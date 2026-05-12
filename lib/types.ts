@@ -1,0 +1,73 @@
+export const workflowStatuses = [
+  "Rezervirano",
+  "Fotografirano",
+  "Shranjeno",
+  "Izbor poslan",
+  "Izbor prejet",
+  "Urejanje",
+  "Poslano",
+  "Plačano",
+  "Zaključeno"
+] as const;
+
+export const paymentStatuses = [
+  "Neplačano",
+  "Delno plačano",
+  "Plačano"
+] as const;
+
+export const shootTypes = [
+  "Portret",
+  "Družina",
+  "Poroka",
+  "Branding",
+  "Nosečniško",
+  "Cake smash",
+  "Rojstni dan",
+  "Dogodek",
+  "Studio",
+  "Lifestyle"
+] as const;
+
+export type WorkflowStatus = (typeof workflowStatuses)[number];
+export type PaymentStatus = (typeof paymentStatuses)[number];
+export type ShootType = (typeof shootTypes)[number] | string;
+
+export type Project = {
+  id: string;
+  user_id?: string | null;
+  client_name: string;
+  email: string;
+  phone: string;
+  shoot_type: ShootType;
+  shoot_date: string;
+  location: string;
+  workflow_status: WorkflowStatus;
+  payment_status: PaymentStatus;
+  amount: number;
+  deposit: number;
+  balance: number;
+  delivery_workdays: number;
+  delivery_due: string;
+  gallery_url: string;
+  drive_url: string;
+  selected_photos: number;
+  notes: string;
+  retouch_notes: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProjectFormValues = Omit<
+  Project,
+  "id" | "user_id" | "created_at" | "updated_at" | "balance"
+> & {
+  balance?: number;
+};
+
+export type ProjectMetric = {
+  label: string;
+  value: string;
+  detail?: string;
+  tone?: "clay" | "olive" | "rose" | "charcoal";
+};

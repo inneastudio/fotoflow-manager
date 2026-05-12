@@ -1,0 +1,134 @@
+-- Seed podatki se vstavijo za prvega uporabnika v auth.users.
+-- Najprej ustvari uporabnika v Supabase Auth, nato zaženi ta seed.
+
+with seed_user as (
+  select id
+  from auth.users
+  order by created_at
+  limit 1
+)
+insert into public.projects (
+  id,
+  user_id,
+  client_name,
+  email,
+  phone,
+  shoot_type,
+  shoot_date,
+  location,
+  workflow_status,
+  payment_status,
+  amount,
+  deposit,
+  delivery_workdays,
+  delivery_due,
+  gallery_url,
+  drive_url,
+  selected_photos,
+  notes,
+  retouch_notes
+)
+select
+  project.id,
+  seed_user.id,
+  project.client_name,
+  project.email,
+  project.phone,
+  project.shoot_type,
+  project.shoot_date::date,
+  project.location,
+  project.workflow_status,
+  project.payment_status,
+  project.amount,
+  project.deposit,
+  project.delivery_workdays,
+  project.delivery_due::date,
+  project.gallery_url,
+  project.drive_url,
+  project.selected_photos,
+  project.notes,
+  project.retouch_notes
+from seed_user
+cross join (
+  values
+    (
+      '9f91b4bf-03a5-48f7-8f66-7f7d4f4a1001'::uuid,
+      'Maja Kovač',
+      'maja.kovac@example.com',
+      '+386 40 212 888',
+      'Branding',
+      '2026-05-11',
+      'Ljubljana, studio Fiora',
+      'Urejanje',
+      'Delno plačano',
+      780,
+      250,
+      6,
+      '2026-05-19',
+      'https://gallery.example.com/maja-branding',
+      'https://drive.google.com/drive/folders/example-maja',
+      34,
+      'Minimalen set z naravno svetlobo in tremi stylingi.',
+      'Ohrani teksturo kože, mehkejša korekcija ozadja.'
+    ),
+    (
+      '9f91b4bf-03a5-48f7-8f66-7f7d4f4a1002'::uuid,
+      'Ana in Luka',
+      'ana.luka@example.com',
+      '+386 31 445 990',
+      'Poroka',
+      '2026-05-16',
+      'Vila Vipolže',
+      'Rezervirano',
+      'Delno plačano',
+      2450,
+      800,
+      25,
+      '2026-06-20',
+      '',
+      'https://drive.google.com/drive/folders/example-poroka',
+      0,
+      'Civilni obred ob 16:00, portreti pred večerjo.',
+      'Topel ton, poudari večerno svetlobo.'
+    ),
+    (
+      '9f91b4bf-03a5-48f7-8f66-7f7d4f4a1003'::uuid,
+      'Nika Novak',
+      'nika.novak@example.com',
+      '+386 51 904 112',
+      'Portret',
+      '2026-04-28',
+      'Tivoli',
+      'Izbor prejet',
+      'Neplačano',
+      420,
+      0,
+      12,
+      '2026-05-14',
+      'https://gallery.example.com/nika-portret',
+      '',
+      18,
+      'Portreti za spletno stran in LinkedIn.',
+      'Tri črno-bele verzije, brez močnega glajenja.'
+    )
+) as project (
+  id,
+  client_name,
+  email,
+  phone,
+  shoot_type,
+  shoot_date,
+  location,
+  workflow_status,
+  payment_status,
+  amount,
+  deposit,
+  delivery_workdays,
+  delivery_due,
+  gallery_url,
+  drive_url,
+  selected_photos,
+  notes,
+  retouch_notes
+)
+on conflict (id) do nothing;
