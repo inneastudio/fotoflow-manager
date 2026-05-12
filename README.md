@@ -12,6 +12,8 @@ Interna Next.js aplikacija za fotografski workflow: rezervacije, statusi, roki, 
 - Finance z grafom prihodkov in pregledom odprtih plačil
 - Pregled strank po kontaktih in zgodovini projektov
 - Nastavljivi tipi fotografiranja s privzetimi delovnimi dnevi do oddaje
+- Izbira fotografa: Žan ali Teja
+- Način plačila: Gotovina ali TRR
 - Supabase integracija za bazo in login
 - Demo način brez Supabase nastavitev
 - Responsive layout: sidebar na desktopu, bottom navigation na telefonu
@@ -29,23 +31,22 @@ Aplikacija bo na voljo na [http://localhost:3000](http://localhost:3000).
 
 ## Supabase nastavitev
 
+Najlažja pot je opisana v [SUPABASE_SETUP.md](./SUPABASE_SETUP.md).
+
+Kratka verzija:
+
 1. Ustvari Supabase projekt.
 2. V Supabase Auth vklopi Email/Password provider.
-3. Kopiraj `.env.example` v `.env.local`.
-4. Dodaj vrednosti:
+3. V SQL Editorju zaženi `supabase/setup.sql`.
+4. Kopiraj `.env.example` v `.env.local`.
+5. Dodaj vrednosti:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-5. Zaženi SQL migracijo iz:
-
-```bash
-supabase/migrations/20260511221100_create_projects.sql
-```
-
-6. Ustvari vsaj enega uporabnika v Supabase Auth.
+6. Ustvari vsaj enega uporabnika v aplikaciji ali Supabase Auth.
 7. Po želji zaženi seed:
 
 ```bash
@@ -75,8 +76,8 @@ supabase/
 Glavna tabela vsebuje:
 
 - kontakt: `client_name`, `email`, `phone`
-- termin: `shoot_type`, `shoot_date`, `location`, `delivery_due`
-- workflow: `workflow_status`, `payment_status`
+- termin: `shoot_type`, `photographer`, `shoot_date`, `location`, `delivery_due`
+- workflow: `workflow_status`, `payment_status`, `payment_method`
 - finance: `amount`, `deposit`, `balance`
 - roki: `delivery_workdays`, `delivery_due`
 - povezave: `gallery_url`, `drive_url`

@@ -52,13 +52,15 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
       { label: "Email", value: project.email || "Ni dodano", icon: Mail },
       { label: "Telefon", value: project.phone || "Ni dodano", icon: Phone },
       { label: "Lokacija", value: project.location || "Ni dodano", icon: MapPin },
+      { label: "Fotograf", value: project.photographer ?? "Žan", icon: FolderOpen },
       {
         label: "Fotografiranje",
         value: formatDate(project.shoot_date),
         icon: CalendarDays
       },
       { label: "Rok oddaje", value: formatDate(project.delivery_due), icon: CalendarDays },
-      { label: "Tip", value: String(project.shoot_type), icon: FolderOpen }
+      { label: "Tip", value: String(project.shoot_type), icon: FolderOpen },
+      { label: "Način plačila", value: project.payment_method ?? "TRR", icon: FolderOpen }
     ];
   }, [project]);
 

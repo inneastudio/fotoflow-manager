@@ -16,6 +16,8 @@ const STORAGE_KEY = "fotoflow-manager-projects";
 function ensureProjectShape(project: Project): Project {
   return {
     ...project,
+    photographer: project.photographer ?? "Žan",
+    payment_method: project.payment_method ?? "TRR",
     delivery_workdays:
       project.delivery_workdays ??
       getBusinessDaysBetween(project.shoot_date, project.delivery_due)
@@ -58,10 +60,12 @@ function normalizeProject(values: ProjectFormValues, existing?: Project): Projec
     email: values.email.trim(),
     phone: values.phone.trim(),
     shoot_type: values.shoot_type,
+    photographer: values.photographer,
     shoot_date: values.shoot_date,
     location: values.location.trim(),
     workflow_status: values.workflow_status,
     payment_status: values.payment_status,
+    payment_method: values.payment_method,
     amount,
     deposit,
     balance,
@@ -165,10 +169,12 @@ export function useProjects() {
             email: updated.email,
             phone: updated.phone,
             shoot_type: updated.shoot_type,
+            photographer: updated.photographer,
             shoot_date: updated.shoot_date,
             location: updated.location,
             workflow_status: updated.workflow_status,
             payment_status: updated.payment_status,
+            payment_method: updated.payment_method,
             amount: updated.amount,
             deposit: updated.deposit,
             balance: updated.balance,

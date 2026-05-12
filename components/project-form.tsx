@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Save } from "lucide-react";
 import type { Project, ProjectFormValues } from "@/lib/types";
-import { paymentStatuses, workflowStatuses } from "@/lib/types";
+import {
+  paymentMethods,
+  paymentStatuses,
+  photographers,
+  workflowStatuses
+} from "@/lib/types";
 import { useStudioSettings } from "@/lib/use-studio-settings";
 import {
   addBusinessDays,
@@ -26,10 +31,12 @@ function defaultValues(): ProjectFormValues {
     email: "",
     phone: "",
     shoot_type: "Portret",
+    photographer: "Žan",
     shoot_date: today,
     location: "",
     workflow_status: "Rezervirano",
     payment_status: "Neplačano",
+    payment_method: "TRR",
     amount: 0,
     deposit: 0,
     delivery_workdays: 8,
@@ -62,10 +69,12 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
       email: project.email,
       phone: project.phone,
       shoot_type: project.shoot_type,
+      photographer: project.photographer ?? "Žan",
       shoot_date: project.shoot_date,
       location: project.location,
       workflow_status: project.workflow_status,
       payment_status: project.payment_status,
+      payment_method: project.payment_method ?? "TRR",
       amount: project.amount,
       deposit: project.deposit,
       delivery_workdays:
@@ -180,6 +189,23 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
         </label>
 
         <label className="space-y-1.5">
+          <span className="text-sm font-medium text-ink">Fotograf</span>
+          <select
+            className="input"
+            value={values.photographer}
+            onChange={(event) =>
+              updateValue("photographer", event.target.value as Project["photographer"])
+            }
+          >
+            {photographers.map((photographer) => (
+              <option key={photographer} value={photographer}>
+                {photographer}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="space-y-1.5">
           <span className="text-sm font-medium text-ink">Email</span>
           <input
             className="input"
@@ -274,6 +300,23 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
             {paymentStatuses.map((status) => (
               <option key={status} value={status}>
                 {status}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="space-y-1.5">
+          <span className="text-sm font-medium text-ink">Način plačila</span>
+          <select
+            className="input"
+            value={values.payment_method}
+            onChange={(event) =>
+              updateValue("payment_method", event.target.value as Project["payment_method"])
+            }
+          >
+            {paymentMethods.map((method) => (
+              <option key={method} value={method}>
+                {method}
               </option>
             ))}
           </select>

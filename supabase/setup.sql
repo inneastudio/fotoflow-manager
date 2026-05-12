@@ -1,3 +1,6 @@
+-- FotoFlow Manager production setup
+-- Copy/paste this whole file into Supabase SQL Editor and run it once.
+
 create extension if not exists pgcrypto;
 
 create table if not exists public.projects (
@@ -26,7 +29,8 @@ create table if not exists public.projects (
     ),
   payment_status text not null default 'Neplačano'
     check (payment_status in ('Neplačano', 'Delno plačano', 'Plačano')),
-  payment_method text not null default 'TRR' check (payment_method in ('Gotovina', 'TRR')),
+  payment_method text not null default 'TRR'
+    check (payment_method in ('Gotovina', 'TRR')),
   amount numeric(12, 2) not null default 0 check (amount >= 0),
   deposit numeric(12, 2) not null default 0 check (deposit >= 0),
   balance numeric(12, 2) not null default 0 check (balance >= 0),
@@ -41,10 +45,24 @@ create table if not exists public.projects (
   updated_at timestamptz not null default now()
 );
 
+alter table public.projects
+add column if not exists photographer text not null default 'Žan'
+check (photographer in ('Žan', 'Teja'));
+
+alter table public.projects
+add column if not exists payment_method text not null default 'TRR'
+check (payment_method in ('Gotovina', 'TRR'));
+
+alter table public.projects
+add column if not exists delivery_workdays integer not null default 8
+check (delivery_workdays >= 0);
+
 create index if not exists projects_user_id_idx on public.projects (user_id);
 create index if not exists projects_shoot_date_idx on public.projects (shoot_date);
 create index if not exists projects_workflow_status_idx on public.projects (workflow_status);
 create index if not exists projects_payment_status_idx on public.projects (payment_status);
+create index if not exists projects_photographer_idx on public.projects (photographer);
+create index if not exists projects_payment_method_idx on public.projects (payment_method);
 
 create or replace function public.set_project_amounts()
 returns trigger

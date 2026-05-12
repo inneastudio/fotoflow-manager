@@ -79,6 +79,14 @@ export function ProjectCard({
           <MapPin className="h-4 w-4 text-clay" />
           <span className="truncate">{project.location || "Lokacija ni določena"}</span>
         </div>
+        <div>
+          <span className="font-semibold text-ink">Fotograf:</span>{" "}
+          {project.photographer}
+        </div>
+        <div>
+          <span className="font-semibold text-ink">Plačilo:</span>{" "}
+          {project.payment_method}
+        </div>
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-2 rounded-lg border border-line bg-white/50 p-3 text-sm">

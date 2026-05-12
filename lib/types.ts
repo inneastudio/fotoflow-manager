@@ -16,6 +16,9 @@ export const paymentStatuses = [
   "Plačano"
 ] as const;
 
+export const photographers = ["Žan", "Teja"] as const;
+export const paymentMethods = ["Gotovina", "TRR"] as const;
+
 export const shootTypes = [
   "Portret",
   "Družina",
@@ -31,6 +34,8 @@ export const shootTypes = [
 
 export type WorkflowStatus = (typeof workflowStatuses)[number];
 export type PaymentStatus = (typeof paymentStatuses)[number];
+export type Photographer = (typeof photographers)[number];
+export type PaymentMethod = (typeof paymentMethods)[number];
 export type ShootType = (typeof shootTypes)[number] | string;
 
 export type Project = {
@@ -40,10 +45,12 @@ export type Project = {
   email: string;
   phone: string;
   shoot_type: ShootType;
+  photographer: Photographer;
   shoot_date: string;
   location: string;
   workflow_status: WorkflowStatus;
   payment_status: PaymentStatus;
+  payment_method: PaymentMethod;
   amount: number;
   deposit: number;
   balance: number;

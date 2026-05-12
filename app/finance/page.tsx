@@ -97,6 +97,9 @@ export default function FinancePage() {
                       <p className="mt-1 text-sm text-muted">
                         Rok oddaje: {formatDate(project.delivery_due)}
                       </p>
+                      <p className="mt-1 text-xs text-muted">
+                        {project.payment_method} · {project.photographer}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-ink">
@@ -130,11 +133,17 @@ export default function FinancePage() {
             <Link
               key={project.id}
               href={`/projects/${project.id}`}
-              className="grid gap-3 p-4 transition hover:bg-white/50 md:grid-cols-[1fr_0.5fr_0.5fr_0.5fr]"
+              className="grid gap-3 p-4 transition hover:bg-white/50 md:grid-cols-[1fr_0.45fr_0.45fr_0.45fr_0.45fr]"
             >
               <div>
                 <p className="font-semibold text-ink">{project.client_name}</p>
-                <p className="mt-1 text-sm text-muted">{project.shoot_type}</p>
+                <p className="mt-1 text-sm text-muted">
+                  {project.shoot_type} · {project.photographer}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted">Način</p>
+                <p className="mt-1 font-semibold">{project.payment_method}</p>
               </div>
               <div>
                 <p className="text-xs text-muted">Znesek</p>
