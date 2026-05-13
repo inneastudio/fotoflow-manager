@@ -2,13 +2,26 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Camera, ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
+import {
+  CalendarDays,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  MapPin
+} from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
 import type { Project } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
 import { formatDate, formatShortDate, sortByDateDesc } from "@/lib/utils";
 
 const weekDays = ["Pon", "Tor", "Sre", "Čet", "Pet", "Sob", "Ned"];
+
+type CalendarEvent = {
+  date: string;
+  type: "shoot" | "due";
+  project: Project;
+};
 
 function dateKey(date: Date) {
   const year = date.getFullYear();
@@ -52,6 +65,44 @@ export default function CalendarPage() {
     .filter((project) => new Date(project.shoot_date) >= new Date(new Date().toDateString()))
     .reverse()
     .slice(0, 6);
+
+  const monthEvents = useMemo(() => {
+    const monthStart = dateKey(month);
+    const monthEnd = dateKey(new Date(month.getFullYear(), month.getMonth() + 1, 0));
+
+    return projects
+      .flatMap((project) => {
+        const events: CalendarEvent[] = [];
+        if (project.shoot_date >= monthStart && project.shoot_date <= monthEnd) {
+          events.push({ date: project.shoot_date, type: "shoot", project });
+        }
+        if (project.delivery_due >= monthStart && project.delivery_due <= monthEnd) {
+          events.push({ date: project.delivery_due, type: "due", project });
+        }
+        return events;
+      })
+      .sort((a, b) => {
+        const dateCompare = a.date.localeCompare(b.date);
+        if (dateCompare !== 0) return dateCompare;
+        if (a.type !== b.type) return a.type === "shoot" ? -1 : 1;
+        return (a.project.shoot_time || "").localeCompare(b.project.shoot_time || "");
+      });
+  }, [month, projects]);
+
+  const agendaGroups = useMemo(() => {
+    return monthEvents.reduce<Array<{ date: string; events: CalendarEvent[] }>>(
+      (groups, event) => {
+        const lastGroup = groups.at(-1);
+        if (lastGroup?.date === event.date) {
+          lastGroup.events.push(event);
+        } else {
+          groups.push({ date: event.date, events: [event] });
+        }
+        return groups;
+      },
+      []
+    );
+  }, [monthEvents]);
 
   function eventsForDay(day: Date) {
     const key = dateKey(day);
@@ -121,7 +172,82 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2">
+          <div className="space-y-3 md:hidden">
+            {loading ? (
+              <div className="h-28 animate-pulse rounded-lg bg-mist/70" />
+            ) : agendaGroups.length ? (
+              agendaGroups.map((group) => (
+                <div
+                  key={group.date}
+                  className="rounded-lg border border-line bg-white/55 p-3"
+                >
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-clay" />
+                      <p className="font-semibold text-ink">
+                        {formatDate(group.date, { weekday: "short" })}
+                      </p>
+                    </div>
+                    <span className="text-xs font-semibold text-muted">
+                      {group.events.length}{" "}
+                      {group.events.length === 1 ? "vnos" : "vnosi"}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {group.events.map((event) => (
+                      <Link
+                        key={`${event.type}-${event.project.id}-${event.date}`}
+                        href={`/projects/${event.project.id}`}
+                        className="block rounded-lg border border-line bg-paper/80 p-3 transition hover:border-clay/35"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold text-ink">
+                              {event.project.project_name ||
+                                event.project.client_name}
+                            </p>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+                              {event.type === "shoot" ? (
+                                <span className="inline-flex items-center gap-1 text-clay">
+                                  <Camera className="h-3.5 w-3.5" />
+                                  Foto
+                                  {event.project.shoot_time
+                                    ? ` ob ${event.project.shoot_time}`
+                                    : ""}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-olive">
+                                  <Clock3 className="h-3.5 w-3.5" />
+                                  Deadline
+                                </span>
+                              )}
+                              {event.project.location ? (
+                                <span className="inline-flex min-w-0 items-center gap-1">
+                                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="truncate">
+                                    {event.project.location}
+                                  </span>
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                          <StatusBadge className="shrink-0">
+                            {event.project.workflow_status}
+                          </StatusBadge>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="rounded-lg border border-line bg-white/60 p-4 text-sm text-muted">
+                Ta mesec ni fotografiranj ali deadlineov.
+              </p>
+            )}
+          </div>
+
+          <div className="hidden grid-cols-7 gap-2 md:grid">
             {weekDays.map((day) => (
               <div key={day} className="px-2 pb-2 text-center text-xs font-semibold text-muted">
                 {day}
