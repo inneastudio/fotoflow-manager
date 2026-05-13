@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Filter, Plus, Search } from "lucide-react";
 import { ProjectCard } from "@/components/project-card";
 import { ProjectModal } from "@/components/project-modal";
-import type { Project, WorkflowStatus } from "@/lib/types";
+import type { PaymentStatus, Project, WorkflowStatus } from "@/lib/types";
 import { paymentStatuses } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
 import { useStudioSettings } from "@/lib/use-studio-settings";
@@ -17,8 +17,7 @@ export default function ProjectsPage() {
     loading,
     createProject,
     updateProject,
-    deleteProject,
-    moveToNextStatus
+    deleteProject
   } =
     useProjects();
   const [query, setQuery] = useState("");
@@ -93,6 +92,25 @@ export default function ProjectsPage() {
     await updateProject(project.id, {
       ...values,
       workflow_status: workflowStatus,
+      payment_status: paymentStatus
+    });
+  }
+
+  async function handlePaymentStatusChange(
+    project: Project,
+    paymentStatus: PaymentStatus
+  ) {
+    const {
+      id: _id,
+      user_id: _userId,
+      created_at: _createdAt,
+      updated_at: _updatedAt,
+      balance: _balance,
+      ...values
+    } = project;
+
+    await updateProject(project.id, {
+      ...values,
       payment_status: paymentStatus
     });
   }
@@ -181,21 +199,21 @@ export default function ProjectsPage() {
       </section>
 
       {loading ? (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-64 animate-pulse rounded-lg bg-mist/70" />
+            <div key={index} className="h-24 animate-pulse rounded-lg bg-mist/70" />
           ))}
         </div>
       ) : filteredProjects.length ? (
-        <section className="grid gap-4 lg:grid-cols-2">
+        <section className="space-y-3">
           {filteredProjects.map((project) => (
             <ProjectCard
               key={project.id}
               project={project}
               onEdit={openEditProject}
               onDelete={handleDeleteProject}
-              onMoveNext={(selectedProject) => moveToNextStatus(selectedProject.id)}
               onWorkflowStatusChange={handleWorkflowStatusChange}
+              onPaymentStatusChange={handlePaymentStatusChange}
             />
           ))}
         </section>
