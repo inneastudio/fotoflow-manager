@@ -274,10 +274,15 @@ export default function SettingsPage() {
                     </span>
                     <input
                       className="input"
-                      value={option.name}
-                      onChange={(event) =>
+                      defaultValue={option.name}
+                      onBlur={(event) =>
                         renameShootType(option.name, event.target.value)
                       }
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.currentTarget.blur();
+                        }
+                      }}
                     />
                   </label>
                   <p className="mt-1 text-sm text-muted">
