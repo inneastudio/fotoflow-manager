@@ -35,7 +35,7 @@ export default function DashboardPage() {
       (project) => project.workflow_status !== "Zaključeno"
     );
     const toEdit = projects.filter((project) =>
-      ["Izbor prejet", "Urejanje"].includes(project.workflow_status)
+      ["Izbor prejet", "Narejen izbor", "Urejanje"].includes(project.workflow_status)
     );
 
     return {
@@ -88,7 +88,7 @@ export default function DashboardPage() {
         <MetricCard
           label="Za urediti"
           value={String(stats.toEdit.length)}
-          detail="Izbor prejet ali v retuši"
+          detail="Izbor prejet, narejen izbor ali v retuši"
           icon={Images}
           tone="clay"
         />

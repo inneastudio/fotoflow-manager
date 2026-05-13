@@ -50,7 +50,7 @@ function defaultValues(): ProjectFormValues {
 }
 
 export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
-  const { shootTypeOptions, shootTypes } = useStudioSettings();
+  const { shootTypeOptions, shootTypes, workflowStatuses } = useStudioSettings();
   const [values, setValues] = useState<ProjectFormValues>(defaultValues);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -18,6 +18,7 @@ create table if not exists public.projects (
         'Shranjeno',
         'Izbor poslan',
         'Izbor prejet',
+        'Narejen izbor',
         'Urejanje',
         'Poslano',
         'Plačano',

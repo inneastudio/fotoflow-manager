@@ -13,20 +13,7 @@ create table if not exists public.projects (
   photographer text not null default 'Žan' check (photographer in ('Žan', 'Teja')),
   shoot_date date not null,
   location text default '',
-  workflow_status text not null default 'Rezervirano'
-    check (
-      workflow_status in (
-        'Rezervirano',
-        'Fotografirano',
-        'Shranjeno',
-        'Izbor poslan',
-        'Izbor prejet',
-        'Urejanje',
-        'Poslano',
-        'Plačano',
-        'Zaključeno'
-      )
-    ),
+  workflow_status text not null default 'Rezervirano',
   payment_status text not null default 'Neplačano'
     check (payment_status in ('Neplačano', 'Delno plačano', 'Plačano')),
   payment_method text not null default 'TRR'
@@ -56,6 +43,8 @@ check (payment_method in ('Gotovina', 'TRR'));
 alter table public.projects
 add column if not exists delivery_workdays integer not null default 8
 check (delivery_workdays >= 0);
+
+alter table public.projects drop constraint if exists projects_workflow_status_check;
 
 create index if not exists projects_user_id_idx on public.projects (user_id);
 create index if not exists projects_shoot_date_idx on public.projects (shoot_date);

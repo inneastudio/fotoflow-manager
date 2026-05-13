@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
 import { useAuth } from "@/components/auth-provider";
-import { paymentStatuses, workflowStatuses } from "@/lib/types";
+import { paymentStatuses } from "@/lib/types";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { useStudioSettings } from "@/lib/use-studio-settings";
 
@@ -22,19 +22,30 @@ export default function SettingsPage() {
   const { user, demoMode, signOut } = useAuth();
   const {
     shootTypeOptions,
+    workflowStatuses,
+    addWorkflowStatus,
     addShootType,
+    removeWorkflowStatus,
     removeShootType,
+    resetWorkflowStatuses,
     resetShootTypes,
     updateShootType
   } = useStudioSettings();
   const [newShootType, setNewShootType] = useState("");
   const [newWorkdays, setNewWorkdays] = useState(8);
+  const [newWorkflowStatus, setNewWorkflowStatus] = useState("");
 
   function handleAddShootType(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     addShootType(newShootType, newWorkdays);
     setNewShootType("");
     setNewWorkdays(8);
+  }
+
+  function handleAddWorkflowStatus(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    addWorkflowStatus(newWorkflowStatus);
+    setNewWorkflowStatus("");
   }
 
   return (
@@ -116,13 +127,60 @@ export default function SettingsPage() {
 
       <section className="grid gap-6 xl:grid-cols-2">
         <div className="surface rounded-lg p-4 sm:p-5">
-          <div className="mb-5 flex items-center gap-2">
-            <Workflow className="h-5 w-5 text-clay" />
-            <h2 className="font-display text-2xl font-semibold">Workflow statusi</h2>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Workflow className="h-5 w-5 text-clay" />
+                <h2 className="font-display text-2xl font-semibold">
+                  Workflow statusi
+                </h2>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-muted">
+                Dodaj ali odstrani korake, ki jih uporabljaš v svojem procesu.
+              </p>
+            </div>
+            <button className="button-secondary" onClick={resetWorkflowStatuses}>
+              <RotateCcw className="h-4 w-4" />
+              Ponastavi
+            </button>
           </div>
-          <div className="flex flex-wrap gap-2">
+
+          <form
+            onSubmit={handleAddWorkflowStatus}
+            className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]"
+          >
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-ink">Nov status</span>
+              <input
+                className="input"
+                value={newWorkflowStatus}
+                onChange={(event) => setNewWorkflowStatus(event.target.value)}
+                placeholder="npr. Čaka na album"
+              />
+            </label>
+            <button className="button-primary self-end" type="submit">
+              <Plus className="h-4 w-4" />
+              Dodaj
+            </button>
+          </form>
+
+          <div className="mt-5 grid gap-2">
             {workflowStatuses.map((status) => (
-              <StatusBadge key={status}>{status}</StatusBadge>
+              <div
+                key={status}
+                className="flex items-center justify-between gap-3 rounded-lg border border-line bg-white/70 p-3"
+              >
+                <StatusBadge>{status}</StatusBadge>
+                <button
+                  type="button"
+                  className="button-ghost h-9 w-9 p-0 text-rose hover:text-rose"
+                  onClick={() => removeWorkflowStatus(status)}
+                  aria-label={`Odstrani ${status}`}
+                  title="Odstrani"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             ))}
           </div>
         </div>

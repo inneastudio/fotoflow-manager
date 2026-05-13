@@ -5,6 +5,7 @@ import { useAuth } from "@/components/auth-provider";
 import { demoProjects } from "@/lib/demo-data";
 import { supabase } from "@/lib/supabase";
 import type { Project, ProjectFormValues } from "@/lib/types";
+import { useStudioSettings } from "@/lib/use-studio-settings";
 import {
   calculateBalance,
   getBusinessDaysBetween,
@@ -83,6 +84,7 @@ function normalizeProject(values: ProjectFormValues, existing?: Project): Projec
 
 export function useProjects() {
   const { user, demoMode, loading: authLoading } = useAuth();
+  const { workflowStatuses } = useStudioSettings();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -237,7 +239,10 @@ export function useProjects() {
       const existing = projects.find((project) => project.id === projectId);
       if (!existing) throw new Error("Projekt ni najden.");
 
-      const nextStatus = getNextWorkflowStatus(existing.workflow_status);
+      const nextStatus = getNextWorkflowStatus(
+        existing.workflow_status,
+        workflowStatuses
+      );
       const nextPaymentStatus =
         nextStatus === "Plačano" || nextStatus === "Zaključeno"
           ? "Plačano"
@@ -249,7 +254,7 @@ export function useProjects() {
         payment_status: nextPaymentStatus
       });
     },
-    [projects, updateProject]
+    [projects, updateProject, workflowStatuses]
   );
 
   return useMemo(

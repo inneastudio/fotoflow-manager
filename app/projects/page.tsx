@@ -5,11 +5,13 @@ import { Filter, Plus, Search } from "lucide-react";
 import { ProjectCard } from "@/components/project-card";
 import { ProjectModal } from "@/components/project-modal";
 import type { Project, WorkflowStatus } from "@/lib/types";
-import { paymentStatuses, workflowStatuses } from "@/lib/types";
+import { paymentStatuses } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
+import { useStudioSettings } from "@/lib/use-studio-settings";
 import { formatCurrency, getOutstandingAmount, sortByDateDesc } from "@/lib/utils";
 
 export default function ProjectsPage() {
+  const { workflowStatuses } = useStudioSettings();
   const {
     projects,
     loading,

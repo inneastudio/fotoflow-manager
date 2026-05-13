@@ -19,8 +19,8 @@ import { MetricCard } from "@/components/metric-card";
 import { ProjectModal } from "@/components/project-modal";
 import { StatusBadge } from "@/components/status-badge";
 import { StatusTimeline } from "@/components/status-timeline";
-import { workflowStatuses } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
+import { useStudioSettings } from "@/lib/use-studio-settings";
 import {
   formatCurrency,
   formatDate,
@@ -40,10 +40,18 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [moving, setMoving] = useState(false);
   const project = projects.find((item) => item.id === projectId);
+  const { workflowStatuses } = useStudioSettings();
+  const availableWorkflowStatuses = project
+    ? Array.from(new Set([...workflowStatuses, project.workflow_status].filter(Boolean)))
+    : workflowStatuses;
 
-  const nextStatus = project ? getNextWorkflowStatus(project.workflow_status) : null;
-  const progress = project ? getStatusProgress(project.workflow_status) : 0;
-  const isFinal = project?.workflow_status === workflowStatuses.at(-1);
+  const nextStatus = project
+    ? getNextWorkflowStatus(project.workflow_status, availableWorkflowStatuses)
+    : null;
+  const progress = project
+    ? getStatusProgress(project.workflow_status, availableWorkflowStatuses)
+    : 0;
+  const isFinal = project?.workflow_status === availableWorkflowStatuses.at(-1);
 
   const detailItems = useMemo(() => {
     if (!project) return [];

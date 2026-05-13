@@ -94,14 +94,28 @@ export function getBusinessDaysBetween(startValue: string, endValue: string) {
   return count;
 }
 
-export function getNextWorkflowStatus(status: WorkflowStatus) {
-  const index = workflowStatuses.indexOf(status);
-  return workflowStatuses[Math.min(index + 1, workflowStatuses.length - 1)];
+export function getNextWorkflowStatus(
+  status: WorkflowStatus,
+  statuses: readonly string[] = workflowStatuses
+) {
+  const availableStatuses = statuses.length ? statuses : workflowStatuses;
+  const index = availableStatuses.indexOf(status);
+  if (index < 0) return availableStatuses[0] ?? status;
+
+  return availableStatuses[
+    Math.min(index + 1, availableStatuses.length - 1)
+  ] as WorkflowStatus;
 }
 
-export function getStatusProgress(status: WorkflowStatus) {
-  const index = workflowStatuses.indexOf(status);
-  return Math.round(((index + 1) / workflowStatuses.length) * 100);
+export function getStatusProgress(
+  status: WorkflowStatus,
+  statuses: readonly string[] = workflowStatuses
+) {
+  const availableStatuses = statuses.length ? statuses : workflowStatuses;
+  const index = availableStatuses.indexOf(status);
+  if (index < 0) return 0;
+
+  return Math.round(((index + 1) / availableStatuses.length) * 100);
 }
 
 export function paymentTone(status: PaymentStatus) {
@@ -115,7 +129,7 @@ export function workflowTone(status: WorkflowStatus) {
     return "bg-olive/10 text-olive border-olive/20";
   }
 
-  if (["Urejanje", "Izbor prejet", "Izbor poslan"].includes(status)) {
+  if (["Urejanje", "Narejen izbor", "Izbor prejet", "Izbor poslan"].includes(status)) {
     return "bg-clay/10 text-clay border-clay/20";
   }
 

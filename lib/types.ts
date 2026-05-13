@@ -4,6 +4,7 @@ export const workflowStatuses = [
   "Shranjeno",
   "Izbor poslan",
   "Izbor prejet",
+  "Narejen izbor",
   "Urejanje",
   "Poslano",
   "Plačano",
@@ -32,7 +33,7 @@ export const shootTypes = [
   "Lifestyle"
 ] as const;
 
-export type WorkflowStatus = (typeof workflowStatuses)[number];
+export type WorkflowStatus = (typeof workflowStatuses)[number] | string;
 export type PaymentStatus = (typeof paymentStatuses)[number];
 export type Photographer = (typeof photographers)[number];
 export type PaymentMethod = (typeof paymentMethods)[number];

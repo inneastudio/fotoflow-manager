@@ -1,10 +1,16 @@
+"use client";
+
 import { Check } from "lucide-react";
 import type { WorkflowStatus } from "@/lib/types";
-import { workflowStatuses } from "@/lib/types";
+import { useStudioSettings } from "@/lib/use-studio-settings";
 import { cn } from "@/lib/utils";
 
 export function StatusTimeline({ status }: { status: WorkflowStatus }) {
-  const currentIndex = workflowStatuses.indexOf(status);
+  const { workflowStatuses } = useStudioSettings();
+  const availableWorkflowStatuses = Array.from(
+    new Set([...workflowStatuses, status].filter(Boolean))
+  );
+  const currentIndex = availableWorkflowStatuses.indexOf(status);
 
   return (
     <div className="surface rounded-lg p-4 sm:p-5">
@@ -14,12 +20,12 @@ export function StatusTimeline({ status }: { status: WorkflowStatus }) {
           <h2 className="mt-1 font-display text-2xl font-semibold">Timeline statusov</h2>
         </div>
         <p className="rounded-lg border border-line bg-white/60 px-3 py-2 text-sm font-semibold text-ink">
-          {currentIndex + 1}/{workflowStatuses.length}
+          {currentIndex + 1}/{availableWorkflowStatuses.length}
         </p>
       </div>
 
       <div className="space-y-3">
-        {workflowStatuses.map((item, index) => {
+        {availableWorkflowStatuses.map((item, index) => {
           const complete = index <= currentIndex;
           const active = index === currentIndex;
 
@@ -36,7 +42,7 @@ export function StatusTimeline({ status }: { status: WorkflowStatus }) {
                 >
                   {complete ? <Check className="h-4 w-4" /> : index + 1}
                 </div>
-                {index < workflowStatuses.length - 1 ? (
+                {index < availableWorkflowStatuses.length - 1 ? (
                   <div className={cn("h-6 w-px", complete ? "bg-olive" : "bg-line")} />
                 ) : null}
               </div>

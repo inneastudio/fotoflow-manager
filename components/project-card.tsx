@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
 import type { Project, WorkflowStatus } from "@/lib/types";
-import { workflowStatuses } from "@/lib/types";
+import { useStudioSettings } from "@/lib/use-studio-settings";
 import { formatCurrency, formatDate, getNextWorkflowStatus } from "@/lib/utils";
 
 type ProjectCardProps = {
@@ -29,8 +29,17 @@ export function ProjectCard({
   onMoveNext,
   onWorkflowStatusChange
 }: ProjectCardProps) {
-  const nextStatus = getNextWorkflowStatus(project.workflow_status);
-  const isFinal = project.workflow_status === workflowStatuses[workflowStatuses.length - 1];
+  const { workflowStatuses } = useStudioSettings();
+  const availableWorkflowStatuses = Array.from(
+    new Set([...workflowStatuses, project.workflow_status].filter(Boolean))
+  );
+  const nextStatus = getNextWorkflowStatus(
+    project.workflow_status,
+    availableWorkflowStatuses
+  );
+  const isFinal =
+    project.workflow_status ===
+    availableWorkflowStatuses[availableWorkflowStatuses.length - 1];
 
   return (
     <article className="surface rounded-lg p-4">
@@ -129,7 +138,7 @@ export function ProjectCard({
             )
           }
         >
-          {workflowStatuses.map((status) => (
+          {availableWorkflowStatuses.map((status) => (
             <option key={status} value={status}>
               {status}
             </option>
