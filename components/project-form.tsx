@@ -32,7 +32,7 @@ function defaultValues(): ProjectFormValues {
     email: "",
     phone: "",
     shoot_type: "Portret",
-    photographer: "Žan",
+    photographer: "Teja",
     shoot_date: today,
     shoot_time: "",
     location: "",
