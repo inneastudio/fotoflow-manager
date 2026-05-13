@@ -12,6 +12,7 @@ create table if not exists public.projects (
   shoot_type text not null default 'Portret',
   photographer text not null default 'Žan' check (photographer in ('Žan', 'Teja')),
   shoot_date date not null,
+  shoot_time text default '',
   location text default '',
   workflow_status text not null default 'Rezervirano',
   payment_status text not null default 'Neplačano'
@@ -39,6 +40,9 @@ check (photographer in ('Žan', 'Teja'));
 alter table public.projects
 add column if not exists payment_method text not null default 'TRR'
 check (payment_method in ('Gotovina', 'TRR'));
+
+alter table public.projects
+add column if not exists shoot_time text default '';
 
 alter table public.projects
 add column if not exists delivery_workdays integer not null default 8

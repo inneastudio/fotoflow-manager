@@ -9,6 +9,7 @@ import {
 export type ShootTypeOption = {
   name: string;
   deliveryWorkdays: number;
+  fixedPrice: number;
 };
 
 type StudioSettings = {
@@ -20,6 +21,7 @@ const STORAGE_KEY = "fotoflow-manager-settings";
 
 export const defaultShootTypeOptions: ShootTypeOption[] = shootTypes.map((name) => ({
   name,
+  fixedPrice: 0,
   deliveryWorkdays:
     name === "Poroka"
       ? 25
@@ -71,7 +73,8 @@ function readSettings(): StudioSettings {
         ...defaultShootTypeOptions.filter((option) => !optionNames.has(option.name))
       ].map((option) => ({
         name: String(option.name).trim(),
-        deliveryWorkdays: Math.max(Number(option.deliveryWorkdays || 0), 0)
+        deliveryWorkdays: Math.max(Number(option.deliveryWorkdays || 0), 0),
+        fixedPrice: Math.max(Number(option.fixedPrice || 0), 0)
       })),
       workflowStatuses: [
         ...cleanSavedStatuses,
@@ -112,7 +115,7 @@ export function useStudioSettings() {
   }, []);
 
   const addShootType = useCallback(
-    (name: string, deliveryWorkdays: number) => {
+    (name: string, deliveryWorkdays: number, fixedPrice = 0) => {
       const cleanName = name.trim();
       if (!cleanName) return;
 
@@ -126,7 +129,11 @@ export function useStudioSettings() {
           ...current,
           shootTypeOptions: [
             ...current.shootTypeOptions,
-            { name: cleanName, deliveryWorkdays: Math.max(Number(deliveryWorkdays || 0), 0) }
+            {
+              name: cleanName,
+              deliveryWorkdays: Math.max(Number(deliveryWorkdays || 0), 0),
+              fixedPrice: Math.max(Number(fixedPrice || 0), 0)
+            }
           ]
         };
       });
@@ -145,12 +152,16 @@ export function useStudioSettings() {
   );
 
   const updateShootType = useCallback(
-    (name: string, deliveryWorkdays: number) => {
+    (name: string, deliveryWorkdays: number, fixedPrice: number) => {
       updateSettings((current) => ({
         ...current,
         shootTypeOptions: current.shootTypeOptions.map((option) =>
           option.name === name
-            ? { ...option, deliveryWorkdays: Math.max(Number(deliveryWorkdays || 0), 0) }
+            ? {
+                ...option,
+                deliveryWorkdays: Math.max(Number(deliveryWorkdays || 0), 0),
+                fixedPrice: Math.max(Number(fixedPrice || 0), 0)
+              }
             : option
         )
       }));

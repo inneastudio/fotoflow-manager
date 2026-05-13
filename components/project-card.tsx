@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   CalendarDays,
+  Clock3,
   ChevronRight,
   Edit3,
   ExternalLink,
@@ -83,6 +84,10 @@ export function ProjectCard({
         <div className="flex items-center gap-2">
           <CalendarDays className="h-4 w-4 text-clay" />
           <span>{formatDate(project.shoot_date)}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Clock3 className="h-4 w-4 text-clay" />
+          <span>{project.shoot_time || "Ura ni določena"}</span>
         </div>
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-clay" />

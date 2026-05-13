@@ -9,6 +9,7 @@ create table if not exists public.projects (
   shoot_type text not null default 'Portret',
   photographer text not null default 'Žan' check (photographer in ('Žan', 'Teja')),
   shoot_date date not null,
+  shoot_time text default '',
   location text default '',
   workflow_status text not null default 'Rezervirano'
     check (

@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   CalendarDays,
   ChevronRight,
+  Clock3,
   Edit3,
   ExternalLink,
   FolderOpen,
@@ -66,6 +67,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
         value: formatDate(project.shoot_date),
         icon: CalendarDays
       },
+      { label: "Ura fotografiranja", value: project.shoot_time || "Ni dodano", icon: Clock3 },
       { label: "Rok oddaje", value: formatDate(project.delivery_due), icon: CalendarDays },
       { label: "Tip", value: String(project.shoot_type), icon: FolderOpen },
       { label: "Način plačila", value: project.payment_method ?? "TRR", icon: FolderOpen }

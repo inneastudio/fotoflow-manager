@@ -19,6 +19,7 @@ function ensureProjectShape(project: Project): Project {
     ...project,
     photographer: project.photographer ?? "Žan",
     payment_method: project.payment_method ?? "TRR",
+    shoot_time: project.shoot_time ?? "",
     delivery_workdays:
       project.delivery_workdays ??
       getBusinessDaysBetween(project.shoot_date, project.delivery_due)
@@ -63,6 +64,7 @@ function normalizeProject(values: ProjectFormValues, existing?: Project): Projec
     shoot_type: values.shoot_type,
     photographer: values.photographer,
     shoot_date: values.shoot_date,
+    shoot_time: values.shoot_time,
     location: values.location.trim(),
     workflow_status: values.workflow_status,
     payment_status: values.payment_status,
@@ -173,6 +175,7 @@ export function useProjects() {
             shoot_type: updated.shoot_type,
             photographer: updated.photographer,
             shoot_date: updated.shoot_date,
+            shoot_time: updated.shoot_time,
             location: updated.location,
             workflow_status: updated.workflow_status,
             payment_status: updated.payment_status,

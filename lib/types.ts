@@ -48,6 +48,7 @@ export type Project = {
   shoot_type: ShootType;
   photographer: Photographer;
   shoot_date: string;
+  shoot_time: string;
   location: string;
   workflow_status: WorkflowStatus;
   payment_status: PaymentStatus;

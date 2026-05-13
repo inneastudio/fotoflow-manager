@@ -67,12 +67,12 @@ export default function CalendarPage() {
     <div className="space-y-6">
       <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="eyebrow">Roki in fotografiranja</p>
+          <p className="eyebrow">Deadlinei in fotografiranja</p>
           <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
             Koledar
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-            Mesečni pregled terminov in rokov oddaje.
+            Mesečni pregled terminov in deadlineov.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -116,7 +116,7 @@ export default function CalendarPage() {
               </span>
               <span className="inline-flex items-center gap-1">
                 <span className="h-2 w-2 rounded-full bg-olive" />
-                Rok
+                Deadline
               </span>
             </div>
           </div>
@@ -161,8 +161,11 @@ export default function CalendarPage() {
                                 event.type === "shoot" ? "text-clay" : "text-olive"
                               }
                             >
-                              {event.type === "shoot" ? "Foto" : "Rok"}
+                              {event.type === "shoot" ? "Foto" : "Deadline"}
                             </span>{" "}
+                            {event.type === "shoot" && event.project.shoot_time
+                              ? `${event.project.shoot_time} · `
+                              : ""}
                             {event.project.client_name}
                           </Link>
                         ))}
@@ -206,7 +209,9 @@ export default function CalendarPage() {
                       <div>
                         <p className="font-semibold text-ink">{project.client_name}</p>
                         <p className="mt-1 text-sm text-muted">
-                          {formatShortDate(project.shoot_date)} · {project.location}
+                          {formatShortDate(project.shoot_date)}
+                          {project.shoot_time ? ` ob ${project.shoot_time}` : ""} ·{" "}
+                          {project.location}
                         </p>
                       </div>
                       <StatusBadge>{project.workflow_status}</StatusBadge>
@@ -224,7 +229,7 @@ export default function CalendarPage() {
           <div className="surface rounded-lg p-4 sm:p-5">
             <div className="flex items-center gap-2 text-sm font-semibold text-ink">
               <Clock3 className="h-4 w-4 text-clay" />
-              Najbližji rok
+              Najbližji deadline
             </div>
             {projects.length ? (
               <p className="mt-3 text-sm text-muted">
@@ -237,7 +242,7 @@ export default function CalendarPage() {
                 )}
               </p>
             ) : (
-              <p className="mt-3 text-sm text-muted">Ni vpisanih rokov.</p>
+              <p className="mt-3 text-sm text-muted">Ni vpisanih deadlineov.</p>
             )}
           </div>
         </aside>

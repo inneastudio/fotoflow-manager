@@ -33,13 +33,15 @@ export default function SettingsPage() {
   } = useStudioSettings();
   const [newShootType, setNewShootType] = useState("");
   const [newWorkdays, setNewWorkdays] = useState(8);
+  const [newFixedPrice, setNewFixedPrice] = useState(0);
   const [newWorkflowStatus, setNewWorkflowStatus] = useState("");
 
   function handleAddShootType(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    addShootType(newShootType, newWorkdays);
+    addShootType(newShootType, newWorkdays, newFixedPrice);
     setNewShootType("");
     setNewWorkdays(8);
+    setNewFixedPrice(0);
   }
 
   function handleAddWorkflowStatus(event: React.FormEvent<HTMLFormElement>) {
@@ -219,7 +221,7 @@ export default function SettingsPage() {
 
         <form
           onSubmit={handleAddShootType}
-          className="mt-5 grid gap-3 md:grid-cols-[1fr_180px_auto]"
+          className="mt-5 grid gap-3 md:grid-cols-[1fr_160px_160px_auto]"
         >
           <label className="space-y-1.5">
             <span className="text-sm font-medium text-ink">Nov tip</span>
@@ -240,6 +242,17 @@ export default function SettingsPage() {
               onChange={(event) => setNewWorkdays(Number(event.target.value))}
             />
           </label>
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-ink">Fiksna cena</span>
+            <input
+              className="input"
+              min="0"
+              step="1"
+              type="number"
+              value={newFixedPrice}
+              onChange={(event) => setNewFixedPrice(Number(event.target.value))}
+            />
+          </label>
           <button className="button-primary self-end" type="submit">
             <Plus className="h-4 w-4" />
             Dodaj
@@ -255,7 +268,9 @@ export default function SettingsPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-ink">{option.name}</p>
-                  <p className="mt-1 text-sm text-muted">Privzeti rok oddaje</p>
+                  <p className="mt-1 text-sm text-muted">
+                    Privzeti rok in cena
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -277,7 +292,30 @@ export default function SettingsPage() {
                   type="number"
                   value={option.deliveryWorkdays}
                   onChange={(event) =>
-                    updateShootType(option.name, Number(event.target.value))
+                    updateShootType(
+                      option.name,
+                      Number(event.target.value),
+                      option.fixedPrice
+                    )
+                  }
+                />
+              </label>
+              <label className="mt-3 block space-y-1.5">
+                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+                  Fiksna cena
+                </span>
+                <input
+                  className="input"
+                  min="0"
+                  step="1"
+                  type="number"
+                  value={option.fixedPrice}
+                  onChange={(event) =>
+                    updateShootType(
+                      option.name,
+                      option.deliveryWorkdays,
+                      Number(event.target.value)
+                    )
                   }
                 />
               </label>

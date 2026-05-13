@@ -33,6 +33,7 @@ function defaultValues(): ProjectFormValues {
     shoot_type: "Portret",
     photographer: "Žan",
     shoot_date: today,
+    shoot_time: "",
     location: "",
     workflow_status: "Rezervirano",
     payment_status: "Neplačano",
@@ -71,6 +72,7 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
       shoot_type: project.shoot_type,
       photographer: project.photographer ?? "Žan",
       shoot_date: project.shoot_date,
+      shoot_time: project.shoot_time ?? "",
       location: project.location,
       workflow_status: project.workflow_status,
       payment_status: project.payment_status,
@@ -102,14 +104,17 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
   }
 
   function updateShootType(type: string) {
+    const selectedOption = shootTypeOptions.find((option) => option.name === type);
     const defaultDays =
-      shootTypeOptions.find((option) => option.name === type)?.deliveryWorkdays ??
+      selectedOption?.deliveryWorkdays ??
       values.delivery_workdays ??
       8;
+    const fixedPrice = Number(selectedOption?.fixedPrice || 0);
 
     setValues((current) => ({
       ...current,
       shoot_type: type,
+      amount: fixedPrice > 0 ? fixedPrice : current.amount,
       delivery_workdays: defaultDays,
       delivery_due: addBusinessDays(current.shoot_date, defaultDays)
     }));
@@ -234,6 +239,16 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
             required
             value={values.shoot_date}
             onChange={(event) => updateShootDate(event.target.value)}
+          />
+        </label>
+
+        <label className="space-y-1.5">
+          <span className="text-sm font-medium text-ink">Ura fotografiranja</span>
+          <input
+            className="input"
+            type="time"
+            value={values.shoot_time}
+            onChange={(event) => updateValue("shoot_time", event.target.value)}
           />
         </label>
 
