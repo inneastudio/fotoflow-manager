@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { CircleDollarSign, ReceiptText, TrendingUp, WalletCards } from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
 import { RevenueChart } from "@/components/revenue-chart";
 import { StatusBadge } from "@/components/status-badge";
 import { useProjects } from "@/lib/use-projects";
+import { photographers } from "@/lib/types";
 import {
   formatCurrency,
   formatDate,
@@ -15,28 +17,58 @@ import {
 
 export default function FinancePage() {
   const { projects, loading } = useProjects();
+  const [photographerFilter, setPhotographerFilter] = useState("Vsi");
+  const photographerOptions = useMemo(() => {
+    return Array.from(
+      new Set([
+        ...photographers,
+        ...projects.map((project) => project.photographer).filter(Boolean)
+      ])
+    );
+  }, [projects]);
+  const filteredProjects = useMemo(() => {
+    if (photographerFilter === "Vsi") return projects;
+    return projects.filter((project) => project.photographer === photographerFilter);
+  }, [photographerFilter, projects]);
 
-  const totalRevenue = projects
+  const totalRevenue = filteredProjects
     .filter((project) => project.payment_status === "Plačano")
     .reduce((sum, project) => sum + project.amount, 0);
-  const deposits = projects.reduce((sum, project) => sum + project.deposit, 0);
-  const outstanding = getOutstandingAmount(projects);
-  const monthlyRevenue = getMonthlyRevenue(projects);
+  const deposits = filteredProjects.reduce((sum, project) => sum + project.deposit, 0);
+  const outstanding = getOutstandingAmount(filteredProjects);
+  const monthlyRevenue = getMonthlyRevenue(filteredProjects);
 
-  const unpaidProjects = projects
+  const unpaidProjects = filteredProjects
     .filter((project) => project.payment_status !== "Plačano")
     .sort((a, b) => b.balance - a.balance);
 
   return (
     <div className="space-y-6">
-      <section>
-        <p className="eyebrow">Plačila in prihodki</p>
-        <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
-          Finance
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-          Pregled plačanih projektov, avansov in odprtih zneskov.
-        </p>
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="eyebrow">Plačila in prihodki</p>
+          <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
+            Finance
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
+            Pregled plačanih projektov, avansov in odprtih zneskov.
+          </p>
+        </div>
+        <label className="w-full space-y-1.5 sm:max-w-xs">
+          <span className="text-sm font-medium text-ink">Fotograf</span>
+          <select
+            className="input"
+            value={photographerFilter}
+            onChange={(event) => setPhotographerFilter(event.target.value)}
+          >
+            <option value="Vsi">Vsi fotografi</option>
+            {photographerOptions.map((photographer) => (
+              <option key={photographer} value={photographer}>
+                {photographer}
+              </option>
+            ))}
+          </select>
+        </label>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -71,7 +103,7 @@ export default function FinancePage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <RevenueChart projects={projects} />
+        <RevenueChart projects={filteredProjects} />
 
         <div className="surface rounded-lg p-4 sm:p-5">
           <div className="mb-4">
@@ -129,7 +161,7 @@ export default function FinancePage() {
           </h2>
         </div>
         <div className="divide-y divide-line">
-          {projects.map((project) => (
+          {filteredProjects.map((project) => (
             <Link
               key={project.id}
               href={`/projects/${project.id}`}

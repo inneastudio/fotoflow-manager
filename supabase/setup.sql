@@ -10,7 +10,7 @@ create table if not exists public.projects (
   email text default '',
   phone text default '',
   shoot_type text not null default 'Portret',
-  photographer text not null default 'Žan' check (photographer in ('Žan', 'Teja')),
+  photographer text not null default 'Žan' check (photographer in ('Žan', 'Doroteja', 'Teja')),
   shoot_date date not null,
   location text default '',
   workflow_status text not null default 'Rezervirano',
@@ -34,7 +34,7 @@ create table if not exists public.projects (
 
 alter table public.projects
 add column if not exists photographer text not null default 'Žan'
-check (photographer in ('Žan', 'Teja'));
+check (photographer in ('Žan', 'Doroteja', 'Teja'));
 
 alter table public.projects
 add column if not exists payment_method text not null default 'TRR'
