@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   CalendarDays,
   Clock3,
+  CreditCard,
   Edit3,
   ExternalLink,
   MapPin,
@@ -37,22 +38,25 @@ export function ProjectCard({
   const projectTitle = project.project_name || project.client_name;
 
   return (
-    <article className="surface rounded-lg p-3">
-      <div className="grid gap-3 xl:grid-cols-[minmax(220px,1.2fr)_minmax(260px,1.2fr)_110px_180px_180px_110px] xl:items-center">
+    <article className="surface rounded-lg px-4 py-3 transition hover:border-clay/30 hover:bg-white/80">
+      <div className="grid gap-3 xl:grid-cols-[minmax(220px,1.2fr)_minmax(260px,1fr)_120px_minmax(340px,1.15fr)_104px] xl:items-center">
         <div className="min-w-0">
           <Link
             href={`/projects/${project.id}`}
-            className="block truncate font-display text-xl font-semibold text-ink hover:text-clay"
+            className="block truncate font-display text-lg font-semibold text-ink hover:text-clay"
           >
             {projectTitle}
           </Link>
-          {project.project_name ? (
-            <p className="mt-1 truncate text-sm text-muted">{project.client_name}</p>
-          ) : null}
-          <p className="mt-1 truncate text-sm text-muted">{project.shoot_type}</p>
+          <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
+            {project.project_name ? (
+              <span className="truncate">{project.client_name}</span>
+            ) : null}
+            {project.project_name ? <span className="text-muted/50">·</span> : null}
+            <span className="truncate">{project.shoot_type}</span>
+          </div>
         </div>
 
-        <div className="grid gap-2 text-sm text-muted sm:grid-cols-2 xl:grid-cols-1">
+        <div className="grid gap-1.5 text-sm text-muted">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4 shrink-0 text-clay" />
             <span className="truncate">{formatDate(project.shoot_date)}</span>
@@ -66,62 +70,65 @@ export function ProjectCard({
           </div>
         </div>
 
-        <div className="rounded-lg border border-line bg-white/60 px-3 py-2 text-sm xl:text-right">
-          <p className="text-xs text-muted">Znesek</p>
-          <p className="mt-0.5 font-semibold text-ink">
-            {formatCurrency(project.amount)}
-          </p>
+        <div className="flex items-center gap-2 text-sm xl:justify-end">
+          <CreditCard className="h-4 w-4 shrink-0 text-clay" />
+          <div>
+            <p className="text-xs text-muted">Znesek</p>
+            <p className="font-semibold text-ink">{formatCurrency(project.amount)}</p>
+          </div>
         </div>
 
-        <label className="space-y-1">
-          <span className="sr-only">Workflow status</span>
-          <select
-            className="input h-10 text-sm"
-            value={project.workflow_status}
-            onChange={(event) =>
-              onWorkflowStatusChange?.(
-                project,
-                event.target.value as WorkflowStatus
-              )
-            }
-          >
-            {availableWorkflowStatuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label>
+            <span className="sr-only">Workflow status</span>
+            <select
+              className="input h-10 rounded-lg border-line bg-white/70 text-sm"
+              value={project.workflow_status}
+              onChange={(event) =>
+                onWorkflowStatusChange?.(
+                  project,
+                  event.target.value as WorkflowStatus
+                )
+              }
+            >
+              {availableWorkflowStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <label className="space-y-1">
-          <span className="sr-only">Plačilni status</span>
-          <select
-            className="input h-10 text-sm"
-            value={project.payment_status}
-            onChange={(event) =>
-              onPaymentStatusChange?.(
-                project,
-                event.target.value as PaymentStatus
-              )
-            }
-          >
-            {paymentStatuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-        </label>
+          <label>
+            <span className="sr-only">Plačilni status</span>
+            <select
+              className="input h-10 rounded-lg border-line bg-white/70 text-sm"
+              value={project.payment_status}
+              onChange={(event) =>
+                onPaymentStatusChange?.(
+                  project,
+                  event.target.value as PaymentStatus
+                )
+              }
+            >
+              {paymentStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
         <div className="flex items-center justify-between gap-2 xl:justify-end">
           <div className="flex flex-wrap gap-1.5 xl:hidden">
             <StatusBadge>{project.workflow_status}</StatusBadge>
             <StatusBadge type="payment">{project.payment_status}</StatusBadge>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <button
               type="button"
-              className="button-ghost h-9 w-9 p-0"
+              className="button-ghost h-8 w-8 p-0 text-muted"
               onClick={() => onEdit?.(project)}
               aria-label="Uredi projekt"
               title="Uredi projekt"
@@ -130,7 +137,7 @@ export function ProjectCard({
             </button>
             <button
               type="button"
-              className="button-ghost h-9 w-9 p-0 text-rose hover:text-rose"
+              className="button-ghost h-8 w-8 p-0 text-rose hover:text-rose"
               onClick={() => onDelete?.(project)}
               aria-label="Izbriši projekt"
               title="Izbriši projekt"
@@ -139,7 +146,7 @@ export function ProjectCard({
             </button>
             <Link
               href={`/projects/${project.id}`}
-              className="button-secondary h-9 w-9 p-0"
+              className="button-secondary h-8 w-8 p-0"
               aria-label="Odpri projekt"
               title="Odpri projekt"
             >
