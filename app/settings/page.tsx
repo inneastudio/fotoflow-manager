@@ -25,6 +25,7 @@ export default function SettingsPage() {
     workflowStatuses,
     addWorkflowStatus,
     addShootType,
+    renameShootType,
     removeWorkflowStatus,
     removeShootType,
     resetWorkflowStatuses,
@@ -266,8 +267,19 @@ export default function SettingsPage() {
               className="rounded-lg border border-line bg-white/70 p-3"
             >
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-ink">{option.name}</p>
+                <div className="min-w-0 flex-1">
+                  <label className="block space-y-1.5">
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+                      Ime tipa
+                    </span>
+                    <input
+                      className="input"
+                      value={option.name}
+                      onChange={(event) =>
+                        renameShootType(option.name, event.target.value)
+                      }
+                    />
+                  </label>
                   <p className="mt-1 text-sm text-muted">
                     Privzeti rok in cena
                   </p>

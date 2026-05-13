@@ -169,6 +169,30 @@ export function useStudioSettings() {
     [updateSettings]
   );
 
+  const renameShootType = useCallback(
+    (currentName: string, nextName: string) => {
+      const cleanName = nextName.trim();
+      if (!cleanName) return;
+
+      updateSettings((current) => {
+        const exists = current.shootTypeOptions.some(
+          (option) =>
+            option.name !== currentName &&
+            option.name.toLowerCase() === cleanName.toLowerCase()
+        );
+        if (exists) return current;
+
+        return {
+          ...current,
+          shootTypeOptions: current.shootTypeOptions.map((option) =>
+            option.name === currentName ? { ...option, name: cleanName } : option
+          )
+        };
+      });
+    },
+    [updateSettings]
+  );
+
   const resetShootTypes = useCallback(() => {
     updateSettings((current) => ({
       ...current,
@@ -224,6 +248,7 @@ export function useStudioSettings() {
       workflowStatuses: settings.workflowStatuses,
       addWorkflowStatus,
       addShootType,
+      renameShootType,
       removeWorkflowStatus,
       removeShootType,
       resetWorkflowStatuses,
@@ -233,6 +258,7 @@ export function useStudioSettings() {
     [
       addWorkflowStatus,
       addShootType,
+      renameShootType,
       removeWorkflowStatus,
       removeShootType,
       resetWorkflowStatuses,
