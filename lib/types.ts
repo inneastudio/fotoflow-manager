@@ -17,7 +17,7 @@ export const paymentStatuses = [
   "Plačano"
 ] as const;
 
-export const photographers = ["Žan", "Doroteja", "Teja"] as const;
+export const photographers = ["Žan", "Teja"] as const;
 export const paymentMethods = ["Gotovina", "TRR"] as const;
 
 export const shootTypes = [

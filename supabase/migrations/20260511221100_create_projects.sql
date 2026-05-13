@@ -7,7 +7,7 @@ create table if not exists public.projects (
   email text default '',
   phone text default '',
   shoot_type text not null default 'Portret',
-  photographer text not null default 'Žan' check (photographer in ('Žan', 'Doroteja', 'Teja')),
+  photographer text not null default 'Žan' check (photographer in ('Žan', 'Teja')),
   shoot_date date not null,
   location text default '',
   workflow_status text not null default 'Rezervirano'
