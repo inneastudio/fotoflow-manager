@@ -340,7 +340,7 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
           <input
             className="input"
             min="0"
-            step="10"
+            step="1"
             type="number"
             value={values.amount}
             onChange={(event) => updateValue("amount", Number(event.target.value))}
@@ -352,7 +352,7 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
           <input
             className="input"
             min="0"
-            step="10"
+            step="1"
             type="number"
             value={values.deposit}
             onChange={(event) => updateValue("deposit", Number(event.target.value))}
