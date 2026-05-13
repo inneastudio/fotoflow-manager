@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CircleDollarSign, ReceiptText, TrendingUp, WalletCards } from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
+import { PaymentMethodLabel } from "@/components/payment-method-label";
 import { RevenueChart } from "@/components/revenue-chart";
 import { StatusBadge } from "@/components/status-badge";
 import { useProjects } from "@/lib/use-projects";
@@ -134,9 +135,10 @@ export default function FinancePage() {
                       <p className="mt-1 text-sm text-muted">
                         Rok oddaje: {formatDate(project.delivery_due)}
                       </p>
-                      <p className="mt-1 text-xs text-muted">
-                        {project.payment_method} · {project.photographer}
-                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
+                        <PaymentMethodLabel method={project.payment_method} />
+                        <span>· {project.photographer}</span>
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-ink">
@@ -185,7 +187,10 @@ export default function FinancePage() {
               </div>
               <div>
                 <p className="text-xs text-muted">Način</p>
-                <p className="mt-1 font-semibold">{project.payment_method}</p>
+                <PaymentMethodLabel
+                  method={project.payment_method}
+                  className="mt-1 font-semibold"
+                />
               </div>
               <div>
                 <p className="text-xs text-muted">Znesek</p>

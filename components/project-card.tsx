@@ -4,12 +4,12 @@ import Link from "next/link";
 import {
   CalendarDays,
   Clock3,
-  CreditCard,
   Edit3,
   ExternalLink,
   MapPin,
   Trash2
 } from "lucide-react";
+import { PaymentMethodLabel } from "@/components/payment-method-label";
 import { StatusBadge } from "@/components/status-badge";
 import type { PaymentStatus, Project, WorkflowStatus } from "@/lib/types";
 import { paymentStatuses } from "@/lib/types";
@@ -70,12 +70,15 @@ export function ProjectCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-sm xl:justify-end">
-          <CreditCard className="h-4 w-4 shrink-0 text-clay" />
-          <div>
+        <div className="text-sm xl:text-right">
+          <div className="inline-flex items-center gap-2 rounded-lg bg-paper/70 px-2.5 py-1.5">
             <p className="text-xs text-muted">Znesek</p>
             <p className="font-semibold text-ink">{formatCurrency(project.amount)}</p>
           </div>
+          <PaymentMethodLabel
+            method={project.payment_method}
+            className="mt-1.5 text-xs text-muted xl:justify-end"
+          />
         </div>
 
         <div className="grid gap-2 sm:grid-cols-2">
