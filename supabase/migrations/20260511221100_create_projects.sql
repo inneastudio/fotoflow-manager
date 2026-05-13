@@ -3,6 +3,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.projects (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  project_name text default '',
   client_name text not null,
   email text default '',
   phone text default '',

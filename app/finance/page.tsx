@@ -125,7 +125,12 @@ export default function FinancePage() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-ink">{project.client_name}</p>
+                      <p className="font-semibold text-ink">
+                        {project.project_name || project.client_name}
+                      </p>
+                      {project.project_name ? (
+                        <p className="mt-1 text-xs text-muted">{project.client_name}</p>
+                      ) : null}
                       <p className="mt-1 text-sm text-muted">
                         Rok oddaje: {formatDate(project.delivery_due)}
                       </p>
@@ -168,7 +173,12 @@ export default function FinancePage() {
               className="grid gap-3 p-4 transition hover:bg-white/50 md:grid-cols-[1fr_0.45fr_0.45fr_0.45fr_0.45fr]"
             >
               <div>
-                <p className="font-semibold text-ink">{project.client_name}</p>
+                <p className="font-semibold text-ink">
+                  {project.project_name || project.client_name}
+                </p>
+                {project.project_name ? (
+                  <p className="mt-1 text-xs text-muted">{project.client_name}</p>
+                ) : null}
                 <p className="mt-1 text-sm text-muted">
                   {project.shoot_type} · {project.photographer}
                 </p>

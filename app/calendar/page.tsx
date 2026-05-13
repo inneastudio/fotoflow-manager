@@ -166,7 +166,7 @@ export default function CalendarPage() {
                             {event.type === "shoot" && event.project.shoot_time
                               ? `${event.project.shoot_time} · `
                               : ""}
-                            {event.project.client_name}
+                            {event.project.project_name || event.project.client_name}
                           </Link>
                         ))}
                         {events.length > 3 ? (
@@ -207,7 +207,9 @@ export default function CalendarPage() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-ink">{project.client_name}</p>
+                        <p className="font-semibold text-ink">
+                          {project.project_name || project.client_name}
+                        </p>
                         <p className="mt-1 text-sm text-muted">
                           {formatShortDate(project.shoot_date)}
                           {project.shoot_time ? ` ob ${project.shoot_time}` : ""} ·{" "}

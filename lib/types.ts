@@ -42,6 +42,7 @@ export type ShootType = (typeof shootTypes)[number] | string;
 export type Project = {
   id: string;
   user_id?: string | null;
+  project_name: string;
   client_name: string;
   email: string;
   phone: string;

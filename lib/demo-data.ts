@@ -4,6 +4,7 @@ export const demoProjects: Project[] = [
   {
     id: "9f91b4bf-03a5-48f7-8f66-7f7d4f4a1001",
     user_id: null,
+    project_name: "Branding Maja 2026",
     client_name: "Maja Kovač",
     email: "maja.kovac@example.com",
     phone: "+386 40 212 888",
@@ -31,6 +32,7 @@ export const demoProjects: Project[] = [
   {
     id: "9f91b4bf-03a5-48f7-8f66-7f7d4f4a1002",
     user_id: null,
+    project_name: "Poroka Ana in Luka",
     client_name: "Ana in Luka",
     email: "ana.luka@example.com",
     phone: "+386 31 445 990",
@@ -58,6 +60,7 @@ export const demoProjects: Project[] = [
   {
     id: "9f91b4bf-03a5-48f7-8f66-7f7d4f4a1003",
     user_id: null,
+    project_name: "Portreti Nika 001",
     client_name: "Nika Novak",
     email: "nika.novak@example.com",
     phone: "+386 51 904 112",
@@ -85,6 +88,7 @@ export const demoProjects: Project[] = [
   {
     id: "9f91b4bf-03a5-48f7-8f66-7f7d4f4a1004",
     user_id: null,
+    project_name: "Studio Aria Lifestyle",
     client_name: "Studio Aria",
     email: "hello@studioaria.example",
     phone: "+386 1 300 118",
@@ -112,6 +116,7 @@ export const demoProjects: Project[] = [
   {
     id: "9f91b4bf-03a5-48f7-8f66-7f7d4f4a1005",
     user_id: null,
+    project_name: "Nosečniško Eva",
     client_name: "Eva Zupan",
     email: "eva.zupan@example.com",
     phone: "+386 41 770 402",
@@ -139,6 +144,7 @@ export const demoProjects: Project[] = [
   {
     id: "9f91b4bf-03a5-48f7-8f66-7f7d4f4a1006",
     user_id: null,
+    project_name: "Hotel Miren Branding",
     client_name: "Hotel Miren",
     email: "marketing@hotelmiren.example",
     phone: "+386 5 882 301",

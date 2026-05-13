@@ -32,7 +32,13 @@ export default function ProjectsPage() {
 
     return sortByDateDesc(projects, "shoot_date").filter((project) => {
       const matchesQuery = normalizedQuery
-        ? [project.client_name, project.email, project.phone, project.location]
+        ? [
+            project.project_name,
+            project.client_name,
+            project.email,
+            project.phone,
+            project.location
+          ]
             .join(" ")
             .toLowerCase()
             .includes(normalizedQuery)

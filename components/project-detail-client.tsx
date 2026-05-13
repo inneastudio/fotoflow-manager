@@ -60,6 +60,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
     return [
       { label: "Email", value: project.email || "Ni dodano", icon: Mail },
       { label: "Telefon", value: project.phone || "Ni dodano", icon: Phone },
+      { label: "Ime stranke", value: project.client_name, icon: FolderOpen },
       { label: "Lokacija", value: project.location || "Ni dodano", icon: MapPin },
       { label: "Fotograf", value: project.photographer ?? "Žan", icon: FolderOpen },
       {
@@ -125,8 +126,11 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
           </Link>
           <p className="eyebrow">{project.shoot_type}</p>
           <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
-            {project.client_name}
+            {project.project_name || project.client_name}
           </h1>
+          {project.project_name ? (
+            <p className="mt-2 text-lg font-medium text-muted">{project.client_name}</p>
+          ) : null}
           <div className="mt-4 flex flex-wrap gap-2">
             <StatusBadge>{project.workflow_status}</StatusBadge>
             <StatusBadge type="payment">{project.payment_status}</StatusBadge>

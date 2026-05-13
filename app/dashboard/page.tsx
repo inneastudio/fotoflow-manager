@@ -132,7 +132,12 @@ export default function DashboardPage() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-ink">{project.client_name}</p>
+                      <p className="font-semibold text-ink">
+                        {project.project_name || project.client_name}
+                      </p>
+                      {project.project_name ? (
+                        <p className="mt-1 text-xs text-muted">{project.client_name}</p>
+                      ) : null}
                       <p className="mt-1 text-sm text-muted">{project.location}</p>
                     </div>
                     <StatusBadge>{project.workflow_status}</StatusBadge>
@@ -166,7 +171,9 @@ export default function DashboardPage() {
             {recentProjects.map((project) => (
               <ProjectListItem key={project.id} projectId={project.id}>
                 <div>
-                  <p className="font-semibold text-ink">{project.client_name}</p>
+                  <p className="font-semibold text-ink">
+                    {project.project_name || project.client_name}
+                  </p>
                   <p className="mt-1 text-sm text-muted">
                     {project.shoot_type} · {formatShortDate(project.shoot_date)}
                   </p>
@@ -193,7 +200,9 @@ export default function DashboardPage() {
               unpaidProjects.map((project) => (
                 <ProjectListItem key={project.id} projectId={project.id}>
                   <div>
-                    <p className="font-semibold text-ink">{project.client_name}</p>
+                    <p className="font-semibold text-ink">
+                      {project.project_name || project.client_name}
+                    </p>
                     <p className="mt-1 text-sm text-muted">
                       Rok: {formatDate(project.delivery_due)}
                     </p>

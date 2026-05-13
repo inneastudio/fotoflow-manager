@@ -27,6 +27,7 @@ const today = new Date().toISOString().slice(0, 10);
 
 function defaultValues(): ProjectFormValues {
   return {
+    project_name: "",
     client_name: "",
     email: "",
     phone: "",
@@ -66,6 +67,7 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
     }
 
     setValues({
+      project_name: project.project_name ?? "",
       client_name: project.client_name,
       email: project.email,
       phone: project.phone,
@@ -167,6 +169,16 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid gap-4 md:grid-cols-2">
+        <label className="space-y-1.5 md:col-span-2">
+          <span className="text-sm font-medium text-ink">Ime projekta</span>
+          <input
+            className="input"
+            value={values.project_name}
+            onChange={(event) => updateValue("project_name", event.target.value)}
+            placeholder="npr. Poroka Ana Luka 2026 ali Branding 001"
+          />
+        </label>
+
         <label className="space-y-1.5">
           <span className="text-sm font-medium text-ink">Ime stranke</span>
           <input

@@ -112,9 +112,11 @@ export default function ClientsPage() {
                     <h2 className="truncate font-display text-2xl font-semibold text-ink">
                       {client.name}
                     </h2>
-                    <p className="mt-1 text-sm text-muted">
-                      Zadnje fotografiranje: {formatDate(client.latest.shoot_date)}
-                    </p>
+                <p className="mt-1 text-sm text-muted">
+                  Zadnji projekt:{" "}
+                  {client.latest.project_name || client.latest.shoot_type} ·{" "}
+                  {formatDate(client.latest.shoot_date)}
+                </p>
                   </div>
                 </div>
                 <StatusBadge>{client.latest.workflow_status}</StatusBadge>

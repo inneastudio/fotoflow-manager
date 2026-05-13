@@ -50,8 +50,11 @@ export function ProjectCard({
             href={`/projects/${project.id}`}
             className="font-display text-2xl font-semibold text-ink hover:text-clay"
           >
-            {project.client_name}
+            {project.project_name || project.client_name}
           </Link>
+          {project.project_name ? (
+            <p className="mt-1 text-sm text-muted">{project.client_name}</p>
+          ) : null}
           <div className="mt-2 flex flex-wrap gap-2">
             <StatusBadge>{project.workflow_status}</StatusBadge>
             <StatusBadge type="payment">{project.payment_status}</StatusBadge>

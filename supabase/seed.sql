@@ -10,6 +10,7 @@ with seed_user as (
 insert into public.projects (
   id,
   user_id,
+  project_name,
   client_name,
   email,
   phone,
@@ -34,6 +35,7 @@ insert into public.projects (
 select
   project.id,
   seed_user.id,
+  project.project_name,
   project.client_name,
   project.email,
   project.phone,
@@ -59,6 +61,7 @@ cross join (
   values
     (
       '9f91b4bf-03a5-48f7-8f66-7f7d4f4a1001'::uuid,
+      'Branding Maja 2026',
       'Maja Kovač',
       'maja.kovac@example.com',
       '+386 40 212 888',
@@ -82,6 +85,7 @@ cross join (
     ),
     (
       '9f91b4bf-03a5-48f7-8f66-7f7d4f4a1002'::uuid,
+      'Poroka Ana in Luka',
       'Ana in Luka',
       'ana.luka@example.com',
       '+386 31 445 990',
@@ -105,6 +109,7 @@ cross join (
     ),
     (
       '9f91b4bf-03a5-48f7-8f66-7f7d4f4a1003'::uuid,
+      'Portreti Nika 001',
       'Nika Novak',
       'nika.novak@example.com',
       '+386 51 904 112',
@@ -128,6 +133,7 @@ cross join (
     )
 ) as project (
   id,
+  project_name,
   client_name,
   email,
   phone,

@@ -21,7 +21,7 @@ export function ProjectModal({ open, project, onClose, onSubmit }: ProjectModalP
           <div>
             <p className="eyebrow">{project ? "Urejanje" : "Nov projekt"}</p>
             <h2 className="mt-1 font-display text-2xl font-semibold text-ink">
-              {project ? project.client_name : "Dodaj fotografiranje"}
+              {project ? project.project_name || project.client_name : "Dodaj fotografiranje"}
             </h2>
           </div>
           <button
