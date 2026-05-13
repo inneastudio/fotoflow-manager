@@ -13,7 +13,7 @@ import { StatusBadge } from "@/components/status-badge";
 import type { PaymentStatus, Project, WorkflowStatus } from "@/lib/types";
 import { paymentStatuses } from "@/lib/types";
 import { useStudioSettings } from "@/lib/use-studio-settings";
-import { formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 type ProjectCardProps = {
   project: Project;
@@ -38,7 +38,7 @@ export function ProjectCard({
 
   return (
     <article className="surface rounded-lg p-3">
-      <div className="grid gap-3 xl:grid-cols-[minmax(220px,1.2fr)_minmax(260px,1.2fr)_180px_180px_110px] xl:items-center">
+      <div className="grid gap-3 xl:grid-cols-[minmax(220px,1.2fr)_minmax(260px,1.2fr)_110px_180px_180px_110px] xl:items-center">
         <div className="min-w-0">
           <Link
             href={`/projects/${project.id}`}
@@ -64,6 +64,13 @@ export function ProjectCard({
             <MapPin className="h-4 w-4 shrink-0 text-clay" />
             <span className="truncate">{project.location || "Lokacija ni določena"}</span>
           </div>
+        </div>
+
+        <div className="rounded-lg border border-line bg-white/60 px-3 py-2 text-sm xl:text-right">
+          <p className="text-xs text-muted">Znesek</p>
+          <p className="mt-0.5 font-semibold text-ink">
+            {formatCurrency(project.amount)}
+          </p>
         </div>
 
         <label className="space-y-1">
