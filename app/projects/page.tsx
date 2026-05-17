@@ -91,6 +91,9 @@ export default function ProjectsPage() {
 
     await updateProject(project.id, {
       ...values,
+      contract_file_url: values.contract_file_url ?? "",
+      timeline_file_url: values.timeline_file_url ?? "",
+      wedding_status_dates: values.wedding_status_dates ?? {},
       workflow_status: workflowStatus,
       payment_status: paymentStatus
     });
@@ -111,6 +114,9 @@ export default function ProjectsPage() {
 
     await updateProject(project.id, {
       ...values,
+      contract_file_url: values.contract_file_url ?? "",
+      timeline_file_url: values.timeline_file_url ?? "",
+      wedding_status_dates: values.wedding_status_dates ?? {},
       payment_status: paymentStatus
     });
   }

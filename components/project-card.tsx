@@ -12,7 +12,7 @@ import {
 import { PaymentMethodLabel } from "@/components/payment-method-label";
 import { StatusBadge } from "@/components/status-badge";
 import type { PaymentStatus, Project, WorkflowStatus } from "@/lib/types";
-import { paymentStatuses } from "@/lib/types";
+import { paymentStatuses, weddingWorkflowStatuses } from "@/lib/types";
 import { useStudioSettings } from "@/lib/use-studio-settings";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
@@ -32,8 +32,12 @@ export function ProjectCard({
   onPaymentStatusChange
 }: ProjectCardProps) {
   const { workflowStatuses } = useStudioSettings();
+  const isWedding = String(project.shoot_type).toLowerCase().includes("poroka");
   const availableWorkflowStatuses = Array.from(
-    new Set([...workflowStatuses, project.workflow_status].filter(Boolean))
+    new Set([
+      ...(isWedding ? weddingWorkflowStatuses : workflowStatuses),
+      project.workflow_status
+    ].filter(Boolean))
   );
   const projectTitle = project.project_name || project.client_name;
 

@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import {
   CalendarHeart,
   CheckCircle2,
+  FileText,
   Heart,
   Images,
   Plus,
@@ -39,6 +40,7 @@ export default function WeddingsPage() {
   const weddingInitialValues = useMemo(
     () => ({
       shoot_type: "Poroka",
+      workflow_status: "Ponudba poslana",
       delivery_workdays: 25,
       delivery_due: addBusinessDays(today, 25),
       project_name: "Poroka "
@@ -50,6 +52,9 @@ export default function WeddingsPage() {
     return weddingProjects
       .filter((project) => new Date(project.shoot_date) >= new Date(new Date().toDateString()))
       .sort((a, b) => new Date(a.shoot_date).getTime() - new Date(b.shoot_date).getTime());
+  }, [weddingProjects]);
+  const orderedWeddings = useMemo(() => {
+    return sortWeddingsByNearest(weddingProjects);
   }, [weddingProjects]);
 
   const editingWeddings = weddingProjects.filter((project) =>
@@ -190,7 +195,7 @@ export default function WeddingsPage() {
         </div>
         <div className="space-y-3">
           {weddingProjects.length ? (
-            sortByDateDesc(weddingProjects, "shoot_date").map((project) => (
+            orderedWeddings.map((project) => (
               <WeddingRow key={project.id} project={project} compact />
             ))
           ) : (
@@ -214,6 +219,31 @@ export default function WeddingsPage() {
   );
 }
 
+function sortWeddingsByNearest(projects: Project[]) {
+  const startOfToday = new Date(new Date().toDateString()).getTime();
+
+  return [...projects].sort((a, b) => {
+    const aTime = new Date(a.shoot_date).getTime();
+    const bTime = new Date(b.shoot_date).getTime();
+    const aUpcoming = aTime >= startOfToday;
+    const bUpcoming = bTime >= startOfToday;
+
+    if (aUpcoming && bUpcoming) return aTime - bTime;
+    if (!aUpcoming && !bUpcoming) return bTime - aTime;
+    return aUpcoming ? -1 : 1;
+  });
+}
+
+function getLatestWeddingStep(project: Project) {
+  const entries = Object.entries(project.wedding_status_dates ?? {}).filter(
+    (entry): entry is [string, string] => Boolean(entry[1])
+  );
+
+  if (!entries.length) return null;
+
+  return entries.sort(([, a], [, b]) => new Date(b).getTime() - new Date(a).getTime())[0];
+}
+
 function WeddingRow({
   project,
   compact = false
@@ -221,6 +251,8 @@ function WeddingRow({
   project: Project;
   compact?: boolean;
 }) {
+  const latestStep = getLatestWeddingStep(project);
+
   return (
     <Link
       href={`/projects/${project.id}`}
@@ -236,10 +268,27 @@ function WeddingRow({
             {project.shoot_time ? ` ob ${project.shoot_time}` : ""}
             {project.location ? ` · ${project.location}` : ""}
           </p>
+          {latestStep ? (
+            <p className="mt-1 text-xs font-medium text-muted">
+              {latestStep[0]}: {formatShortDate(latestStep[1])}
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <StatusBadge>{project.workflow_status}</StatusBadge>
           {!compact ? <StatusBadge type="payment">{project.payment_status}</StatusBadge> : null}
+          {project.contract_file_url ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-line bg-paper px-2 py-1 text-xs font-semibold text-muted">
+              <FileText className="h-3.5 w-3.5" />
+              Pogodba
+            </span>
+          ) : null}
+          {project.timeline_file_url ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-line bg-paper px-2 py-1 text-xs font-semibold text-muted">
+              <FileText className="h-3.5 w-3.5" />
+              Časovnica
+            </span>
+          ) : null}
           <span className="text-sm font-semibold text-ink">
             {formatCurrency(project.amount)}
           </span>

@@ -11,6 +11,37 @@ export const workflowStatuses = [
   "Zaključeno"
 ] as const;
 
+export const weddingWorkflowStatuses = [
+  "Ponudba poslana",
+  "Ponudba potrjena",
+  "Avansna pogodba poslana",
+  "Avans plačan",
+  "Pogodba poslana",
+  "Pogodba podpisana",
+  "Sestanek",
+  "Časovnica",
+  "Fotografirano",
+  "Shranjeno",
+  "Izbor poslan",
+  "Izbor prejet",
+  "Narejen izbor",
+  "Urejanje",
+  "Poslano",
+  "Plačano",
+  "Zaključeno"
+] as const;
+
+export const weddingDateStatuses = [
+  "Ponudba poslana",
+  "Ponudba potrjena",
+  "Avansna pogodba poslana",
+  "Avans plačan",
+  "Pogodba poslana",
+  "Pogodba podpisana",
+  "Sestanek",
+  "Časovnica"
+] as const;
+
 export const paymentStatuses = [
   "Neplačano",
   "Delno plačano",
@@ -34,6 +65,7 @@ export const shootTypes = [
 ] as const;
 
 export type WorkflowStatus = (typeof workflowStatuses)[number] | string;
+export type WeddingStatusDates = Partial<Record<(typeof weddingDateStatuses)[number] | string, string>>;
 export type PaymentStatus = (typeof paymentStatuses)[number];
 export type Photographer = (typeof photographers)[number];
 export type PaymentMethod = (typeof paymentMethods)[number];
@@ -61,6 +93,9 @@ export type Project = {
   delivery_due: string;
   gallery_url: string;
   drive_url: string;
+  contract_file_url?: string;
+  timeline_file_url?: string;
+  wedding_status_dates?: WeddingStatusDates;
   selected_photos: number;
   notes: string;
   retouch_notes: string;
@@ -72,6 +107,9 @@ export type ProjectFormValues = Omit<
   Project,
   "id" | "user_id" | "created_at" | "updated_at" | "balance"
 > & {
+  contract_file_url: string;
+  timeline_file_url: string;
+  wedding_status_dates: WeddingStatusDates;
   balance?: number;
 };
 

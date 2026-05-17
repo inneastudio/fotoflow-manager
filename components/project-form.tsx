@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Save } from "lucide-react";
+import { FileText, Link as LinkIcon, Save, Upload } from "lucide-react";
 import type { Project, ProjectFormValues } from "@/lib/types";
 import {
   paymentMethods,
   paymentStatuses,
   photographers,
-  workflowStatuses
+  weddingDateStatuses,
+  weddingWorkflowStatuses
 } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
 import { useStudioSettings } from "@/lib/use-studio-settings";
 import {
   addBusinessDays,
@@ -46,6 +48,9 @@ function defaultValues(initialValues?: Partial<ProjectFormValues>): ProjectFormV
     delivery_due: addBusinessDays(today, 8),
     gallery_url: "",
     drive_url: "",
+    contract_file_url: "",
+    timeline_file_url: "",
+    wedding_status_dates: {},
     selected_photos: 0,
     notes: "",
     retouch_notes: ""
@@ -95,11 +100,22 @@ export function ProjectForm({
       delivery_due: project.delivery_due,
       gallery_url: project.gallery_url,
       drive_url: project.drive_url,
+      contract_file_url: project.contract_file_url ?? "",
+      timeline_file_url: project.timeline_file_url ?? "",
+      wedding_status_dates: project.wedding_status_dates ?? {},
       selected_photos: project.selected_photos,
       notes: project.notes,
       retouch_notes: project.retouch_notes
     });
   }, [initialValues, project]);
+
+  const isWedding = String(values.shoot_type).toLowerCase().includes("poroka");
+  const statusOptions = useMemo(() => {
+    if (!isWedding) return workflowStatuses;
+    return Array.from(
+      new Set([...weddingWorkflowStatuses, String(values.workflow_status)].filter(Boolean))
+    );
+  }, [isWedding, values.workflow_status, workflowStatuses]);
 
   const balance = useMemo(() => {
     if (values.payment_status === "Plačano") return 0;
@@ -111,6 +127,33 @@ export function ProjectForm({
     value: ProjectFormValues[K]
   ) {
     setValues((current) => ({ ...current, [key]: value }));
+  }
+
+  function updateWeddingDate(status: string, date: string) {
+    setValues((current) => ({
+      ...current,
+      wedding_status_dates: {
+        ...current.wedding_status_dates,
+        [status]: date
+      }
+    }));
+  }
+
+  function updateWorkflowStatus(status: Project["workflow_status"]) {
+    const shouldStampWeddingDate =
+      isWedding &&
+      weddingDateStatuses.includes(status as (typeof weddingDateStatuses)[number]);
+
+    setValues((current) => ({
+      ...current,
+      workflow_status: status,
+      wedding_status_dates: shouldStampWeddingDate
+        ? {
+            ...current.wedding_status_dates,
+            [status]: current.wedding_status_dates?.[status] || today
+          }
+        : current.wedding_status_dates
+    }));
   }
 
   function updateShootType(type: string) {
@@ -154,6 +197,44 @@ export function ProjectForm({
       delivery_due: date,
       delivery_workdays: getBusinessDaysBetween(current.shoot_date, date)
     }));
+  }
+
+  async function uploadPdf(
+    file: File | null,
+    field: "contract_file_url" | "timeline_file_url"
+  ) {
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      setError("Naloži lahko samo PDF dokument.");
+      return;
+    }
+
+    setError(null);
+
+    if (!supabase) {
+      const reader = new FileReader();
+      reader.onload = () => updateValue(field, String(reader.result || ""));
+      reader.onerror = () => setError("PDF dokumenta ni bilo mogoče prebrati.");
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+    const path = `${crypto.randomUUID()}-${safeFileName}`;
+    const { error: uploadError } = await supabase.storage
+      .from("project-documents")
+      .upload(path, file, {
+        contentType: "application/pdf",
+        upsert: false
+      });
+
+    if (uploadError) {
+      setError(uploadError.message);
+      return;
+    }
+
+    const { data } = supabase.storage.from("project-documents").getPublicUrl(path);
+    updateValue(field, data.publicUrl);
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -312,10 +393,10 @@ export function ProjectForm({
             className="input"
             value={values.workflow_status}
             onChange={(event) =>
-              updateValue("workflow_status", event.target.value as Project["workflow_status"])
+              updateWorkflowStatus(event.target.value as Project["workflow_status"])
             }
           >
-            {workflowStatuses.map((status) => (
+            {statusOptions.map((status) => (
               <option key={status} value={status}>
                 {status}
               </option>
@@ -402,6 +483,46 @@ export function ProjectForm({
         </div>
       </div>
 
+      {isWedding ? (
+        <section className="rounded-lg border border-line bg-white/60 p-4">
+          <div className="mb-4">
+            <p className="eyebrow">Poročni workflow</p>
+            <h3 className="mt-1 font-display text-xl font-semibold text-ink">
+              Datumi do fotografiranja
+            </h3>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            {weddingDateStatuses.map((status) => (
+              <label key={status} className="space-y-1.5">
+                <span className="text-sm font-medium text-ink">{status}</span>
+                <input
+                  className="input"
+                  type="date"
+                  value={values.wedding_status_dates?.[status] ?? ""}
+                  onChange={(event) => updateWeddingDate(status, event.target.value)}
+                />
+              </label>
+            ))}
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <PdfUploadField
+              label="PDF pogodba"
+              value={values.contract_file_url}
+              onUpload={(file) => uploadPdf(file, "contract_file_url")}
+              onClear={() => updateValue("contract_file_url", "")}
+            />
+            <PdfUploadField
+              label="PDF časovnica"
+              value={values.timeline_file_url}
+              onUpload={(file) => uploadPdf(file, "timeline_file_url")}
+              onClear={() => updateValue("timeline_file_url", "")}
+            />
+          </div>
+        </section>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-1.5">
           <span className="text-sm font-medium text-ink">Link do galerije</span>
@@ -462,5 +583,58 @@ export function ProjectForm({
         </button>
       </div>
     </form>
+  );
+}
+
+function PdfUploadField({
+  label,
+  value,
+  onUpload,
+  onClear
+}: {
+  label: string;
+  value: string;
+  onUpload: (file: File | null) => void;
+  onClear: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-line bg-paper p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-clay" />
+          <span className="text-sm font-semibold text-ink">{label}</span>
+        </div>
+        {value ? (
+          <a
+            href={value}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-clay"
+          >
+            <LinkIcon className="h-3.5 w-3.5" />
+            Odpri
+          </a>
+        ) : null}
+      </div>
+      <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-line bg-white px-3 py-4 text-sm font-medium text-muted transition hover:border-clay/40 hover:text-ink">
+        <Upload className="h-4 w-4" />
+        Naloži PDF
+        <input
+          className="sr-only"
+          type="file"
+          accept="application/pdf"
+          onChange={(event) => onUpload(event.target.files?.[0] ?? null)}
+        />
+      </label>
+      {value ? (
+        <button
+          type="button"
+          className="mt-2 text-xs font-semibold text-muted hover:text-rose"
+          onClick={onClear}
+        >
+          Odstrani dokument
+        </button>
+      ) : null}
+    </div>
   );
 }

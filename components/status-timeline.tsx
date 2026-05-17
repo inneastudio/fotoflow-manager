@@ -1,14 +1,22 @@
 "use client";
 
 import { Check } from "lucide-react";
-import type { WorkflowStatus } from "@/lib/types";
+import type { WeddingStatusDates, WorkflowStatus } from "@/lib/types";
 import { useStudioSettings } from "@/lib/use-studio-settings";
 import { cn } from "@/lib/utils";
 
-export function StatusTimeline({ status }: { status: WorkflowStatus }) {
+export function StatusTimeline({
+  status,
+  statuses,
+  statusDates
+}: {
+  status: WorkflowStatus;
+  statuses?: readonly string[];
+  statusDates?: WeddingStatusDates;
+}) {
   const { workflowStatuses } = useStudioSettings();
   const availableWorkflowStatuses = Array.from(
-    new Set([...workflowStatuses, status].filter(Boolean))
+    new Set([...(statuses?.length ? statuses : workflowStatuses), status].filter(Boolean))
   );
   const currentIndex = availableWorkflowStatuses.indexOf(status);
 
@@ -56,7 +64,17 @@ export function StatusTimeline({ status }: { status: WorkflowStatus }) {
                   {item}
                 </p>
                 <p className="mt-1 text-xs text-muted">
-                  {active ? "Trenutni korak" : complete ? "Zaključeno" : "Čaka"}
+                  {statusDates?.[item]
+                    ? new Intl.DateTimeFormat("sl-SI", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric"
+                      }).format(new Date(statusDates[item]))
+                    : active
+                      ? "Trenutni korak"
+                      : complete
+                        ? "Zaključeno"
+                        : "Čaka"}
                 </p>
               </div>
             </div>

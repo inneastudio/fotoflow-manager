@@ -10,6 +10,7 @@ import {
   Clock3,
   Edit3,
   ExternalLink,
+  FileText,
   FolderOpen,
   Mail,
   MapPin,
@@ -22,6 +23,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { StatusTimeline } from "@/components/status-timeline";
 import { useProjects } from "@/lib/use-projects";
 import { useStudioSettings } from "@/lib/use-studio-settings";
+import { weddingWorkflowStatuses } from "@/lib/types";
 import {
   formatCurrency,
   formatDate,
@@ -42,8 +44,14 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
   const [moving, setMoving] = useState(false);
   const project = projects.find((item) => item.id === projectId);
   const { workflowStatuses } = useStudioSettings();
+  const isWedding = String(project?.shoot_type ?? "").toLowerCase().includes("poroka");
   const availableWorkflowStatuses = project
-    ? Array.from(new Set([...workflowStatuses, project.workflow_status].filter(Boolean)))
+    ? Array.from(
+        new Set([
+          ...(isWedding ? weddingWorkflowStatuses : workflowStatuses),
+          project.workflow_status
+        ].filter(Boolean))
+      )
     : workflowStatuses;
 
   const nextStatus = project
@@ -242,6 +250,12 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
           <div className="grid gap-4 md:grid-cols-2">
             <ExternalLinkCard label="Galerija" url={project.gallery_url} />
             <ExternalLinkCard label="Google Drive" url={project.drive_url} />
+            {isWedding ? (
+              <>
+                <ExternalLinkCard label="PDF pogodba" url={project.contract_file_url ?? ""} icon={FileText} />
+                <ExternalLinkCard label="PDF časovnica" url={project.timeline_file_url ?? ""} icon={FileText} />
+              </>
+            ) : null}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -250,7 +264,11 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
           </div>
         </div>
 
-        <StatusTimeline status={project.workflow_status} />
+        <StatusTimeline
+          status={project.workflow_status}
+          statuses={availableWorkflowStatuses}
+          statusDates={isWedding ? project.wedding_status_dates : undefined}
+        />
       </section>
 
       <ProjectModal
@@ -266,7 +284,15 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
   );
 }
 
-function ExternalLinkCard({ label, url }: { label: string; url: string }) {
+function ExternalLinkCard({
+  label,
+  url,
+  icon: Icon = ExternalLink
+}: {
+  label: string;
+  url: string;
+  icon?: typeof ExternalLink;
+}) {
   return (
     <div className="surface rounded-lg p-4">
       <p className="eyebrow">{label}</p>
@@ -277,7 +303,7 @@ function ExternalLinkCard({ label, url }: { label: string; url: string }) {
           rel="noreferrer"
           className="mt-3 inline-flex max-w-full items-center gap-2 text-sm font-semibold text-clay hover:text-ink"
         >
-          <ExternalLink className="h-4 w-4 shrink-0" />
+          <Icon className="h-4 w-4 shrink-0" />
           <span className="truncate">{url}</span>
         </a>
       ) : (

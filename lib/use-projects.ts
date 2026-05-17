@@ -5,6 +5,7 @@ import { useAuth } from "@/components/auth-provider";
 import { demoProjects } from "@/lib/demo-data";
 import { supabase } from "@/lib/supabase";
 import type { Project, ProjectFormValues } from "@/lib/types";
+import { weddingWorkflowStatuses } from "@/lib/types";
 import { useStudioSettings } from "@/lib/use-studio-settings";
 import {
   calculateBalance,
@@ -21,6 +22,9 @@ function ensureProjectShape(project: Project): Project {
     photographer: project.photographer ?? "Žan",
     payment_method: project.payment_method ?? "TRR",
     shoot_time: project.shoot_time ?? "",
+    contract_file_url: project.contract_file_url ?? "",
+    timeline_file_url: project.timeline_file_url ?? "",
+    wedding_status_dates: project.wedding_status_dates ?? {},
     delivery_workdays:
       project.delivery_workdays ??
       getBusinessDaysBetween(project.shoot_date, project.delivery_due)
@@ -78,6 +82,9 @@ function normalizeProject(values: ProjectFormValues, existing?: Project): Projec
     delivery_due: values.delivery_due,
     gallery_url: values.gallery_url.trim(),
     drive_url: values.drive_url.trim(),
+    contract_file_url: values.contract_file_url?.trim() ?? "",
+    timeline_file_url: values.timeline_file_url?.trim() ?? "",
+    wedding_status_dates: values.wedding_status_dates ?? {},
     selected_photos: selectedPhotos,
     notes: values.notes.trim(),
     retouch_notes: values.retouch_notes.trim(),
@@ -190,6 +197,9 @@ export function useProjects() {
             delivery_due: updated.delivery_due,
             gallery_url: updated.gallery_url,
             drive_url: updated.drive_url,
+            contract_file_url: updated.contract_file_url,
+            timeline_file_url: updated.timeline_file_url,
+            wedding_status_dates: updated.wedding_status_dates,
             selected_photos: updated.selected_photos,
             notes: updated.notes,
             retouch_notes: updated.retouch_notes,
@@ -247,7 +257,9 @@ export function useProjects() {
 
       const nextStatus = getNextWorkflowStatus(
         existing.workflow_status,
-        workflowStatuses
+        String(existing.shoot_type).toLowerCase().includes("poroka")
+          ? weddingWorkflowStatuses
+          : workflowStatuses
       );
       const nextPaymentStatus =
         nextStatus === "Plačano" || nextStatus === "Zaključeno"
@@ -256,6 +268,9 @@ export function useProjects() {
 
       return updateProject(projectId, {
         ...existing,
+        contract_file_url: existing.contract_file_url ?? "",
+        timeline_file_url: existing.timeline_file_url ?? "",
+        wedding_status_dates: existing.wedding_status_dates ?? {},
         workflow_status: nextStatus,
         payment_status: nextPaymentStatus
       });
