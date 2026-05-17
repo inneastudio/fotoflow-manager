@@ -20,6 +20,7 @@ import { useProjects } from "@/lib/use-projects";
 import { formatDate } from "@/lib/utils";
 
 const weekDays = ["Pon", "Tor", "Sre", "Čet", "Pet", "Sob", "Ned"];
+const maxCalendarMonth = new Date(2027, 11, 1);
 
 type WeddingEventType =
   | "wedding"
@@ -64,6 +65,43 @@ function eventTone(type: WeddingEventType) {
   if (type === "timeline") return "text-olive";
   if (type === "contract") return "text-charcoal";
   return "text-muted";
+}
+
+function eventPillClass(type: WeddingEventType) {
+  if (type === "wedding") return "border-clay/30 bg-clay/15 text-clay";
+  if (type === "meeting") return "border-rose/30 bg-rose/15 text-rose";
+  if (type === "timeline") return "border-olive/30 bg-olive/15 text-olive";
+  if (type === "contract") return "border-charcoal/20 bg-charcoal/10 text-charcoal";
+  if (type === "offer") return "border-line bg-mist text-ink";
+  return "border-line bg-paper text-muted";
+}
+
+function eventDotClass(type: WeddingEventType) {
+  if (type === "wedding") return "bg-clay";
+  if (type === "meeting") return "bg-rose";
+  if (type === "timeline") return "bg-olive";
+  if (type === "contract") return "bg-charcoal";
+  if (type === "offer") return "bg-ink";
+  return "bg-muted";
+}
+
+function eventDetails(event: WeddingCalendarEvent) {
+  return [
+    `${event.label}: ${event.project.project_name || event.project.client_name}`,
+    formatDate(event.date),
+    event.type === "wedding" && event.project.shoot_time
+      ? `Ura: ${event.project.shoot_time}`
+      : "",
+    event.project.location ? `Lokacija: ${event.project.location}` : "",
+    `Status: ${event.project.workflow_status}`,
+    event.project.wedding_package ? `Foto paket: ${event.project.wedding_package}` : "",
+    event.project.wedding_video_enabled ? "Snemanje vključeno" : "",
+    event.project.wedding_photobooth_enabled ? "Photobooth vključen" : ""
+  ].filter(Boolean);
+}
+
+function canGoNext(month: Date) {
+  return month < maxCalendarMonth;
 }
 
 function createWeddingEvents(project: Project, monthStart: string, monthEnd: string) {
@@ -188,8 +226,9 @@ export default function WeddingCalendarPage() {
                 new Date(current.getFullYear(), current.getMonth() + 1, 1)
               )
             }
+            disabled={!canGoNext(month)}
             aria-label="Naslednji mesec"
-            title="Naslednji mesec"
+            title={canGoNext(month) ? "Naslednji mesec" : "Koledar je nastavljen do decembra 2027"}
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -202,11 +241,11 @@ export default function WeddingCalendarPage() {
             {monthLabel(month)}
           </h2>
           <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
-            <span>Poroka</span>
-            <span>Sestanek</span>
-            <span>Pogodba</span>
-            <span>Časovnica</span>
-            <span>Deadline</span>
+            <LegendItem type="wedding" label="Poroka" />
+            <LegendItem type="meeting" label="Sestanek" />
+            <LegendItem type="contract" label="Pogodba" />
+            <LegendItem type="timeline" label="Časovnica" />
+            <LegendItem type="deadline" label="Deadline" />
           </div>
         </div>
 
@@ -316,7 +355,8 @@ function AgendaGroup({
           <Link
             key={`${event.type}-${event.project.id}-${event.label}`}
             href={`/projects/${event.project.id}`}
-            className="block rounded-lg border border-line bg-paper/80 p-3 transition hover:border-clay/35"
+            className={`block rounded-lg border p-3 transition hover:border-clay/35 ${eventPillClass(event.type)}`}
+            title={eventDetails(event).join("\n")}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -353,13 +393,23 @@ function AgendaGroup({
 }
 
 function CalendarEventLink({ event }: { event: WeddingCalendarEvent }) {
+  const details = eventDetails(event);
+
   return (
     <Link
       href={`/projects/${event.project.id}`}
-      className="block truncate rounded-md border border-transparent bg-paper/80 px-2 py-1 text-[11px] font-medium text-ink hover:border-clay/30"
+      className={`group relative block truncate rounded-md border px-2 py-1 text-[11px] font-semibold transition hover:z-20 hover:overflow-visible hover:shadow-soft ${eventPillClass(event.type)}`}
+      title={details.join("\n")}
     >
-      <span className={eventTone(event.type)}>{event.label}</span>{" "}
-      {event.project.project_name || event.project.client_name}
+      <span>{event.label}</span>{" "}
+      <span className="font-medium">{event.project.project_name || event.project.client_name}</span>
+      <span className="pointer-events-none absolute left-0 top-full z-30 mt-2 hidden w-64 rounded-lg border border-line bg-white p-3 text-left text-xs font-medium text-ink shadow-soft group-hover:block">
+        {details.map((detail) => (
+          <span key={detail} className="block whitespace-normal leading-5">
+            {detail}
+          </span>
+        ))}
+      </span>
     </Link>
   );
 }
@@ -367,4 +417,13 @@ function CalendarEventLink({ event }: { event: WeddingCalendarEvent }) {
 function EventIcon({ event }: { event: WeddingCalendarEvent }) {
   const Icon = eventIcon(event.type);
   return <Icon className={`h-4 w-4 shrink-0 ${eventTone(event.type)}`} />;
+}
+
+function LegendItem({ type, label }: { type: WeddingEventType; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className={`h-2.5 w-2.5 rounded-full ${eventDotClass(type)}`} />
+      {label}
+    </span>
+  );
 }
