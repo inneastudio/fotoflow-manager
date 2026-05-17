@@ -8,6 +8,7 @@ import {
   CalendarDays,
   ChevronRight,
   Columns3,
+  Archive,
   FolderKanban,
   Heart,
   LayoutDashboard,
@@ -27,6 +28,7 @@ const navItems = [
   { href: "/finance", label: "Finance", icon: WalletCards },
   { href: "/clients", label: "Stranke", icon: UsersRound },
   { href: "/settings", label: "Nastavitve", icon: Settings },
+  { href: "/archive", label: "Arhiv", icon: Archive },
   { href: "/kanban", label: "Kanban", icon: Columns3 }
 ];
 
@@ -144,7 +146,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/90 px-2 py-2 backdrop-blur-xl lg:hidden">
-        <div className="grid grid-cols-9 gap-1">
+        <div className="grid grid-cols-10 gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active =

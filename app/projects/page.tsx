@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { AlertCircle, Archive, Filter, Plus, Search, Send, type LucideIcon } from "lucide-react";
 import { ProjectCard } from "@/components/project-card";
 import { ProjectModal } from "@/components/project-modal";
@@ -14,8 +15,6 @@ import { paymentStatuses } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
 import { useStudioSettings } from "@/lib/use-studio-settings";
 import {
-  formatCurrency,
-  getOutstandingAmount,
   sortByNearestUpcoming
 } from "@/lib/utils";
 
@@ -40,8 +39,11 @@ export default function ProjectsPage() {
 
   const filteredProjects = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
+    const activeProjects = projects.filter(
+      (project) => project.workflow_status !== "Zaključeno"
+    );
 
-    return sortByNearestUpcoming(projects, "shoot_date").filter((project) => {
+    return sortByNearestUpcoming(activeProjects, "shoot_date").filter((project) => {
       const matchesQuery = normalizedQuery
         ? [
             project.project_name,
@@ -69,7 +71,10 @@ export default function ProjectsPage() {
     });
   }, [focusFilter, paymentFilter, projects, query, workflowFilter]);
 
-  const unpaidAmount = getOutstandingAmount(projects);
+  const activeProjectCount = projects.filter(
+    (project) => project.workflow_status !== "Zaključeno"
+  ).length;
+  const archivedProjectCount = projects.length - activeProjectCount;
   const waitingToShootCount = projects.filter(
     (project) => project.workflow_status === "Rezervirano"
   ).length;
@@ -187,8 +192,8 @@ export default function ProjectsPage() {
 
       <section className="grid gap-3 md:grid-cols-3">
         <div className="surface rounded-lg p-4">
-          <p className="text-sm text-muted">Vsi projekti</p>
-          <p className="mt-2 font-display text-3xl font-semibold">{projects.length}</p>
+          <p className="text-sm text-muted">Aktivni projekti</p>
+          <p className="mt-2 font-display text-3xl font-semibold">{activeProjectCount}</p>
         </div>
         <div className="surface rounded-lg p-4">
           <p className="text-sm text-muted">Odprti workflowi</p>
@@ -200,10 +205,17 @@ export default function ProjectsPage() {
           </p>
         </div>
         <div className="surface rounded-lg p-4">
-          <p className="text-sm text-muted">Neplačan znesek</p>
-          <p className="mt-2 font-display text-3xl font-semibold">
-            {formatCurrency(unpaidAmount)}
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm text-muted">Arhiv</p>
+              <p className="mt-2 font-display text-3xl font-semibold">
+                {archivedProjectCount}
+              </p>
+            </div>
+            <Link href="/archive" className="button-secondary py-1.5 text-sm">
+              Odpri
+            </Link>
+          </div>
         </div>
       </section>
 
