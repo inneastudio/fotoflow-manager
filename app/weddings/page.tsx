@@ -18,7 +18,7 @@ import { MetricCard } from "@/components/metric-card";
 import { ProjectModal } from "@/components/project-modal";
 import { StatusBadge } from "@/components/status-badge";
 import { useProjects } from "@/lib/use-projects";
-import type { Project } from "@/lib/types";
+import { weddingWorkflowStatuses, type Project } from "@/lib/types";
 import {
   addBusinessDays,
   formatCurrency,
@@ -101,6 +101,13 @@ export default function WeddingsPage() {
           Nova poroka
         </button>
       </section>
+
+      <div className="flex justify-end">
+        <Link href="/weddings/calendar" className="button-secondary">
+          <CalendarHeart className="h-4 w-4" />
+          Koledar porok
+        </Link>
+      </div>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <MetricCard
@@ -316,6 +323,22 @@ function getLatestWeddingStep(project: Project) {
   return entries.sort(([, a], [, b]) => new Date(b).getTime() - new Date(a).getTime())[0];
 }
 
+function getNextWeddingStep(project: Project) {
+  const index = weddingWorkflowStatuses.indexOf(
+    project.workflow_status as (typeof weddingWorkflowStatuses)[number]
+  );
+  const nextStatus = weddingWorkflowStatuses[
+    Math.min(index < 0 ? 0 : index + 1, weddingWorkflowStatuses.length - 1)
+  ];
+
+  if (!nextStatus || nextStatus === project.workflow_status) return null;
+
+  return {
+    status: nextStatus,
+    date: project.wedding_status_dates?.[nextStatus] ?? ""
+  };
+}
+
 function needsMeetingReminder(project: Project) {
   const meetingDone = Boolean(project.wedding_status_dates?.Sestanek);
   if (meetingDone) return false;
@@ -338,6 +361,7 @@ function WeddingRow({
   onEdit?: (project: Project) => void;
 }) {
   const latestStep = getLatestWeddingStep(project);
+  const nextStep = getNextWeddingStep(project);
 
   return (
     <article className="rounded-lg border border-line bg-white/60 p-3 transition hover:border-clay/40">
@@ -359,6 +383,13 @@ function WeddingRow({
               {latestStep[0]}: {formatShortDate(latestStep[1])}
             </p>
           ) : null}
+          {nextStep ? (
+            <p className="mt-1 text-xs font-semibold text-clay">
+              Naslednji: {nextStep.status}
+              {nextStep.date ? ` · ${formatShortDate(nextStep.date)}` : " · brez datuma"}
+            </p>
+          ) : null}
+          <WeddingDateSummary project={project} />
           <WeddingPackageSummary project={project} />
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
@@ -392,6 +423,22 @@ function WeddingRow({
       </div>
     </article>
   );
+}
+
+function WeddingDateSummary({ project }: { project: Project }) {
+  const dates = [
+    project.wedding_status_dates?.Sestanek
+      ? `Sestanek: ${formatShortDate(project.wedding_status_dates.Sestanek)}`
+      : "",
+    project.wedding_status_dates?.["Časovnica"]
+      ? `Časovnica: ${formatShortDate(project.wedding_status_dates["Časovnica"])}`
+      : "",
+    project.delivery_due ? `Deadline: ${formatShortDate(project.delivery_due)}` : ""
+  ].filter(Boolean);
+
+  if (!dates.length) return null;
+
+  return <p className="mt-1 truncate text-xs text-muted">{dates.join(" · ")}</p>;
 }
 
 function WeddingServiceBadges({ project }: { project: Project }) {
