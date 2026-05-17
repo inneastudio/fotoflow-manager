@@ -21,6 +21,8 @@ import { MetricCard } from "@/components/metric-card";
 import { ProjectModal } from "@/components/project-modal";
 import { StatusBadge } from "@/components/status-badge";
 import { StatusTimeline } from "@/components/status-timeline";
+import { buildContractHtml, buildTimelineHtml, openGeneratedDocument } from "@/lib/document-generator";
+import { useDocumentTemplates } from "@/lib/document-templates";
 import { useProjects } from "@/lib/use-projects";
 import { useStudioSettings } from "@/lib/use-studio-settings";
 import { weddingWorkflowStatuses, type Project } from "@/lib/types";
@@ -43,6 +45,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [moving, setMoving] = useState(false);
   const project = projects.find((item) => item.id === projectId);
+  const { templates } = useDocumentTemplates();
   const { workflowStatuses } = useStudioSettings();
   const isWedding = String(project?.shoot_type ?? "").toLowerCase().includes("poroka");
   const availableWorkflowStatuses = project
@@ -258,7 +261,43 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
             ) : null}
           </div>
 
-          {isWedding ? <WeddingPackageCard project={project} /> : null}
+          {isWedding ? (
+            <>
+              <div className="surface rounded-lg p-4">
+                <p className="eyebrow">Dokumenti</p>
+                <h2 className="mt-1 font-display text-2xl font-semibold text-ink">
+                  Generator
+                </h2>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="button-primary"
+                    onClick={() =>
+                      openGeneratedDocument(buildContractHtml(project, templates))
+                    }
+                  >
+                    <FileText className="h-4 w-4" />
+                    Generiraj pogodbo
+                  </button>
+                  <button
+                    type="button"
+                    className="button-secondary"
+                    onClick={() =>
+                      openGeneratedDocument(buildTimelineHtml(project, templates))
+                    }
+                  >
+                    <FileText className="h-4 w-4" />
+                    Generiraj časovnico
+                  </button>
+                </div>
+                <p className="mt-3 text-sm text-muted">
+                  Dokument se odpre v novem zavihku, kjer ga lahko shraniš kot PDF.
+                </p>
+              </div>
+
+              <WeddingPackageCard project={project} />
+            </>
+          ) : null}
 
           <div className="grid gap-4 md:grid-cols-2">
             <NoteCard title="Opombe" body={project.notes} />

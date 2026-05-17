@@ -5,6 +5,7 @@ import { useState } from "react";
 import {
   CheckCircle2,
   Database,
+  FileText,
   LogOut,
   Plus,
   RotateCcw,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
 import { useAuth } from "@/components/auth-provider";
+import { useDocumentTemplates } from "@/lib/document-templates";
 import { paymentStatuses } from "@/lib/types";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { useStudioSettings } from "@/lib/use-studio-settings";
@@ -32,6 +34,7 @@ export default function SettingsPage() {
     resetShootTypes,
     updateShootType
   } = useStudioSettings();
+  const { templates, updateTemplates, resetTemplates } = useDocumentTemplates();
   const [newShootType, setNewShootType] = useState("");
   const [newWorkdays, setNewWorkdays] = useState(8);
   const [newFixedPrice, setNewFixedPrice] = useState(0);
@@ -338,6 +341,262 @@ export default function SettingsPage() {
               </label>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="surface rounded-lg p-4 sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-clay" />
+              <h2 className="font-display text-2xl font-semibold">
+                Predloge dokumentov
+              </h2>
+            </div>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
+              Uredi besedilo pogodbe, člene in časovnico. Uporabi spremenljivke kot {"{ime_stranke}"}, {"{datum_fotografiranja}"}, {"{lokacija}"}, {"{znesek}"}.
+            </p>
+          </div>
+          <button className="button-secondary" onClick={resetTemplates}>
+            <RotateCcw className="h-4 w-4" />
+            Ponastavi
+          </button>
+        </div>
+
+        <div className="mt-5 grid gap-6 xl:grid-cols-2">
+          <div className="rounded-lg border border-line bg-white/70 p-4">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="eyebrow">Pogodba</p>
+                <h3 className="font-display text-xl font-semibold text-ink">
+                  Členi pogodbe
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="button-secondary"
+                onClick={() =>
+                  updateTemplates((current) => ({
+                    ...current,
+                    contractClauses: [
+                      ...current.contractClauses,
+                      {
+                        id: crypto.randomUUID(),
+                        title: "Nov člen",
+                        body: "Besedilo novega člena ..."
+                      }
+                    ]
+                  }))
+                }
+              >
+                <Plus className="h-4 w-4" />
+                Člen
+              </button>
+            </div>
+
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-ink">Uvod</span>
+              <textarea
+                className="input min-h-24"
+                value={templates.contractIntro}
+                onChange={(event) =>
+                  updateTemplates((current) => ({
+                    ...current,
+                    contractIntro: event.target.value
+                  }))
+                }
+              />
+            </label>
+
+            <div className="mt-4 space-y-3">
+              {templates.contractClauses.map((clause, index) => (
+                <div key={clause.id} className="rounded-lg border border-line bg-paper p-3">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-muted">
+                      Člen {index + 1}
+                    </p>
+                    <button
+                      type="button"
+                      className="button-ghost h-8 w-8 p-0 text-rose hover:text-rose"
+                      onClick={() =>
+                        updateTemplates((current) => ({
+                          ...current,
+                          contractClauses: current.contractClauses.filter(
+                            (item) => item.id !== clause.id
+                          )
+                        }))
+                      }
+                      aria-label="Odstrani člen"
+                      title="Odstrani"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <label className="block space-y-1.5">
+                    <span className="text-sm font-medium text-ink">Naslov</span>
+                    <input
+                      className="input"
+                      value={clause.title}
+                      onChange={(event) =>
+                        updateTemplates((current) => ({
+                          ...current,
+                          contractClauses: current.contractClauses.map((item) =>
+                            item.id === clause.id
+                              ? { ...item, title: event.target.value }
+                              : item
+                          )
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="mt-3 block space-y-1.5">
+                    <span className="text-sm font-medium text-ink">Besedilo</span>
+                    <textarea
+                      className="input min-h-28"
+                      value={clause.body}
+                      onChange={(event) =>
+                        updateTemplates((current) => ({
+                          ...current,
+                          contractClauses: current.contractClauses.map((item) =>
+                            item.id === clause.id
+                              ? { ...item, body: event.target.value }
+                              : item
+                          )
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-line bg-white/70 p-4">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="eyebrow">Časovnica</p>
+                <h3 className="font-display text-xl font-semibold text-ink">
+                  Vrstice časovnice
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="button-secondary"
+                onClick={() =>
+                  updateTemplates((current) => ({
+                    ...current,
+                    timelineItems: [
+                      ...current.timelineItems,
+                      {
+                        id: crypto.randomUUID(),
+                        time: "",
+                        title: "Nov korak",
+                        note: ""
+                      }
+                    ]
+                  }))
+                }
+              >
+                <Plus className="h-4 w-4" />
+                Korak
+              </button>
+            </div>
+
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-ink">Uvod</span>
+              <textarea
+                className="input min-h-24"
+                value={templates.timelineIntro}
+                onChange={(event) =>
+                  updateTemplates((current) => ({
+                    ...current,
+                    timelineIntro: event.target.value
+                  }))
+                }
+              />
+            </label>
+
+            <div className="mt-4 space-y-3">
+              {templates.timelineItems.map((item, index) => (
+                <div key={item.id} className="rounded-lg border border-line bg-paper p-3">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-muted">
+                      Korak {index + 1}
+                    </p>
+                    <button
+                      type="button"
+                      className="button-ghost h-8 w-8 p-0 text-rose hover:text-rose"
+                      onClick={() =>
+                        updateTemplates((current) => ({
+                          ...current,
+                          timelineItems: current.timelineItems.filter(
+                            (row) => row.id !== item.id
+                          )
+                        }))
+                      }
+                      aria-label="Odstrani korak"
+                      title="Odstrani"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium text-ink">Ura</span>
+                      <input
+                        className="input"
+                        value={item.time}
+                        onChange={(event) =>
+                          updateTemplates((current) => ({
+                            ...current,
+                            timelineItems: current.timelineItems.map((row) =>
+                              row.id === item.id
+                                ? { ...row, time: event.target.value }
+                                : row
+                            )
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium text-ink">Naslov</span>
+                      <input
+                        className="input"
+                        value={item.title}
+                        onChange={(event) =>
+                          updateTemplates((current) => ({
+                            ...current,
+                            timelineItems: current.timelineItems.map((row) =>
+                              row.id === item.id
+                                ? { ...row, title: event.target.value }
+                                : row
+                            )
+                          }))
+                        }
+                      />
+                    </label>
+                  </div>
+                  <label className="mt-3 block space-y-1.5">
+                    <span className="text-sm font-medium text-ink">Opomba</span>
+                    <textarea
+                      className="input min-h-24"
+                      value={item.note}
+                      onChange={(event) =>
+                        updateTemplates((current) => ({
+                          ...current,
+                          timelineItems: current.timelineItems.map((row) =>
+                            row.id === item.id
+                              ? { ...row, note: event.target.value }
+                              : row
+                          )
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     </div>
