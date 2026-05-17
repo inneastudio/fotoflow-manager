@@ -1,4 +1,4 @@
-import type { Project } from "@/lib/types";
+import type { Project, StudioDocument } from "@/lib/types";
 
 export type Database = {
   public: {
@@ -15,9 +15,35 @@ export type Database = {
         };
         Relationships: [];
       };
+      documents: {
+        Row: StudioDocument;
+        Insert: Omit<StudioDocument, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<StudioDocument, "id" | "created_at" | "updated_at">> & {
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {};
-    Functions: {};
+    Functions: {
+      get_shared_document: {
+        Args: { share_token_input: string };
+        Returns: StudioDocument[];
+      };
+      sign_shared_document: {
+        Args: {
+          share_token_input: string;
+          signer_name_input: string;
+          signer_email_input: string;
+          signature_text_input: string;
+        };
+        Returns: StudioDocument[];
+      };
+    };
     Enums: {};
     CompositeTypes: {};
   };

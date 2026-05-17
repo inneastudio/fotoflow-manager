@@ -112,6 +112,28 @@ export type Project = {
   updated_at: string;
 };
 
+export type DocumentType = "contract" | "timeline" | "custom";
+export type DocumentStatus = "Osnutek" | "Poslano" | "Podpisano";
+
+export type StudioDocument = {
+  id: string;
+  user_id?: string | null;
+  project_id: string;
+  title: string;
+  type: DocumentType;
+  status: DocumentStatus;
+  client_name: string;
+  client_email: string;
+  document_html: string;
+  share_token: string;
+  signed_at?: string | null;
+  signer_name?: string | null;
+  signer_email?: string | null;
+  signature_text?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProjectFormValues = Omit<
   Project,
   "id" | "user_id" | "created_at" | "updated_at" | "balance"

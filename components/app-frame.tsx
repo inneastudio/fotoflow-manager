@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Columns3,
   Archive,
+  FileText,
   FolderKanban,
   Heart,
   LayoutDashboard,
@@ -23,6 +24,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/projects", label: "Projekti", icon: FolderKanban },
   { href: "/weddings", label: "Poroke", icon: Heart },
+  { href: "/documents", label: "Dokumenti", icon: FileText },
   { href: "/calendar", label: "Koledar", icon: CalendarDays },
   { href: "/statistics", label: "Statistika", icon: BarChart3 },
   { href: "/finance", label: "Finance", icon: WalletCards },
@@ -37,12 +39,17 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, loading, demoMode } = useAuth();
   const isLogin = pathname === "/login";
+  const isPublicSigningPage = pathname.startsWith("/sign/");
 
   useEffect(() => {
-    if (!loading && !demoMode && !user && !isLogin) {
+    if (!loading && !demoMode && !user && !isLogin && !isPublicSigningPage) {
       router.replace("/login");
     }
-  }, [demoMode, isLogin, loading, router, user]);
+  }, [demoMode, isLogin, isPublicSigningPage, loading, router, user]);
+
+  if (isPublicSigningPage) {
+    return <>{children}</>;
+  }
 
   if (isLogin) {
     return <main className="min-h-screen">{children}</main>;
@@ -146,7 +153,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/90 px-2 py-2 backdrop-blur-xl lg:hidden">
-        <div className="grid grid-cols-10 gap-1">
+        <div className="flex gap-1 overflow-x-auto pb-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active =
@@ -157,7 +164,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex min-h-12 flex-col items-center justify-center rounded-lg text-[11px] font-medium transition",
+                  "flex min-h-12 min-w-[78px] flex-col items-center justify-center rounded-lg text-[11px] font-medium transition",
                   active ? "bg-clay text-white" : "text-muted hover:bg-mist"
                 )}
               >
