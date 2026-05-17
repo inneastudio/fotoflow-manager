@@ -310,15 +310,17 @@ export function ProjectForm({
           />
         </label>
 
-        <label className="space-y-1.5">
-          <span className="text-sm font-medium text-ink">Naslov stranke</span>
-          <input
-            className="input"
-            value={values.client_address ?? ""}
-            onChange={(event) => updateValue("client_address", event.target.value)}
-            placeholder="Ulica, pošta, kraj"
-          />
-        </label>
+        {isWedding ? (
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-ink">Naslov stranke</span>
+            <input
+              className="input"
+              value={values.client_address ?? ""}
+              onChange={(event) => updateValue("client_address", event.target.value)}
+              placeholder="Ulica, pošta, kraj"
+            />
+          </label>
+        ) : null}
 
         <label className="space-y-1.5">
           <span className="text-sm font-medium text-ink">Tip fotografiranja</span>
