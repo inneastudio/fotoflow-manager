@@ -1,5 +1,5 @@
 import type { DocumentTemplates } from "@/lib/document-templates";
-import type { Project } from "@/lib/types";
+import type { Project, StudioDocument } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 function escapeHtml(value: string) {
@@ -161,4 +161,23 @@ export function openGeneratedDocument(html: string) {
   win.document.open();
   win.document.write(html);
   win.document.close();
+}
+
+export function buildSignedDocumentHtml(document: StudioDocument) {
+  if (document.status !== "Podpisano") return document.document_html;
+
+  const signedAt = document.signed_at ? formatDate(document.signed_at) : "Ni določeno";
+  const signatureBlock = `<section style="margin-top:56px;border:1px solid #e2d2bd;border-radius:14px;padding:18px;background:#fffdf8">
+    <h2>Elektronski podpis</h2>
+    <p><strong>Podpisnik:</strong> ${escapeHtml(document.signer_name || document.client_name)}</p>
+    <p><strong>Email:</strong> ${escapeHtml(document.signer_email || document.client_email)}</p>
+    <p><strong>Podpis:</strong> <span style="font-size:28px;font-family:Georgia,serif">${escapeHtml(document.signature_text || "")}</span></p>
+    <p><strong>Datum podpisa:</strong> ${escapeHtml(signedAt)}</p>
+  </section>`;
+
+  if (document.document_html.includes("</main>")) {
+    return document.document_html.replace("</main>", `${signatureBlock}</main>`);
+  }
+
+  return `${document.document_html}${signatureBlock}`;
 }

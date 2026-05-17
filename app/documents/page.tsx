@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from "react";
 import { StatusBadge } from "@/components/status-badge";
 import {
   buildContractHtml,
+  buildSignedDocumentHtml,
   buildTimelineHtml,
   openGeneratedDocument
 } from "@/lib/document-generator";
@@ -173,7 +174,7 @@ export default function DocumentsPage() {
                   active={document.id === selectedDocument?.id}
                   copied={copiedId === document.id}
                   onSelect={() => setSelectedDocumentId(document.id)}
-                  onOpen={() => openGeneratedDocument(document.document_html)}
+                  onOpen={() => openGeneratedDocument(buildSignedDocumentHtml(document))}
                   onCopy={() => copySigningLink(document)}
                   onMarkSent={() =>
                     updateDocument(document.id, { status: "Poslano" })
@@ -306,7 +307,7 @@ function DocumentPreview({ document }: { document?: StudioDocument }) {
       <iframe
         title={document.title}
         className="h-[680px] w-full bg-white"
-        srcDoc={document.document_html}
+        srcDoc={buildSignedDocumentHtml(document)}
       />
     </section>
   );

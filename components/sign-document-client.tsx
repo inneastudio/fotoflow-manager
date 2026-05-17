@@ -2,6 +2,7 @@
 
 import { CheckCircle2, FileSignature, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { buildSignedDocumentHtml } from "@/lib/document-generator";
 import { getSharedDocument, signSharedDocument } from "@/lib/shared-documents";
 import type { StudioDocument } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -100,7 +101,7 @@ export function SignDocumentClient({ token }: { token: string }) {
           <iframe
             title={document.title}
             className="h-[760px] w-full bg-white"
-            srcDoc={document.document_html}
+            srcDoc={buildSignedDocumentHtml(document)}
           />
         </section>
 
@@ -201,4 +202,3 @@ export function SignDocumentClient({ token }: { token: string }) {
     </main>
   );
 }
-
