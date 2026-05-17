@@ -8,6 +8,7 @@ create table if not exists public.projects (
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
   project_name text default '',
   client_name text not null,
+  client_address text default '',
   email text default '',
   phone text default '',
   shoot_type text not null default 'Portret',
@@ -45,6 +46,9 @@ check (photographer in ('Žan', 'Teja', 'Žan in Teja'));
 
 alter table public.projects
 add column if not exists project_name text default '';
+
+alter table public.projects
+add column if not exists client_address text default '';
 
 alter table public.projects
 add column if not exists payment_method text not null default 'TRR'

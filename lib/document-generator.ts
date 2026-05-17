@@ -12,9 +12,17 @@ function escapeHtml(value: string) {
 }
 
 function projectVariables(project: Project) {
+  const currentDate = new Intl.DateTimeFormat("sl-SI", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  }).format(new Date());
+
   return {
+    danasnji_datum: currentDate,
     ime_projekta: project.project_name || project.client_name,
     ime_stranke: project.client_name,
+    naslov: project.client_address || "",
     email: project.email || "",
     telefon: project.phone || "",
     tip_fotografiranja: String(project.shoot_type),
@@ -98,20 +106,24 @@ function metaBlock(project: Project) {
     .join("")}</div>`;
 }
 
+function templateHtml(text: string, project: Project) {
+  return escapeHtml(fillTemplate(text, project)).replaceAll("\n", "<br />");
+}
+
 export function buildContractHtml(project: Project, templates: DocumentTemplates) {
   const clauses = templates.contractClauses
     .map(
       (clause, index) => `<section>
         <h2>${index + 1}. ${escapeHtml(fillTemplate(clause.title, project))}</h2>
-        <p>${escapeHtml(fillTemplate(clause.body, project)).replaceAll("\n", "<br />")}</p>
+        <p>${templateHtml(clause.body, project)}</p>
       </section>`
     )
     .join("");
 
   return documentShell(
-    `Pogodba - ${project.project_name || project.client_name}`,
-    `<h1>Pogodba</h1>
-    <p class="muted">${escapeHtml(fillTemplate(templates.contractIntro, project))}</p>
+    `Poročna pogodba - ${project.project_name || project.client_name}`,
+    `<h1>POROČNA POGODBA</h1>
+    <p class="muted">${templateHtml(templates.contractIntro, project)}</p>
     ${metaBlock(project)}
     ${clauses}
     <div class="signatures">
@@ -137,7 +149,7 @@ export function buildTimelineHtml(project: Project, templates: DocumentTemplates
   return documentShell(
     `Časovnica - ${project.project_name || project.client_name}`,
     `<h1>Časovnica</h1>
-    <p class="muted">${escapeHtml(fillTemplate(templates.timelineIntro, project))}</p>
+    <p class="muted">${templateHtml(templates.timelineIntro, project)}</p>
     ${metaBlock(project)}
     ${rows}`
   );

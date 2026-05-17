@@ -19,6 +19,7 @@ function ensureProjectShape(project: Project): Project {
   return {
     ...project,
     project_name: project.project_name ?? "",
+    client_address: project.client_address ?? "",
     photographer: project.photographer ?? "Žan",
     payment_method: project.payment_method ?? "TRR",
     shoot_time: project.shoot_time ?? "",
@@ -77,6 +78,7 @@ function normalizeProject(values: ProjectFormValues, existing?: Project): Projec
     user_id: existing?.user_id ?? null,
     project_name: values.project_name.trim(),
     client_name: values.client_name.trim(),
+    client_address: values.client_address?.trim() ?? "",
     email: values.email.trim(),
     phone: values.phone.trim(),
     shoot_type: values.shoot_type,
@@ -200,6 +202,7 @@ export function useProjects() {
           .update({
             project_name: updated.project_name,
             client_name: updated.client_name,
+            client_address: updated.client_address,
             email: updated.email,
             phone: updated.phone,
             shoot_type: updated.shoot_type,

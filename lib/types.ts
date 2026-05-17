@@ -76,6 +76,7 @@ export type Project = {
   user_id?: string | null;
   project_name: string;
   client_name: string;
+  client_address?: string;
   email: string;
   phone: string;
   shoot_type: ShootType;

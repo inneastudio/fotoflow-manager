@@ -354,7 +354,7 @@ export default function SettingsPage() {
               </h2>
             </div>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-              Uredi besedilo pogodbe, člene in časovnico. Uporabi spremenljivke kot {"{ime_stranke}"}, {"{datum_fotografiranja}"}, {"{lokacija}"}, {"{znesek}"}.
+              Uredi besedilo pogodbe, člene in časovnico. Uporabi spremenljivke kot {"{ime_stranke}"}, {"{danasnji_datum}"}, {"{datum_fotografiranja}"}, {"{lokacija}"}, {"{znesek}"}, {"{avans}"}.
             </p>
           </div>
           <button className="button-secondary" onClick={resetTemplates}>

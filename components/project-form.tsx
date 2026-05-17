@@ -32,6 +32,7 @@ function defaultValues(initialValues?: Partial<ProjectFormValues>): ProjectFormV
   const base: ProjectFormValues = {
     project_name: "",
     client_name: "",
+    client_address: "",
     email: "",
     phone: "",
     shoot_type: "Portret",
@@ -90,6 +91,7 @@ export function ProjectForm({
     setValues({
       project_name: project.project_name ?? "",
       client_name: project.client_name,
+      client_address: project.client_address ?? "",
       email: project.email,
       phone: project.phone,
       shoot_type: project.shoot_type,
@@ -305,6 +307,16 @@ export function ProjectForm({
             value={values.client_name}
             onChange={(event) => updateValue("client_name", event.target.value)}
             placeholder="npr. Maja Kovač"
+          />
+        </label>
+
+        <label className="space-y-1.5">
+          <span className="text-sm font-medium text-ink">Naslov stranke</span>
+          <input
+            className="input"
+            value={values.client_address ?? ""}
+            onChange={(event) => updateValue("client_address", event.target.value)}
+            placeholder="Ulica, pošta, kraj"
           />
         </label>
 
