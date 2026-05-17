@@ -183,3 +183,18 @@ export function sortByDateDesc(projects: Project[], key: keyof Project = "update
     return new Date(String(b[key])).getTime() - new Date(String(a[key])).getTime();
   });
 }
+
+export function sortByNearestUpcoming(projects: Project[], key: keyof Project = "shoot_date") {
+  const startOfToday = new Date(new Date().toDateString()).getTime();
+
+  return [...projects].sort((a, b) => {
+    const aTime = new Date(String(a[key])).getTime();
+    const bTime = new Date(String(b[key])).getTime();
+    const aUpcoming = aTime >= startOfToday;
+    const bUpcoming = bTime >= startOfToday;
+
+    if (aUpcoming && bUpcoming) return aTime - bTime;
+    if (!aUpcoming && !bUpcoming) return bTime - aTime;
+    return aUpcoming ? -1 : 1;
+  });
+}

@@ -8,7 +8,7 @@ import type { PaymentStatus, Project, WorkflowStatus } from "@/lib/types";
 import { paymentStatuses } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
 import { useStudioSettings } from "@/lib/use-studio-settings";
-import { formatCurrency, getOutstandingAmount, sortByDateDesc } from "@/lib/utils";
+import { formatCurrency, getOutstandingAmount, sortByNearestUpcoming } from "@/lib/utils";
 
 export default function ProjectsPage() {
   const { workflowStatuses } = useStudioSettings();
@@ -29,7 +29,7 @@ export default function ProjectsPage() {
   const filteredProjects = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return sortByDateDesc(projects, "shoot_date").filter((project) => {
+    return sortByNearestUpcoming(projects, "shoot_date").filter((project) => {
       const matchesQuery = normalizedQuery
         ? [
             project.project_name,
