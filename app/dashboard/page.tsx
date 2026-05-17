@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   Archive,
   CalendarClock,
   CircleDollarSign,
+  Eye,
+  EyeOff,
   FolderKanban,
   Images,
   Plus,
@@ -30,9 +32,25 @@ import {
   sortByDateDesc
 } from "@/lib/utils";
 
+const FINANCE_VISIBILITY_KEY = "fotoflow-manager-show-dashboard-finance";
+
 export default function DashboardPage() {
   const { projects, loading, createProject } = useProjects();
   const [modalOpen, setModalOpen] = useState(false);
+  const [showFinance, setShowFinance] = useState(true);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(FINANCE_VISIBILITY_KEY);
+    if (saved === "false") setShowFinance(false);
+  }, []);
+
+  function toggleFinanceVisibility() {
+    setShowFinance((current) => {
+      const next = !current;
+      window.localStorage.setItem(FINANCE_VISIBILITY_KEY, String(next));
+      return next;
+    });
+  }
 
   const stats = useMemo(() => {
     const activeProjects = projects.filter(
@@ -77,10 +95,16 @@ export default function DashboardPage() {
             Pregled rezervacij, urejanja, rokov in plačil za fotografski workflow.
           </p>
         </div>
-        <button className="button-primary" onClick={() => setModalOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Nov projekt
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button className="button-secondary" onClick={toggleFinanceVisibility}>
+            {showFinance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showFinance ? "Skrij finance" : "Prikaži finance"}
+          </button>
+          <button className="button-primary" onClick={() => setModalOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Nov projekt
+          </button>
+        </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -98,20 +122,24 @@ export default function DashboardPage() {
           icon={Images}
           tone="clay"
         />
-        <MetricCard
-          label="Neplačano"
-          value={formatCurrency(stats.unpaidAmount)}
-          detail="Preostanki odprtih plačil"
-          icon={WalletCards}
-          tone="rose"
-        />
-        <MetricCard
-          label="Mesečni prihodki"
-          value={formatCurrency(stats.monthlyRevenue)}
-          detail="Plačani projekti ta mesec"
-          icon={CircleDollarSign}
-          tone="olive"
-        />
+        {showFinance ? (
+          <>
+            <MetricCard
+              label="Neplačano"
+              value={formatCurrency(stats.unpaidAmount)}
+              detail="Preostanki odprtih plačil"
+              icon={WalletCards}
+              tone="rose"
+            />
+            <MetricCard
+              label="Mesečni prihodki"
+              value={formatCurrency(stats.monthlyRevenue)}
+              detail="Plačani projekti ta mesec"
+              icon={CircleDollarSign}
+              tone="olive"
+            />
+          </>
+        ) : null}
       </section>
 
       {reminderCount ? (
@@ -156,8 +184,8 @@ export default function DashboardPage() {
         </section>
       ) : null}
 
-      <section className="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
-        <RevenueChart projects={projects} />
+      <section className={showFinance ? "grid gap-6 xl:grid-cols-[1.4fr_0.9fr]" : "grid gap-6"}>
+        {showFinance ? <RevenueChart projects={projects} /> : null}
 
         <div className="surface rounded-lg p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3">
@@ -201,7 +229,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-2">
+      <section className={showFinance ? "grid gap-6 xl:grid-cols-2" : "grid gap-6"}>
         <div className="surface rounded-lg p-4 sm:p-5">
           <div className="mb-4 flex items-center justify-between">
             <div>
@@ -232,46 +260,48 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="surface rounded-lg p-4 sm:p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <p className="eyebrow">Finance</p>
-              <h2 className="mt-1 font-display text-2xl font-semibold">
-                Neplačani projekti
-              </h2>
-            </div>
-            <Sparkles className="h-5 w-5 text-clay" />
-          </div>
-
-          <div className="space-y-3">
-            {unpaidProjects.length ? (
-              unpaidProjects.map((project) => (
-                <ProjectListItem key={project.id} projectId={project.id}>
-                  <div>
-                    <p className="font-semibold text-ink">
-                      {project.project_name || project.client_name}
-                    </p>
-                    <p className="mt-1 text-sm text-muted">
-                      Rok: {formatDate(project.delivery_due)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-ink">
-                      {formatCurrency(project.balance)}
-                    </p>
-                    <StatusBadge type="payment" className="mt-1">
-                      {project.payment_status}
-                    </StatusBadge>
-                  </div>
-                </ProjectListItem>
-              ))
-            ) : (
-              <div className="rounded-lg border border-line bg-white/50 p-4 text-sm text-muted">
-                Vsa plačila so zaključena.
+        {showFinance ? (
+          <div className="surface rounded-lg p-4 sm:p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="eyebrow">Finance</p>
+                <h2 className="mt-1 font-display text-2xl font-semibold">
+                  Neplačani projekti
+                </h2>
               </div>
-            )}
+              <Sparkles className="h-5 w-5 text-clay" />
+            </div>
+
+            <div className="space-y-3">
+              {unpaidProjects.length ? (
+                unpaidProjects.map((project) => (
+                  <ProjectListItem key={project.id} projectId={project.id}>
+                    <div>
+                      <p className="font-semibold text-ink">
+                        {project.project_name || project.client_name}
+                      </p>
+                      <p className="mt-1 text-sm text-muted">
+                        Rok: {formatDate(project.delivery_due)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-ink">
+                        {formatCurrency(project.balance)}
+                      </p>
+                      <StatusBadge type="payment" className="mt-1">
+                        {project.payment_status}
+                      </StatusBadge>
+                    </div>
+                  </ProjectListItem>
+                ))
+              ) : (
+                <div className="rounded-lg border border-line bg-white/50 p-4 text-sm text-muted">
+                  Vsa plačila so zaključena.
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        ) : null}
       </section>
 
       <ProjectModal
