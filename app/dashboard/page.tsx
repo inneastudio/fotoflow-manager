@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
+  AlertCircle,
+  Archive,
   CalendarClock,
   CircleDollarSign,
   FolderKanban,
   Images,
   Plus,
+  Send,
   Sparkles,
   WalletCards
 } from "lucide-react";
@@ -15,6 +18,7 @@ import { MetricCard } from "@/components/metric-card";
 import { ProjectModal } from "@/components/project-modal";
 import { RevenueChart } from "@/components/revenue-chart";
 import { StatusBadge } from "@/components/status-badge";
+import { countReminders, getProjectReminders, type ReminderItem } from "@/lib/project-insights";
 import { useProjects } from "@/lib/use-projects";
 import {
   formatCurrency,
@@ -49,6 +53,8 @@ export default function DashboardPage() {
   const todayProjects = projects.filter((project) =>
     isSameDay(project.shoot_date, new Date())
   );
+  const reminders = useMemo(() => getProjectReminders(projects), [projects]);
+  const reminderCount = countReminders(reminders);
   const unpaidProjects = projects
     .filter((project) => project.payment_status !== "Plačano")
     .sort((a, b) => b.balance - a.balance)
@@ -107,6 +113,48 @@ export default function DashboardPage() {
           tone="olive"
         />
       </section>
+
+      {reminderCount ? (
+        <section className="surface rounded-lg border-clay/30 bg-clay/5 p-4 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="eyebrow">Prioritete danes</p>
+              <h2 className="mt-1 font-display text-2xl font-semibold text-ink">
+                Kaj ne sme uiti
+              </h2>
+            </div>
+            <span className="rounded-full border border-line bg-white/75 px-3 py-1 text-xs font-semibold text-muted">
+              {reminderCount} opomnikov
+            </span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <PriorityList
+              title="Deadline"
+              icon={AlertCircle}
+              items={reminders.deadlines}
+              empty="Ni nujnih deadlineov."
+            />
+            <PriorityList
+              title="Avans"
+              icon={WalletCards}
+              items={reminders.unpaidDeposits}
+              empty="Avansi so urejeni."
+            />
+            <PriorityList
+              title="Shrani"
+              icon={Archive}
+              items={reminders.unsaved}
+              empty="Ni projektov za shraniti."
+            />
+            <PriorityList
+              title="Izbor"
+              icon={Send}
+              items={reminders.selectionLate}
+              empty="Izbori niso zamujeni."
+            />
+          </div>
+        </section>
+      ) : null}
 
       <section className="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
         <RevenueChart projects={projects} />
@@ -234,6 +282,52 @@ export default function DashboardPage() {
           setModalOpen(false);
         }}
       />
+    </div>
+  );
+}
+
+function PriorityList({
+  title,
+  icon: Icon,
+  items,
+  empty
+}: {
+  title: string;
+  icon: typeof AlertCircle;
+  items: ReminderItem[];
+  empty: string;
+}) {
+  return (
+    <div className="rounded-lg border border-line bg-white/70 p-3">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-sm font-semibold text-ink">
+          <Icon className="h-4 w-4 text-clay" />
+          {title}
+        </div>
+        <span className="rounded-full bg-paper px-2 py-0.5 text-xs font-semibold text-muted">
+          {items.length}
+        </span>
+      </div>
+      <div className="space-y-2">
+        {items.length ? (
+          items.slice(0, 3).map(({ project, label }) => (
+            <Link
+              key={`${title}-${project.id}`}
+              href={`/projects/${project.id}`}
+              className="block rounded-lg border border-line bg-paper/80 p-2 transition hover:border-clay/35"
+            >
+              <p className="truncate text-sm font-semibold text-ink">
+                {project.project_name || project.client_name}
+              </p>
+              <p className="mt-1 text-xs text-muted">{label}</p>
+            </Link>
+          ))
+        ) : (
+          <p className="rounded-lg border border-line bg-paper/80 p-2 text-sm text-muted">
+            {empty}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

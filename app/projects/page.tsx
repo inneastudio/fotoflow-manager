@@ -4,47 +4,22 @@ import { useMemo, useState } from "react";
 import { AlertCircle, Archive, Filter, Plus, Search, Send, type LucideIcon } from "lucide-react";
 import { ProjectCard } from "@/components/project-card";
 import { ProjectModal } from "@/components/project-modal";
+import {
+  editAndSendStatuses,
+  getProjectReminders,
+  type ReminderItem
+} from "@/lib/project-insights";
 import type { PaymentStatus, Project, WorkflowStatus } from "@/lib/types";
 import { paymentStatuses } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
 import { useStudioSettings } from "@/lib/use-studio-settings";
 import {
   formatCurrency,
-  formatShortDate,
   getOutstandingAmount,
   sortByNearestUpcoming
 } from "@/lib/utils";
 
 type ProjectFocusFilter = "Vsi" | "Za fotografirat" | "Za urediti";
-
-const editAndSendStatuses = [
-  "Fotografirano",
-  "Shranjeno",
-  "Izbor poslan",
-  "Izbor prejet",
-  "Narejen izbor",
-  "Urejanje"
-];
-const savedOrLaterStatuses = [
-  "Shranjeno",
-  "Izbor poslan",
-  "Izbor prejet",
-  "Narejen izbor",
-  "Urejanje",
-  "Poslano",
-  "Plačano",
-  "Zaključeno"
-];
-const selectionSentOrLaterStatuses = [
-  "Izbor poslan",
-  "Izbor prejet",
-  "Narejen izbor",
-  "Urejanje",
-  "Poslano",
-  "Plačano",
-  "Zaključeno"
-];
-const deliveredStatuses = ["Poslano", "Plačano", "Zaključeno"];
 
 export default function ProjectsPage() {
   const { workflowStatuses } = useStudioSettings();
@@ -103,7 +78,10 @@ export default function ProjectsPage() {
   ).length;
   const reminders = useMemo(() => getProjectReminders(projects), [projects]);
   const reminderCount =
-    reminders.deadlines.length + reminders.unsaved.length + reminders.selectionLate.length;
+    reminders.deadlines.length +
+    reminders.unsaved.length +
+    reminders.selectionLate.length +
+    reminders.unpaidDeposits.length;
 
   function openNewProject() {
     setEditingProject(null);
@@ -248,12 +226,19 @@ export default function ProjectsPage() {
             </span>
           </div>
 
-          <div className="grid gap-3 xl:grid-cols-3">
+          <div className="grid gap-3 xl:grid-cols-4">
             <ReminderColumn
               title="Deadline v 3 dneh"
               icon={AlertCircle}
               empty="Ni bližnjih deadlineov."
               items={reminders.deadlines}
+              onEdit={openEditProject}
+            />
+            <ReminderColumn
+              title="Avans ni plačan"
+              icon={AlertCircle}
+              empty="Ni odprtih avansov."
+              items={reminders.unpaidDeposits}
               onEdit={openEditProject}
             />
             <ReminderColumn
@@ -391,84 +376,6 @@ export default function ProjectsPage() {
   );
 }
 
-function getProjectReminders(projects: Project[]) {
-  const today = new Date(new Date().toDateString());
-  const threeDaysFromNow = new Date(today);
-  threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
-
-  function projectDate(value: string) {
-    return new Date(`${value}T12:00:00`);
-  }
-
-  const openProjects = projects.filter(
-    (project) => !deliveredStatuses.includes(String(project.workflow_status))
-  );
-
-  const deadlines = openProjects
-    .filter((project) => {
-      const due = projectDate(project.delivery_due);
-      return due >= today && due <= threeDaysFromNow;
-    })
-    .map((project) => ({
-      project,
-      label: `Rok: ${formatShortDate(project.delivery_due)}`
-    }));
-
-  const unsaved = projects
-    .filter((project) => {
-      const shootDate = projectDate(project.shoot_date);
-      return (
-        shootDate <= today &&
-        !savedOrLaterStatuses.includes(String(project.workflow_status))
-      );
-    })
-    .map((project) => ({
-      project,
-      label: `Fotografirano: ${formatShortDate(project.shoot_date)}`
-    }));
-
-  const selectionLate = projects
-    .filter((project) => {
-      const shootDate = projectDate(project.shoot_date);
-      const selectionDue = new Date(shootDate);
-      selectionDue.setDate(selectionDue.getDate() + 3);
-
-      return (
-        today >= selectionDue &&
-        !selectionSentOrLaterStatuses.includes(String(project.workflow_status))
-      );
-    })
-    .map((project) => ({
-      project,
-      label: `Izbor do: ${formatShortDate(addDays(project.shoot_date, 3))}`
-    }));
-
-  return {
-    deadlines: sortReminderItems(deadlines),
-    unsaved: sortReminderItems(unsaved),
-    selectionLate: sortReminderItems(selectionLate)
-  };
-}
-
-function addDays(dateValue: string, days: number) {
-  const date = new Date(`${dateValue}T12:00:00`);
-  date.setDate(date.getDate() + days);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function sortReminderItems(
-  items: Array<{ project: Project; label: string }>
-) {
-  return [...items].sort(
-    (a, b) =>
-      new Date(a.project.shoot_date).getTime() -
-      new Date(b.project.shoot_date).getTime()
-  );
-}
-
 function ReminderColumn({
   title,
   icon: Icon,
@@ -479,7 +386,7 @@ function ReminderColumn({
   title: string;
   icon: LucideIcon;
   empty: string;
-  items: Array<{ project: Project; label: string }>;
+  items: ReminderItem[];
   onEdit: (project: Project) => void;
 }) {
   return (
