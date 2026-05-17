@@ -19,14 +19,15 @@ import {
 
 type ProjectFormProps = {
   project?: Project | null;
+  initialValues?: Partial<ProjectFormValues>;
   onSubmit: (values: ProjectFormValues) => Promise<void> | void;
   onCancel: () => void;
 };
 
 const today = new Date().toISOString().slice(0, 10);
 
-function defaultValues(): ProjectFormValues {
-  return {
+function defaultValues(initialValues?: Partial<ProjectFormValues>): ProjectFormValues {
+  const base: ProjectFormValues = {
     project_name: "",
     client_name: "",
     email: "",
@@ -49,9 +50,16 @@ function defaultValues(): ProjectFormValues {
     notes: "",
     retouch_notes: ""
   };
+
+  return { ...base, ...initialValues };
 }
 
-export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
+export function ProjectForm({
+  project,
+  initialValues,
+  onSubmit,
+  onCancel
+}: ProjectFormProps) {
   const { shootTypeOptions, shootTypes, workflowStatuses } = useStudioSettings();
   const [values, setValues] = useState<ProjectFormValues>(defaultValues);
   const [saving, setSaving] = useState(false);
@@ -62,7 +70,7 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
 
   useEffect(() => {
     if (!project) {
-      setValues(defaultValues());
+      setValues(defaultValues(initialValues));
       return;
     }
 
@@ -91,7 +99,7 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
       notes: project.notes,
       retouch_notes: project.retouch_notes
     });
-  }, [project]);
+  }, [initialValues, project]);
 
   const balance = useMemo(() => {
     if (values.payment_status === "Plačano") return 0;

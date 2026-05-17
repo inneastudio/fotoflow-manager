@@ -7,11 +7,18 @@ import type { Project, ProjectFormValues } from "@/lib/types";
 type ProjectModalProps = {
   open: boolean;
   project?: Project | null;
+  initialValues?: Partial<ProjectFormValues>;
   onClose: () => void;
   onSubmit: (values: ProjectFormValues) => Promise<void> | void;
 };
 
-export function ProjectModal({ open, project, onClose, onSubmit }: ProjectModalProps) {
+export function ProjectModal({
+  open,
+  project,
+  initialValues,
+  onClose,
+  onSubmit
+}: ProjectModalProps) {
   if (!open) return null;
 
   return (
@@ -35,7 +42,12 @@ export function ProjectModal({ open, project, onClose, onSubmit }: ProjectModalP
           </button>
         </div>
         <div className="max-h-[calc(94vh-82px)] overflow-y-auto p-5">
-          <ProjectForm project={project} onSubmit={onSubmit} onCancel={onClose} />
+          <ProjectForm
+            project={project}
+            initialValues={initialValues}
+            onSubmit={onSubmit}
+            onCancel={onClose}
+          />
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import {
   CalendarDays,
   ChevronRight,
   FolderKanban,
+  Heart,
   LayoutDashboard,
   Settings,
   UsersRound,
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/projects", label: "Projekti", icon: FolderKanban },
+  { href: "/weddings", label: "Poroke", icon: Heart },
   { href: "/calendar", label: "Koledar", icon: CalendarDays },
   { href: "/statistics", label: "Statistika", icon: BarChart3 },
   { href: "/finance", label: "Finance", icon: WalletCards },
@@ -140,7 +142,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/90 px-2 py-2 backdrop-blur-xl lg:hidden">
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-8 gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active =
