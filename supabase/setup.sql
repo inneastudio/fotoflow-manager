@@ -11,7 +11,7 @@ create table if not exists public.projects (
   email text default '',
   phone text default '',
   shoot_type text not null default 'Portret',
-  photographer text not null default 'Žan' check (photographer in ('Žan', 'Teja')),
+  photographer text not null default 'Žan' check (photographer in ('Žan', 'Teja', 'Žan in Teja')),
   shoot_date date not null,
   shoot_time text default '',
   location text default '',
@@ -36,7 +36,12 @@ create table if not exists public.projects (
 
 alter table public.projects
 add column if not exists photographer text not null default 'Žan'
-check (photographer in ('Žan', 'Teja'));
+check (photographer in ('Žan', 'Teja', 'Žan in Teja'));
+
+alter table public.projects drop constraint if exists projects_photographer_check;
+alter table public.projects
+add constraint projects_photographer_check
+check (photographer in ('Žan', 'Teja', 'Žan in Teja'));
 
 alter table public.projects
 add column if not exists project_name text default '';
