@@ -21,13 +21,13 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/projects", label: "Projekti", icon: FolderKanban },
-  { href: "/kanban", label: "Kanban", icon: Columns3 },
   { href: "/weddings", label: "Poroke", icon: Heart },
   { href: "/calendar", label: "Koledar", icon: CalendarDays },
   { href: "/statistics", label: "Statistika", icon: BarChart3 },
   { href: "/finance", label: "Finance", icon: WalletCards },
   { href: "/clients", label: "Stranke", icon: UsersRound },
-  { href: "/settings", label: "Nastavitve", icon: Settings }
+  { href: "/settings", label: "Nastavitve", icon: Settings },
+  { href: "/kanban", label: "Kanban", icon: Columns3 }
 ];
 
 export function AppFrame({ children }: { children: React.ReactNode }) {
