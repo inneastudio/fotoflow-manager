@@ -69,16 +69,12 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen pb-20 lg:flex lg:pb-0">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-line/80 bg-white/90 px-5 py-6 backdrop-blur-xl lg:block">
-        <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-lg bg-ink text-lg font-semibold text-paper">
-            F
-          </div>
-          <div>
-            <p className="font-display text-2xl font-semibold leading-none">FotoFlow</p>
-            <p className="mt-1 text-xs uppercase tracking-[0.18em] text-muted">
-              Manager
-            </p>
-          </div>
+        <Link href="/dashboard" className="block">
+          <img
+            src="/logo-fotoflow-manager-small.png"
+            alt="FotoFlow Manager"
+            className="h-auto w-[230px] rounded-lg"
+          />
         </Link>
 
         <nav className="mt-10 space-y-1">
@@ -122,15 +118,11 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-20 border-b border-line/70 bg-canvas/90 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-7xl items-center justify-between">
             <Link href="/dashboard" className="flex items-center gap-3 lg:hidden">
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-ink text-paper">
-                F
-              </div>
-              <div>
-                <p className="font-display text-xl font-semibold leading-none">
-                  FotoFlow
-                </p>
-                <p className="text-xs text-muted">Manager</p>
-              </div>
+              <img
+                src="/logo-fotoflow-manager-small.png"
+                alt="FotoFlow Manager"
+                className="h-12 w-auto rounded-lg"
+              />
             </Link>
 
             <div className="hidden lg:block">
