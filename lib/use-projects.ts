@@ -30,6 +30,11 @@ function ensureProjectShape(project: Project): Project {
     wedding_video_enabled: Boolean(project.wedding_video_enabled),
     wedding_video_package: project.wedding_video_package ?? "",
     wedding_video_price: Number(project.wedding_video_price ?? 0),
+    wedding_photobooth_enabled: Boolean(
+      project.wedding_photobooth_enabled ??
+        (project.wedding_photobooth_package ||
+          Number(project.wedding_photobooth_price ?? 0) > 0)
+    ),
     wedding_photobooth_package: project.wedding_photobooth_package ?? "",
     wedding_photobooth_price: Number(project.wedding_photobooth_price ?? 0),
     delivery_workdays:
@@ -97,6 +102,7 @@ function normalizeProject(values: ProjectFormValues, existing?: Project): Projec
     wedding_video_enabled: Boolean(values.wedding_video_enabled),
     wedding_video_package: values.wedding_video_package?.trim() ?? "",
     wedding_video_price: Number(values.wedding_video_price || 0),
+    wedding_photobooth_enabled: Boolean(values.wedding_photobooth_enabled),
     wedding_photobooth_package: values.wedding_photobooth_package?.trim() ?? "",
     wedding_photobooth_price: Number(values.wedding_photobooth_price || 0),
     selected_photos: selectedPhotos,
@@ -219,6 +225,7 @@ export function useProjects() {
             wedding_video_enabled: updated.wedding_video_enabled,
             wedding_video_package: updated.wedding_video_package,
             wedding_video_price: updated.wedding_video_price,
+            wedding_photobooth_enabled: updated.wedding_photobooth_enabled,
             wedding_photobooth_package: updated.wedding_photobooth_package,
             wedding_photobooth_price: updated.wedding_photobooth_price,
             selected_photos: updated.selected_photos,
@@ -297,6 +304,7 @@ export function useProjects() {
         wedding_video_enabled: Boolean(existing.wedding_video_enabled),
         wedding_video_package: existing.wedding_video_package ?? "",
         wedding_video_price: Number(existing.wedding_video_price ?? 0),
+        wedding_photobooth_enabled: Boolean(existing.wedding_photobooth_enabled),
         wedding_photobooth_package: existing.wedding_photobooth_package ?? "",
         wedding_photobooth_price: Number(existing.wedding_photobooth_price ?? 0),
         workflow_status: nextStatus,

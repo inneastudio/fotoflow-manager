@@ -56,6 +56,7 @@ function defaultValues(initialValues?: Partial<ProjectFormValues>): ProjectFormV
     wedding_video_enabled: false,
     wedding_video_package: "",
     wedding_video_price: 0,
+    wedding_photobooth_enabled: false,
     wedding_photobooth_package: "",
     wedding_photobooth_price: 0,
     selected_photos: 0,
@@ -115,6 +116,7 @@ export function ProjectForm({
       wedding_video_enabled: Boolean(project.wedding_video_enabled),
       wedding_video_package: project.wedding_video_package ?? "",
       wedding_video_price: Number(project.wedding_video_price ?? 0),
+      wedding_photobooth_enabled: Boolean(project.wedding_photobooth_enabled),
       wedding_photobooth_package: project.wedding_photobooth_package ?? "",
       wedding_photobooth_price: Number(project.wedding_photobooth_price ?? 0),
       selected_photos: project.selected_photos,
@@ -139,10 +141,11 @@ export function ProjectForm({
     return (
       Number(values.wedding_package_price || 0) +
       (values.wedding_video_enabled ? Number(values.wedding_video_price || 0) : 0) +
-      Number(values.wedding_photobooth_price || 0)
+      (values.wedding_photobooth_enabled ? Number(values.wedding_photobooth_price || 0) : 0)
     );
   }, [
     values.wedding_package_price,
+    values.wedding_photobooth_enabled,
     values.wedding_photobooth_price,
     values.wedding_video_enabled,
     values.wedding_video_price
@@ -558,31 +561,6 @@ export function ProjectForm({
                   }
                 />
               </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium text-ink">Paket snemanja</span>
-                <input
-                  className="input"
-                  value={values.wedding_video_package}
-                  onChange={(event) => {
-                    updateValue("wedding_video_package", event.target.value);
-                    if (event.target.value) updateValue("wedding_video_enabled", true);
-                  }}
-                  placeholder="npr. highlights, celodnevno snemanje ..."
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium text-ink">Cena snemanja</span>
-                <input
-                  className="input"
-                  min="0"
-                  step="1"
-                  type="number"
-                  value={values.wedding_video_price}
-                  onChange={(event) =>
-                    updateValue("wedding_video_price", Number(event.target.value))
-                  }
-                />
-              </label>
               <label className="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-ink md:col-span-2">
                 <input
                   type="checkbox"
@@ -591,32 +569,74 @@ export function ProjectForm({
                     updateValue("wedding_video_enabled", event.target.checked)
                   }
                 />
-                Snemanje je vključeno
+                Dodaj snemanje
               </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium text-ink">Photobooth paket</span>
+              {values.wedding_video_enabled ? (
+                <>
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium text-ink">Paket snemanja</span>
+                    <input
+                      className="input"
+                      value={values.wedding_video_package}
+                      onChange={(event) =>
+                        updateValue("wedding_video_package", event.target.value)
+                      }
+                      placeholder="npr. highlights, celodnevno snemanje ..."
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium text-ink">Cena snemanja</span>
+                    <input
+                      className="input"
+                      min="0"
+                      step="1"
+                      type="number"
+                      value={values.wedding_video_price}
+                      onChange={(event) =>
+                        updateValue("wedding_video_price", Number(event.target.value))
+                      }
+                    />
+                  </label>
+                </>
+              ) : null}
+              <label className="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-ink md:col-span-2">
                 <input
-                  className="input"
-                  value={values.wedding_photobooth_package}
+                  type="checkbox"
+                  checked={values.wedding_photobooth_enabled}
                   onChange={(event) =>
-                    updateValue("wedding_photobooth_package", event.target.value)
-                  }
-                  placeholder="npr. 3 ure, neomejeni printi ..."
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-sm font-medium text-ink">Cena photobootha</span>
-                <input
-                  className="input"
-                  min="0"
-                  step="1"
-                  type="number"
-                  value={values.wedding_photobooth_price}
-                  onChange={(event) =>
-                    updateValue("wedding_photobooth_price", Number(event.target.value))
+                    updateValue("wedding_photobooth_enabled", event.target.checked)
                   }
                 />
+                Dodaj photobooth
               </label>
+              {values.wedding_photobooth_enabled ? (
+                <>
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium text-ink">Photobooth paket</span>
+                    <input
+                      className="input"
+                      value={values.wedding_photobooth_package}
+                      onChange={(event) =>
+                        updateValue("wedding_photobooth_package", event.target.value)
+                      }
+                      placeholder="npr. 3 ure, neomejeni printi ..."
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium text-ink">Cena photobootha</span>
+                    <input
+                      className="input"
+                      min="0"
+                      step="1"
+                      type="number"
+                      value={values.wedding_photobooth_price}
+                      onChange={(event) =>
+                        updateValue("wedding_photobooth_price", Number(event.target.value))
+                      }
+                    />
+                  </label>
+                </>
+              ) : null}
             </div>
 
             <p className="mt-3 text-sm font-semibold text-muted">

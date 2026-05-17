@@ -99,6 +99,7 @@ export default function ProjectsPage() {
       wedding_video_enabled: Boolean(values.wedding_video_enabled),
       wedding_video_package: values.wedding_video_package ?? "",
       wedding_video_price: Number(values.wedding_video_price ?? 0),
+      wedding_photobooth_enabled: Boolean(values.wedding_photobooth_enabled),
       wedding_photobooth_package: values.wedding_photobooth_package ?? "",
       wedding_photobooth_price: Number(values.wedding_photobooth_price ?? 0),
       workflow_status: workflowStatus,
@@ -129,6 +130,7 @@ export default function ProjectsPage() {
       wedding_video_enabled: Boolean(values.wedding_video_enabled),
       wedding_video_package: values.wedding_video_package ?? "",
       wedding_video_price: Number(values.wedding_video_price ?? 0),
+      wedding_photobooth_enabled: Boolean(values.wedding_photobooth_enabled),
       wedding_photobooth_package: values.wedding_photobooth_package ?? "",
       wedding_photobooth_price: Number(values.wedding_photobooth_price ?? 0),
       payment_status: paymentStatus

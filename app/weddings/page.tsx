@@ -5,11 +5,13 @@ import { useMemo, useState } from "react";
 import {
   CalendarHeart,
   CheckCircle2,
+  Edit3,
   FileText,
   Heart,
   Images,
   MessageCircleWarning,
   Plus,
+  Video,
   WalletCards
 } from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
@@ -29,8 +31,9 @@ import {
 const today = new Date().toISOString().slice(0, 10);
 
 export default function WeddingsPage() {
-  const { projects, loading, createProject } = useProjects();
+  const { projects, loading, createProject, updateProject } = useProjects();
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   const weddingProjects = useMemo(() => {
     return projects.filter((project) =>
@@ -87,7 +90,13 @@ export default function WeddingsPage() {
             Pregled poročnih projektov, rokov, plačil in faz obdelave.
           </p>
         </div>
-        <button className="button-primary" onClick={() => setModalOpen(true)}>
+        <button
+          className="button-primary"
+          onClick={() => {
+            setEditingProject(null);
+            setModalOpen(true);
+          }}
+        >
           <Plus className="h-4 w-4" />
           Nova poroka
         </button>
@@ -180,7 +189,14 @@ export default function WeddingsPage() {
           <div className="space-y-3">
             {upcomingWeddings.length ? (
               upcomingWeddings.map((project) => (
-                <WeddingRow key={project.id} project={project} />
+                <WeddingRow
+                  key={project.id}
+                  project={project}
+                  onEdit={(wedding) => {
+                    setEditingProject(wedding);
+                    setModalOpen(true);
+                  }}
+                />
               ))
             ) : (
               <p className="rounded-lg border border-line bg-white/60 p-4 text-sm text-muted">
@@ -235,7 +251,15 @@ export default function WeddingsPage() {
         <div className="space-y-3">
           {weddingProjects.length ? (
             orderedWeddings.map((project) => (
-              <WeddingRow key={project.id} project={project} compact />
+              <WeddingRow
+                key={project.id}
+                project={project}
+                compact
+                onEdit={(wedding) => {
+                  setEditingProject(wedding);
+                  setModalOpen(true);
+                }}
+              />
             ))
           ) : (
             <p className="rounded-lg border border-line bg-white/60 p-4 text-sm text-muted">
@@ -247,10 +271,19 @@ export default function WeddingsPage() {
 
       <ProjectModal
         open={modalOpen}
+        project={editingProject}
         initialValues={weddingInitialValues}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setEditingProject(null);
+          setModalOpen(false);
+        }}
         onSubmit={async (values) => {
-          await createProject(values);
+          if (editingProject) {
+            await updateProject(editingProject.id, values);
+          } else {
+            await createProject(values);
+          }
+          setEditingProject(null);
           setModalOpen(false);
         }}
       />
@@ -297,23 +330,25 @@ function needsMeetingReminder(project: Project) {
 
 function WeddingRow({
   project,
-  compact = false
+  compact = false,
+  onEdit
 }: {
   project: Project;
   compact?: boolean;
+  onEdit?: (project: Project) => void;
 }) {
   const latestStep = getLatestWeddingStep(project);
 
   return (
-    <Link
-      href={`/projects/${project.id}`}
-      className="block rounded-lg border border-line bg-white/60 p-3 transition hover:border-clay/40"
-    >
+    <article className="rounded-lg border border-line bg-white/60 p-3 transition hover:border-clay/40">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="truncate font-semibold text-ink">
+          <Link
+            href={`/projects/${project.id}`}
+            className="block truncate font-semibold text-ink hover:text-clay"
+          >
             {project.project_name || project.client_name}
-          </p>
+          </Link>
           <p className="mt-1 text-sm text-muted">
             {formatDate(project.shoot_date)}
             {project.shoot_time ? ` ob ${project.shoot_time}` : ""}
@@ -329,6 +364,7 @@ function WeddingRow({
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <StatusBadge>{project.workflow_status}</StatusBadge>
           {!compact ? <StatusBadge type="payment">{project.payment_status}</StatusBadge> : null}
+          <WeddingServiceBadges project={project} />
           {project.contract_file_url ? (
             <span className="inline-flex items-center gap-1 rounded-full border border-line bg-paper px-2 py-1 text-xs font-semibold text-muted">
               <FileText className="h-3.5 w-3.5" />
@@ -344,9 +380,40 @@ function WeddingRow({
           <span className="text-sm font-semibold text-ink">
             {formatCurrency(project.amount)}
           </span>
+          <button
+            type="button"
+            className="button-secondary h-8 px-2 text-xs"
+            onClick={() => onEdit?.(project)}
+          >
+            <Edit3 className="h-3.5 w-3.5" />
+            Uredi
+          </button>
         </div>
       </div>
-    </Link>
+    </article>
+  );
+}
+
+function WeddingServiceBadges({ project }: { project: Project }) {
+  return (
+    <>
+      <span className="inline-flex items-center gap-1 rounded-full border border-line bg-paper px-2 py-1 text-xs font-semibold text-muted">
+        <Heart className="h-3.5 w-3.5" />
+        Slikanje
+      </span>
+      {project.wedding_video_enabled ? (
+        <span className="inline-flex items-center gap-1 rounded-full border border-line bg-paper px-2 py-1 text-xs font-semibold text-muted">
+          <Video className="h-3.5 w-3.5" />
+          Snemanje
+        </span>
+      ) : null}
+      {project.wedding_photobooth_enabled ? (
+        <span className="inline-flex items-center gap-1 rounded-full border border-line bg-paper px-2 py-1 text-xs font-semibold text-muted">
+          <Images className="h-3.5 w-3.5" />
+          Photobooth
+        </span>
+      ) : null}
+    </>
   );
 }
 
@@ -356,7 +423,7 @@ function WeddingPackageSummary({ project }: { project: Project }) {
     project.wedding_video_enabled && project.wedding_video_package
       ? `Video: ${project.wedding_video_package}`
       : "",
-    project.wedding_photobooth_package
+    project.wedding_photobooth_enabled && project.wedding_photobooth_package
       ? `Photobooth: ${project.wedding_photobooth_package}`
       : ""
   ].filter(Boolean);

@@ -302,8 +302,10 @@ function WeddingPackageCard({ project }: { project: Project }) {
     },
     {
       label: "Photobooth",
-      name: project.wedding_photobooth_package || "Ni dodano",
-      price: project.wedding_photobooth_price ?? 0
+      name: project.wedding_photobooth_enabled
+        ? project.wedding_photobooth_package || "Vključeno"
+        : "Ni vključeno",
+      price: project.wedding_photobooth_enabled ? project.wedding_photobooth_price ?? 0 : 0
     }
   ];
   const total = rows.reduce((sum, row) => sum + Number(row.price || 0), 0);
