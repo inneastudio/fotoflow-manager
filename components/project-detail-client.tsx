@@ -23,7 +23,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { StatusTimeline } from "@/components/status-timeline";
 import { useProjects } from "@/lib/use-projects";
 import { useStudioSettings } from "@/lib/use-studio-settings";
-import { weddingWorkflowStatuses } from "@/lib/types";
+import { weddingWorkflowStatuses, type Project } from "@/lib/types";
 import {
   formatCurrency,
   formatDate,
@@ -258,6 +258,8 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
             ) : null}
           </div>
 
+          {isWedding ? <WeddingPackageCard project={project} /> : null}
+
           <div className="grid gap-4 md:grid-cols-2">
             <NoteCard title="Opombe" body={project.notes} />
             <NoteCard title="Opombe za retušo" body={project.retouch_notes} />
@@ -280,6 +282,52 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
           setModalOpen(false);
         }}
       />
+    </div>
+  );
+}
+
+function WeddingPackageCard({ project }: { project: Project }) {
+  const rows = [
+    {
+      label: "Foto paket",
+      name: project.wedding_package || "Ni dodano",
+      price: project.wedding_package_price ?? 0
+    },
+    {
+      label: "Snemanje",
+      name: project.wedding_video_enabled
+        ? project.wedding_video_package || "Vključeno"
+        : "Ni vključeno",
+      price: project.wedding_video_enabled ? project.wedding_video_price ?? 0 : 0
+    },
+    {
+      label: "Photobooth",
+      name: project.wedding_photobooth_package || "Ni dodano",
+      price: project.wedding_photobooth_price ?? 0
+    }
+  ];
+  const total = rows.reduce((sum, row) => sum + Number(row.price || 0), 0);
+
+  return (
+    <div className="surface rounded-lg p-4">
+      <p className="eyebrow">Poročna ponudba</p>
+      <div className="mt-3 divide-y divide-line">
+        {rows.map((row) => (
+          <div key={row.label} className="flex items-center justify-between gap-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-ink">{row.label}</p>
+              <p className="mt-1 text-sm text-muted">{row.name}</p>
+            </div>
+            <p className="text-sm font-semibold text-ink">{formatCurrency(row.price)}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 flex items-center justify-between rounded-lg border border-line bg-white/60 px-3 py-2">
+        <span className="text-sm font-semibold text-muted">Skupaj po paketih</span>
+        <span className="font-display text-xl font-semibold text-ink">
+          {formatCurrency(total)}
+        </span>
+      </div>
     </div>
   );
 }

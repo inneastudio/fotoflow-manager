@@ -8,6 +8,7 @@ import {
   FileText,
   Heart,
   Images,
+  MessageCircleWarning,
   Plus,
   WalletCards
 } from "lucide-react";
@@ -56,6 +57,9 @@ export default function WeddingsPage() {
   const orderedWeddings = useMemo(() => {
     return sortWeddingsByNearest(weddingProjects);
   }, [weddingProjects]);
+  const meetingReminders = useMemo(() => {
+    return upcomingWeddings.filter((project) => needsMeetingReminder(project));
+  }, [upcomingWeddings]);
 
   const editingWeddings = weddingProjects.filter((project) =>
     ["Izbor prejet", "Narejen izbor", "Urejanje"].includes(project.workflow_status)
@@ -126,6 +130,41 @@ export default function WeddingsPage() {
           tone="rose"
         />
       </section>
+
+      {meetingReminders.length ? (
+        <section className="surface rounded-lg border-clay/30 bg-clay/5 p-4 sm:p-5">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-clay/10 text-clay">
+              <MessageCircleWarning className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="eyebrow">Opomnik</p>
+              <h2 className="font-display text-2xl font-semibold text-ink">
+                Sestanek pred poroko
+              </h2>
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {meetingReminders.map((project) => (
+              <Link
+                key={project.id}
+                href={`/projects/${project.id}`}
+                className="rounded-lg border border-line bg-white/70 p-3 transition hover:border-clay/40"
+              >
+                <p className="font-semibold text-ink">
+                  {project.project_name || project.client_name}
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  Poroka: {formatDate(project.shoot_date)}
+                </p>
+                <p className="mt-1 text-xs font-semibold text-clay">
+                  Manj kot 2 meseca do poroke, sestanek še ni označen.
+                </p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="surface rounded-lg p-4 sm:p-5">
@@ -244,6 +283,18 @@ function getLatestWeddingStep(project: Project) {
   return entries.sort(([, a], [, b]) => new Date(b).getTime() - new Date(a).getTime())[0];
 }
 
+function needsMeetingReminder(project: Project) {
+  const meetingDone = Boolean(project.wedding_status_dates?.Sestanek);
+  if (meetingDone) return false;
+
+  const todayTime = new Date(new Date().toDateString()).getTime();
+  const shootDate = new Date(project.shoot_date);
+  const reminderDate = new Date(shootDate);
+  reminderDate.setMonth(reminderDate.getMonth() - 2);
+
+  return todayTime >= reminderDate.getTime() && todayTime <= shootDate.getTime();
+}
+
 function WeddingRow({
   project,
   compact = false
@@ -273,6 +324,7 @@ function WeddingRow({
               {latestStep[0]}: {formatShortDate(latestStep[1])}
             </p>
           ) : null}
+          <WeddingPackageSummary project={project} />
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <StatusBadge>{project.workflow_status}</StatusBadge>
@@ -296,4 +348,20 @@ function WeddingRow({
       </div>
     </Link>
   );
+}
+
+function WeddingPackageSummary({ project }: { project: Project }) {
+  const parts = [
+    project.wedding_package ? `Foto: ${project.wedding_package}` : "",
+    project.wedding_video_enabled && project.wedding_video_package
+      ? `Video: ${project.wedding_video_package}`
+      : "",
+    project.wedding_photobooth_package
+      ? `Photobooth: ${project.wedding_photobooth_package}`
+      : ""
+  ].filter(Boolean);
+
+  if (!parts.length) return null;
+
+  return <p className="mt-1 truncate text-xs text-muted">{parts.join(" · ")}</p>;
 }

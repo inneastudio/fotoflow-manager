@@ -94,6 +94,13 @@ export default function ProjectsPage() {
       contract_file_url: values.contract_file_url ?? "",
       timeline_file_url: values.timeline_file_url ?? "",
       wedding_status_dates: values.wedding_status_dates ?? {},
+      wedding_package: values.wedding_package ?? "",
+      wedding_package_price: Number(values.wedding_package_price ?? 0),
+      wedding_video_enabled: Boolean(values.wedding_video_enabled),
+      wedding_video_package: values.wedding_video_package ?? "",
+      wedding_video_price: Number(values.wedding_video_price ?? 0),
+      wedding_photobooth_package: values.wedding_photobooth_package ?? "",
+      wedding_photobooth_price: Number(values.wedding_photobooth_price ?? 0),
       workflow_status: workflowStatus,
       payment_status: paymentStatus
     });
@@ -117,6 +124,13 @@ export default function ProjectsPage() {
       contract_file_url: values.contract_file_url ?? "",
       timeline_file_url: values.timeline_file_url ?? "",
       wedding_status_dates: values.wedding_status_dates ?? {},
+      wedding_package: values.wedding_package ?? "",
+      wedding_package_price: Number(values.wedding_package_price ?? 0),
+      wedding_video_enabled: Boolean(values.wedding_video_enabled),
+      wedding_video_package: values.wedding_video_package ?? "",
+      wedding_video_price: Number(values.wedding_video_price ?? 0),
+      wedding_photobooth_package: values.wedding_photobooth_package ?? "",
+      wedding_photobooth_price: Number(values.wedding_photobooth_price ?? 0),
       payment_status: paymentStatus
     });
   }

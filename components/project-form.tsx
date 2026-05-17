@@ -51,6 +51,13 @@ function defaultValues(initialValues?: Partial<ProjectFormValues>): ProjectFormV
     contract_file_url: "",
     timeline_file_url: "",
     wedding_status_dates: {},
+    wedding_package: "",
+    wedding_package_price: 0,
+    wedding_video_enabled: false,
+    wedding_video_package: "",
+    wedding_video_price: 0,
+    wedding_photobooth_package: "",
+    wedding_photobooth_price: 0,
     selected_photos: 0,
     notes: "",
     retouch_notes: ""
@@ -103,6 +110,13 @@ export function ProjectForm({
       contract_file_url: project.contract_file_url ?? "",
       timeline_file_url: project.timeline_file_url ?? "",
       wedding_status_dates: project.wedding_status_dates ?? {},
+      wedding_package: project.wedding_package ?? "",
+      wedding_package_price: Number(project.wedding_package_price ?? 0),
+      wedding_video_enabled: Boolean(project.wedding_video_enabled),
+      wedding_video_package: project.wedding_video_package ?? "",
+      wedding_video_price: Number(project.wedding_video_price ?? 0),
+      wedding_photobooth_package: project.wedding_photobooth_package ?? "",
+      wedding_photobooth_price: Number(project.wedding_photobooth_price ?? 0),
       selected_photos: project.selected_photos,
       notes: project.notes,
       retouch_notes: project.retouch_notes
@@ -121,6 +135,18 @@ export function ProjectForm({
     if (values.payment_status === "Plačano") return 0;
     return calculateBalance(Number(values.amount), Number(values.deposit));
   }, [values.amount, values.deposit, values.payment_status]);
+  const weddingPackageTotal = useMemo(() => {
+    return (
+      Number(values.wedding_package_price || 0) +
+      (values.wedding_video_enabled ? Number(values.wedding_video_price || 0) : 0) +
+      Number(values.wedding_photobooth_price || 0)
+    );
+  }, [
+    values.wedding_package_price,
+    values.wedding_photobooth_price,
+    values.wedding_video_enabled,
+    values.wedding_video_price
+  ]);
 
   function updateValue<K extends keyof ProjectFormValues>(
     key: K,
@@ -490,6 +516,112 @@ export function ProjectForm({
             <h3 className="mt-1 font-display text-xl font-semibold text-ink">
               Datumi do fotografiranja
             </h3>
+          </div>
+
+          <div className="mb-5 rounded-lg border border-line bg-paper p-4">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="eyebrow">Paketi in dodatki</p>
+                <h4 className="mt-1 font-display text-lg font-semibold text-ink">
+                  Poročna ponudba
+                </h4>
+              </div>
+              <button
+                type="button"
+                className="button-secondary"
+                onClick={() => updateValue("amount", weddingPackageTotal)}
+              >
+                Uporabi {formatCurrency(weddingPackageTotal)}
+              </button>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium text-ink">Foto paket</span>
+                <input
+                  className="input"
+                  value={values.wedding_package}
+                  onChange={(event) => updateValue("wedding_package", event.target.value)}
+                  placeholder="npr. 8 ur, celodnevni paket ..."
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium text-ink">Cena foto paketa</span>
+                <input
+                  className="input"
+                  min="0"
+                  step="1"
+                  type="number"
+                  value={values.wedding_package_price}
+                  onChange={(event) =>
+                    updateValue("wedding_package_price", Number(event.target.value))
+                  }
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium text-ink">Paket snemanja</span>
+                <input
+                  className="input"
+                  value={values.wedding_video_package}
+                  onChange={(event) => {
+                    updateValue("wedding_video_package", event.target.value);
+                    if (event.target.value) updateValue("wedding_video_enabled", true);
+                  }}
+                  placeholder="npr. highlights, celodnevno snemanje ..."
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium text-ink">Cena snemanja</span>
+                <input
+                  className="input"
+                  min="0"
+                  step="1"
+                  type="number"
+                  value={values.wedding_video_price}
+                  onChange={(event) =>
+                    updateValue("wedding_video_price", Number(event.target.value))
+                  }
+                />
+              </label>
+              <label className="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-ink md:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={values.wedding_video_enabled}
+                  onChange={(event) =>
+                    updateValue("wedding_video_enabled", event.target.checked)
+                  }
+                />
+                Snemanje je vključeno
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium text-ink">Photobooth paket</span>
+                <input
+                  className="input"
+                  value={values.wedding_photobooth_package}
+                  onChange={(event) =>
+                    updateValue("wedding_photobooth_package", event.target.value)
+                  }
+                  placeholder="npr. 3 ure, neomejeni printi ..."
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium text-ink">Cena photobootha</span>
+                <input
+                  className="input"
+                  min="0"
+                  step="1"
+                  type="number"
+                  value={values.wedding_photobooth_price}
+                  onChange={(event) =>
+                    updateValue("wedding_photobooth_price", Number(event.target.value))
+                  }
+                />
+              </label>
+            </div>
+
+            <p className="mt-3 text-sm font-semibold text-muted">
+              Predlagan skupaj: {formatCurrency(weddingPackageTotal)}
+            </p>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
