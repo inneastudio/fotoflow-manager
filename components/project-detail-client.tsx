@@ -196,20 +196,24 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
           icon={FolderOpen}
           tone="charcoal"
         />
-        <MetricCard
-          label="Avans"
-          value={formatCurrency(project.deposit)}
-          detail="Že prejeto"
-          icon={FolderOpen}
-          tone="olive"
-        />
-        <MetricCard
-          label="Preostanek"
-          value={formatCurrency(project.balance)}
-          detail="Odprto plačilo"
-          icon={FolderOpen}
-          tone={project.balance ? "rose" : "olive"}
-        />
+        {String(project.shoot_type).toLowerCase().includes("poroka") ? (
+          <>
+            <MetricCard
+              label="Avans"
+              value={formatCurrency(project.deposit)}
+              detail="Že prejeto"
+              icon={FolderOpen}
+              tone="olive"
+            />
+            <MetricCard
+              label="Preostanek"
+              value={formatCurrency(project.balance)}
+              detail="Odprto plačilo"
+              icon={FolderOpen}
+              tone={project.balance ? "rose" : "olive"}
+            />
+          </>
+        ) : null}
         <MetricCard
           label="Izbrane fotografije"
           value={String(project.selected_photos)}

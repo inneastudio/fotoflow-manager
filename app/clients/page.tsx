@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Mail, Phone, Search, UserRound } from "lucide-react";
+import { ExternalLink, Mail, Phone, Search } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import type { Project } from "@/lib/types";
@@ -91,72 +91,98 @@ export default function ClientsPage() {
       </section>
 
       {loading ? (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-56 animate-pulse rounded-lg bg-mist/70" />
+        <div className="surface overflow-hidden rounded-lg">
+          {Array.from({ length: 7 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-16 animate-pulse border-b border-line last:border-b-0"
+            />
           ))}
         </div>
       ) : filteredClients.length ? (
-        <section className="grid gap-4 lg:grid-cols-2">
-          {filteredClients.map((client) => (
-            <article key={client.email || client.name} className="surface rounded-lg p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex min-w-0 items-start gap-3">
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-ink text-paper">
-                    <UserRound className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className="truncate font-display text-2xl font-semibold text-ink">
-                      {client.name}
-                    </h2>
-                <p className="mt-1 text-sm text-muted">
-                  Zadnji projekt:{" "}
-                  {client.latest.project_name || client.latest.shoot_type} ·{" "}
-                  {formatDate(client.latest.shoot_date)}
-                </p>
+        <section className="surface overflow-hidden rounded-lg">
+          <div className="hidden grid-cols-[minmax(220px,1.2fr)_minmax(220px,1fr)_minmax(220px,1fr)_90px_120px_120px_44px] gap-4 border-b border-line bg-mist/45 px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted lg:grid">
+            <span>Stranka</span>
+            <span>Kontakt</span>
+            <span>Zadnji projekt</span>
+            <span>Projekti</span>
+            <span>Skupaj</span>
+            <span>Odprto</span>
+            <span />
+          </div>
+
+          <div className="divide-y divide-line">
+            {filteredClients.map((client) => (
+              <article
+                key={client.email || client.name}
+                className="grid gap-3 px-4 py-4 transition hover:bg-mist/35 lg:grid-cols-[minmax(220px,1.2fr)_minmax(220px,1fr)_minmax(220px,1fr)_90px_120px_120px_44px] lg:items-center"
+              >
+                <div className="min-w-0">
+                  <h2 className="truncate font-display text-lg font-semibold text-ink">
+                    {client.name}
+                  </h2>
+                  <div className="mt-1 lg:hidden">
+                    <StatusBadge>{client.latest.workflow_status}</StatusBadge>
                   </div>
                 </div>
-                <StatusBadge>{client.latest.workflow_status}</StatusBadge>
-              </div>
 
-              <div className="mt-4 grid gap-2 text-sm text-muted">
-                <a className="flex items-center gap-2 hover:text-clay" href={`mailto:${client.email}`}>
-                  <Mail className="h-4 w-4 text-clay" />
-                  <span className="truncate">{client.email || "Email ni dodan"}</span>
-                </a>
-                <a className="flex items-center gap-2 hover:text-clay" href={`tel:${client.phone}`}>
-                  <Phone className="h-4 w-4 text-clay" />
-                  <span>{client.phone || "Telefon ni dodan"}</span>
-                </a>
-              </div>
-
-              <div className="mt-4 grid grid-cols-3 gap-2 rounded-lg border border-line bg-white/50 p-3 text-sm">
-                <div>
-                  <p className="text-muted">Projekti</p>
-                  <p className="mt-1 font-semibold text-ink">{client.projects.length}</p>
+                <div className="grid min-w-0 gap-1 text-sm text-muted">
+                  <a
+                    className="flex min-w-0 items-center gap-2 hover:text-ink"
+                    href={`mailto:${client.email}`}
+                  >
+                    <Mail className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{client.email || "Email ni dodan"}</span>
+                  </a>
+                  <a
+                    className="flex min-w-0 items-center gap-2 hover:text-ink"
+                    href={`tel:${client.phone}`}
+                  >
+                    <Phone className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{client.phone || "Telefon ni dodan"}</span>
+                  </a>
                 </div>
-                <div>
-                  <p className="text-muted">Skupaj</p>
-                  <p className="mt-1 font-semibold text-ink">
+
+                <div className="min-w-0 text-sm">
+                  <p className="truncate font-semibold text-ink">
+                    {client.latest.project_name || client.latest.shoot_type}
+                  </p>
+                  <p className="mt-1 truncate text-muted">
+                    {client.latest.shoot_type} · {formatDate(client.latest.shoot_date)}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 text-sm lg:block">
+                  <span className="text-muted lg:hidden">Projekti</span>
+                  <span className="font-semibold text-ink">{client.projects.length}</span>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 text-sm lg:block">
+                  <span className="text-muted lg:hidden">Skupaj</span>
+                  <span className="font-semibold text-ink">
                     {formatCurrency(client.total)}
-                  </p>
+                  </span>
                 </div>
-                <div>
-                  <p className="text-muted">Odprto</p>
-                  <p className="mt-1 font-semibold text-ink">
-                    {formatCurrency(client.outstanding)}
-                  </p>
-                </div>
-              </div>
 
-              <div className="mt-4 flex items-center justify-between">
-                <p className="text-sm text-muted">{client.latest.shoot_type}</p>
-                <Link href={`/projects/${client.latest.id}`} className="button-secondary py-1.5">
-                  Odpri zadnji projekt
+                <div className="flex items-center justify-between gap-3 text-sm lg:block">
+                  <span className="text-muted lg:hidden">Odprto</span>
+                  <span className="font-semibold text-ink">
+                    {formatCurrency(client.outstanding)}
+                  </span>
+                </div>
+
+                <Link
+                  href={`/projects/${client.latest.id}`}
+                  className="button-secondary h-10 w-full p-0 lg:w-10"
+                  aria-label="Odpri zadnji projekt"
+                  title="Odpri zadnji projekt"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  <span className="lg:sr-only">Odpri zadnji projekt</span>
                 </Link>
-              </div>
-            </article>
-          ))}
+              </article>
+            ))}
+          </div>
         </section>
       ) : (
         <section className="surface rounded-lg p-8 text-center">

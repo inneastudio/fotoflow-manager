@@ -146,8 +146,11 @@ export function ProjectForm({
 
   const balance = useMemo(() => {
     if (values.payment_status === "Plačano") return 0;
-    return calculateBalance(Number(values.amount), Number(values.deposit));
-  }, [values.amount, values.deposit, values.payment_status]);
+    return calculateBalance(
+      Number(values.amount),
+      isWedding ? Number(values.deposit) : 0
+    );
+  }, [isWedding, values.amount, values.deposit, values.payment_status]);
   const weddingPackageTotal = useMemo(() => {
     return (
       Number(values.wedding_package_price || 0) +
@@ -265,6 +268,7 @@ export function ProjectForm({
       ...current,
       shoot_type: type,
       amount: fixedPrice > 0 ? fixedPrice : current.amount,
+      deposit: type.toLowerCase().includes("poroka") ? current.deposit : 0,
       delivery_workdays: defaultDays,
       delivery_due: addBusinessDays(current.shoot_date, defaultDays)
     }));
@@ -340,7 +344,11 @@ export function ProjectForm({
     setError(null);
 
     try {
-      await onSubmit({ ...values, balance });
+      await onSubmit({
+        ...values,
+        deposit: isWedding ? Number(values.deposit || 0) : 0,
+        balance
+      });
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -572,24 +580,28 @@ export function ProjectForm({
           />
         </label>
 
-        <label className="space-y-1.5">
-          <span className="text-sm font-medium text-ink">Avans</span>
-          <input
-            className="input"
-            min="0"
-            step="1"
-            type="number"
-            value={values.deposit}
-            onChange={(event) => updateValue("deposit", Number(event.target.value))}
-          />
-        </label>
+        {isWedding ? (
+          <>
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-ink">Avans</span>
+              <input
+                className="input"
+                min="0"
+                step="1"
+                type="number"
+                value={values.deposit}
+                onChange={(event) => updateValue("deposit", Number(event.target.value))}
+              />
+            </label>
 
-        <div className="rounded-lg border border-line bg-white/60 px-3 py-2">
-          <span className="text-sm font-medium text-muted">Preostanek</span>
-          <p className="mt-2 font-display text-2xl font-semibold text-ink">
-            {formatCurrency(balance)}
-          </p>
-        </div>
+            <div className="rounded-lg border border-line bg-white/60 px-3 py-2">
+              <span className="text-sm font-medium text-muted">Preostanek</span>
+              <p className="mt-2 font-display text-2xl font-semibold text-ink">
+                {formatCurrency(balance)}
+              </p>
+            </div>
+          </>
+        ) : null}
       </div>
 
       {isWedding ? (

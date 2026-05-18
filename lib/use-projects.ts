@@ -91,7 +91,8 @@ function omitMissingOptionalColumns<
 function normalizeProject(values: ProjectFormValues, existing?: Project): Project {
   const now = new Date().toISOString();
   const amount = Number(values.amount || 0);
-  const deposit = Number(values.deposit || 0);
+  const isWedding = String(values.shoot_type).toLowerCase().includes("poroka");
+  const deposit = isWedding ? Number(values.deposit || 0) : 0;
   const selectedPhotos = Number(values.selected_photos || 0);
   const balance =
     values.payment_status === "Plačano" ? 0 : calculateBalance(amount, deposit);

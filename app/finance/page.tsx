@@ -53,7 +53,9 @@ export default function FinancePage() {
   const totalRevenue = filteredProjects
     .filter((project) => project.payment_status === "Plačano")
     .reduce((sum, project) => sum + project.amount, 0);
-  const deposits = filteredProjects.reduce((sum, project) => sum + project.deposit, 0);
+  const deposits = filteredProjects
+    .filter((project) => String(project.shoot_type).toLowerCase().includes("poroka"))
+    .reduce((sum, project) => sum + project.deposit, 0);
   const monthlyRevenue = getMonthlyRevenue(filteredProjects);
   const paidProjects = filteredProjects.filter(
     (project) => project.payment_status === "Plačano"
@@ -132,9 +134,9 @@ export default function FinancePage() {
           tone="charcoal"
         />
         <MetricCard
-          label="Prejeti avansi"
+          label="Poročni avansi"
           value={formatCurrency(deposits)}
-          detail="Vsi evidentirani avansi"
+          detail="Evidentirano samo pri porokah"
           icon={ReceiptText}
           tone="clay"
         />

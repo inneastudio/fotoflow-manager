@@ -67,17 +67,17 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen pb-20 lg:flex lg:pb-0">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-line/80 bg-paper/80 px-5 py-6 shadow-card backdrop-blur-2xl lg:block">
+    <div className="min-h-screen bg-canvas pb-20 lg:flex lg:pb-0">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-line bg-white px-5 py-6 lg:block">
         <Link href="/dashboard" className="block">
           <img
             src="/logo-fotoflow-manager-small.png"
             alt="FotoFlow Manager"
-            className="h-auto w-[230px] rounded-lg"
+            className="h-auto w-[220px] rounded-lg"
           />
         </Link>
 
-        <nav className="mt-10 space-y-1.5">
+        <nav className="mt-10 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active =
@@ -88,10 +88,10 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "group flex items-center justify-between rounded-lg px-3 py-3 text-sm font-medium transition",
+                  "group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold transition",
                   active
-                    ? "bg-ink text-paper shadow-card"
-                    : "text-muted hover:bg-white/70 hover:text-ink"
+                    ? "bg-ink text-white shadow-card"
+                    : "text-muted hover:bg-mist hover:text-ink"
                 )}
               >
                 <span className="flex items-center gap-3">
@@ -104,7 +104,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="absolute bottom-6 left-5 right-5 rounded-lg border border-line bg-white/65 p-4">
+        <div className="absolute bottom-6 left-5 right-5 rounded-lg border border-line bg-canvas p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
             {demoMode ? "Demo način" : "Prijavljen račun"}
           </p>
@@ -115,7 +115,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="w-full lg:pl-72">
-        <header className="sticky top-0 z-20 border-b border-line/70 bg-canvas/75 px-4 py-3 backdrop-blur-2xl sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-20 border-b border-line bg-white/85 px-4 py-3 backdrop-blur-2xl sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-7xl items-center justify-between">
             <Link href="/dashboard" className="flex items-center gap-3 lg:hidden">
               <img
@@ -144,7 +144,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/90 px-2 py-2 backdrop-blur-2xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/92 px-2 py-2 backdrop-blur-2xl lg:hidden">
         <div className="flex gap-1 overflow-x-auto pb-1">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -157,7 +157,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 className={cn(
                   "flex min-h-12 min-w-[78px] flex-col items-center justify-center rounded-lg text-[11px] font-medium transition",
-                  active ? "bg-ink text-paper" : "text-muted hover:bg-white/70"
+                  active ? "bg-ink text-white" : "text-muted hover:bg-mist"
                 )}
               >
                 <Icon className="mb-1 h-4 w-4" />

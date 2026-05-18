@@ -110,6 +110,7 @@ export function getProjectReminders(projects: Project[]) {
   const unpaidDeposits = projects
     .filter(
       (project) =>
+        String(project.shoot_type).toLowerCase().includes("poroka") &&
         project.workflow_status === "Rezervirano" &&
         project.payment_status === "Neplačano" &&
         Number(project.deposit || 0) <= 0

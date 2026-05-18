@@ -15,7 +15,7 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <section className="page-hero">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-3xl">
           <p className="eyebrow">{eyebrow}</p>
           <h1 className="page-title">{title}</h1>

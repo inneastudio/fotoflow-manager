@@ -246,9 +246,9 @@ export default function ProjectsPage() {
               onEdit={openEditProject}
             />
             <ReminderColumn
-              title="Avans ni plačan"
+              title="Poročni avans"
               icon={AlertCircle}
-              empty="Ni odprtih avansov."
+              empty="Ni odprtih poročnih avansov."
               items={reminders.unpaidDeposits}
               onEdit={openEditProject}
             />
