@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { CalendarDays, Columns3, Euro, MapPin } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import type { Project, ProjectFormValues, WorkflowStatus } from "@/lib/types";
 import { weddingWorkflowStatuses } from "@/lib/types";
@@ -50,16 +51,12 @@ export default function KanbanPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <section>
-        <p className="eyebrow">Pipeline</p>
-        <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
-          Kanban
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-          Pregled projektov po workflow statusih za hitro planiranje dela.
-        </p>
-      </section>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Pipeline"
+        title="Kanban"
+        description="Pregled projektov po workflow statusih za hitro planiranje dela."
+      />
 
       <section className="overflow-x-auto pb-3">
         <div className="flex min-h-[580px] gap-4">

@@ -10,6 +10,7 @@ import {
   Clock3,
   MapPin
 } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import type { Project } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
@@ -115,17 +116,12 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow">Deadlinei in fotografiranja</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
-            Koledar
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-            Mesečni pregled terminov in deadlineov.
-          </p>
-        </div>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Deadlinei in fotografiranja"
+        title="Koledar"
+        description="Mesečni pregled terminov in deadlineov."
+        actions={
         <div className="flex items-center gap-2">
           <button
             className="button-secondary h-10 w-10 p-0"
@@ -152,7 +148,8 @@ export default function CalendarPage() {
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
-      </section>
+        }
+      />
 
       <section className="grid gap-6 xl:grid-cols-[1fr_0.38fr]">
         <div className="surface rounded-lg p-4 sm:p-5">

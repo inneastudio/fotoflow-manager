@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Mail, Phone, Search, UserRound } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import type { Project } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
@@ -62,24 +63,20 @@ export default function ClientsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow">CRM</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
-            Stranke
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-            Kontaktni pregled strank in njihovih projektov.
-          </p>
-        </div>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="CRM"
+        title="Stranke"
+        description="Kontaktni pregled strank in njihovih projektov."
+        actions={
         <div className="surface rounded-lg px-4 py-3">
           <p className="text-sm text-muted">Skupaj strank</p>
           <p className="mt-1 font-display text-3xl font-semibold">
             {clients.length}
           </p>
         </div>
-      </section>
+        }
+      />
 
       <section className="surface rounded-lg p-4">
         <label className="relative block">

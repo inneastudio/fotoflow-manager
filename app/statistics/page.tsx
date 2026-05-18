@@ -22,6 +22,7 @@ import {
   UserRound
 } from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
+import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { useProjects } from "@/lib/use-projects";
 import { formatCurrency } from "@/lib/utils";
@@ -111,16 +112,12 @@ export default function StatisticsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <section>
-        <p className="eyebrow">Pregled studia</p>
-        <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
-          Statistika
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-          Pregled količine fotografiranj, tipov projektov, fotografov in statusov.
-        </p>
-      </section>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Pregled studia"
+        title="Statistika"
+        description="Pregled količine fotografiranj, tipov projektov, fotografov in statusov."
+      />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <MetricCard

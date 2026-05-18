@@ -24,15 +24,15 @@ export function MetricCard({
   tone = "charcoal"
 }: MetricCardProps) {
   return (
-    <div className="surface rounded-lg p-4 sm:p-5">
+    <div className="surface rounded-lg p-4 transition hover:-translate-y-0.5 hover:shadow-soft sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-muted">{label}</p>
-          <p className="mt-3 font-display text-3xl font-semibold leading-none text-ink">
+          <p className="mt-3 font-display text-3xl font-semibold leading-none tracking-normal text-ink">
             {value}
           </p>
         </div>
-        <div className={cn("grid h-10 w-10 place-items-center rounded-lg", toneClasses[tone])}>
+        <div className={cn("grid h-10 w-10 place-items-center rounded-lg border border-current/10", toneClasses[tone])}>
           <Icon className="h-5 w-5" />
         </div>
       </div>

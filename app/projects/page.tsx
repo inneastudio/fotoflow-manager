@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertCircle, Archive, Filter, Plus, Search, Send, type LucideIcon } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { ProjectCard } from "@/components/project-card";
 import { ProjectModal } from "@/components/project-modal";
 import {
@@ -175,22 +176,18 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow">Workflow</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
-            Projekti
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-            Filtriraj po statusu, poišči stranko in hitro odpri podrobnosti.
-          </p>
-        </div>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Workflow"
+        title="Projekti"
+        description="Filtriraj po statusu, poišči stranko in hitro odpri podrobnosti."
+        actions={
         <button className="button-primary" onClick={openNewProject}>
           <Plus className="h-4 w-4" />
           Dodaj projekt
         </button>
-      </section>
+        }
+      />
 
       <section className="grid gap-3 md:grid-cols-3">
         <div className="surface rounded-lg p-4">

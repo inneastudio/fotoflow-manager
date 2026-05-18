@@ -35,38 +35,38 @@ export function RevenueChart({ projects }: { projects: Project[] }) {
           <AreaChart data={data} margin={{ left: 0, right: 8, top: 12, bottom: 0 }}>
             <defs>
               <linearGradient id="revenueFill" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="5%" stopColor="#0071e3" stopOpacity={0.24} />
-                <stop offset="95%" stopColor="#0071e3" stopOpacity={0.02} />
+                <stop offset="5%" stopColor="#a86f51" stopOpacity={0.24} />
+                <stop offset="95%" stopColor="#a86f51" stopOpacity={0.02} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#d2d2d7" strokeDasharray="4 4" vertical={false} />
+            <CartesianGrid stroke="#e0d0bd" strokeDasharray="4 4" vertical={false} />
             <XAxis
               dataKey="month"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#6e6e73", fontSize: 12 }}
+              tick={{ fill: "#776e63", fontSize: 12 }}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
               width={54}
-              tick={{ fill: "#6e6e73", fontSize: 12 }}
+              tick={{ fill: "#776e63", fontSize: 12 }}
               tickFormatter={(value) => `${Number(value) / 1000}k`}
             />
             <Tooltip
-              cursor={{ stroke: "#0071e3", strokeWidth: 1 }}
+              cursor={{ stroke: "#a86f51", strokeWidth: 1 }}
               formatter={(value) => [formatCurrency(Number(value)), "Prihodki"]}
               contentStyle={{
                 borderRadius: 8,
-                border: "1px solid #d2d2d7",
-                background: "#ffffff",
-                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)"
+                border: "1px solid #e0d0bd",
+                background: "#fffaf2",
+                boxShadow: "0 8px 24px rgba(66, 47, 29, 0.08)"
               }}
             />
             <Area
               type="monotone"
               dataKey="prihodki"
-              stroke="#0071e3"
+              stroke="#a86f51"
               strokeWidth={3}
               fill="url(#revenueFill)"
             />

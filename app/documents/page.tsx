@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { StatusBadge } from "@/components/status-badge";
+import { PageHeader } from "@/components/page-header";
 import {
   buildContractHtml,
   buildSignedDocumentHtml,
@@ -84,19 +85,12 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="eyebrow">Dokumenti</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
-            Pogodbe, časovnice in podpisi
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-            Ustvari dokument iz podatkov poroke, izvozi PDF ali pošlji naročniku link
-            za virtualni podpis.
-          </p>
-        </div>
-      </div>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Dokumenti"
+        title="Pogodbe, časovnice in podpisi"
+        description="Ustvari dokument iz podatkov poroke, izvozi PDF ali pošlji naročniku link za virtualni podpis."
+      />
 
       <section className="surface rounded-lg p-4 sm:p-5">
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.7fr_auto] lg:items-end">

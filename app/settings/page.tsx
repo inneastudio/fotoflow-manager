@@ -19,6 +19,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
 import { useAuth } from "@/components/auth-provider";
+import { PageHeader } from "@/components/page-header";
 import { useDocumentTemplates } from "@/lib/document-templates";
 import { paymentStatuses } from "@/lib/types";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -71,16 +72,12 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <section>
-        <p className="eyebrow">Studio nastavitve</p>
-        <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
-          Nastavitve
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-          Supabase povezava, login status in delovni statusi aplikacije.
-        </p>
-      </section>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Studio nastavitve"
+        title="Nastavitve"
+        description="Supabase povezava, paketi, dokumenti in delovni statusi aplikacije."
+      />
 
       <section className="grid gap-4 lg:grid-cols-3">
         <div className="surface rounded-lg p-4 sm:p-5">

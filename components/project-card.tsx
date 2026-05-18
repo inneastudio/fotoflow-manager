@@ -42,12 +42,12 @@ export function ProjectCard({
   const projectTitle = project.project_name || project.client_name;
 
   return (
-    <article className="surface rounded-lg px-4 py-3 transition hover:border-clay/30 hover:bg-white/80">
+    <article className="surface rounded-lg px-4 py-3 transition hover:-translate-y-0.5 hover:border-clay/35 hover:bg-white/75 hover:shadow-soft">
       <div className="grid gap-3 xl:grid-cols-[minmax(220px,1.2fr)_minmax(260px,1fr)_120px_minmax(340px,1.15fr)_104px] xl:items-center">
         <div className="min-w-0">
           <Link
             href={`/projects/${project.id}`}
-            className="block truncate font-display text-lg font-semibold text-ink hover:text-clay"
+            className="block truncate font-display text-lg font-semibold tracking-normal text-ink hover:text-clay"
           >
             {projectTitle}
           </Link>
@@ -75,7 +75,7 @@ export function ProjectCard({
         </div>
 
         <div className="text-sm xl:text-right">
-          <div className="inline-flex items-center gap-2 rounded-lg bg-paper/70 px-2.5 py-1.5">
+          <div className="inline-flex items-center gap-2 rounded-lg border border-line bg-white/55 px-2.5 py-1.5">
             <p className="text-xs text-muted">Znesek</p>
             <p className="font-semibold text-ink">{formatCurrency(project.amount)}</p>
           </div>
@@ -89,7 +89,7 @@ export function ProjectCard({
           <label>
             <span className="sr-only">Workflow status</span>
             <select
-              className="input h-10 rounded-lg border-line bg-white/70 text-sm"
+              className="input h-10 rounded-lg border-line bg-white/70 text-sm font-medium"
               value={project.workflow_status}
               onChange={(event) =>
                 onWorkflowStatusChange?.(
@@ -109,7 +109,7 @@ export function ProjectCard({
           <label>
             <span className="sr-only">Plačilni status</span>
             <select
-              className="input h-10 rounded-lg border-line bg-white/70 text-sm"
+              className="input h-10 rounded-lg border-line bg-white/70 text-sm font-medium"
               value={project.payment_status}
               onChange={(event) =>
                 onPaymentStatusChange?.(
@@ -135,7 +135,7 @@ export function ProjectCard({
           <div className="flex items-center gap-0.5">
             <button
               type="button"
-              className="button-ghost h-8 w-8 p-0 text-muted"
+              className="button-ghost h-9 w-9 p-0 text-muted"
               onClick={() => onEdit?.(project)}
               aria-label="Uredi projekt"
               title="Uredi projekt"
@@ -144,7 +144,7 @@ export function ProjectCard({
             </button>
             <button
               type="button"
-              className="button-ghost h-8 w-8 p-0 text-rose hover:text-rose"
+              className="button-ghost h-9 w-9 p-0 text-rose hover:text-rose"
               onClick={() => onDelete?.(project)}
               aria-label="Izbriši projekt"
               title="Izbriši projekt"
@@ -153,7 +153,7 @@ export function ProjectCard({
             </button>
             <Link
               href={`/projects/${project.id}`}
-              className="button-secondary h-8 w-8 p-0"
+              className="button-secondary h-9 w-9 p-0"
               aria-label="Odpri projekt"
               title="Odpri projekt"
             >

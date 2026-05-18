@@ -17,6 +17,7 @@ import {
   WalletCards
 } from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
+import { PageHeader } from "@/components/page-header";
 import { ProjectModal } from "@/components/project-modal";
 import { RevenueChart } from "@/components/revenue-chart";
 import { StatusBadge } from "@/components/status-badge";
@@ -88,18 +89,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow">FotoFlow Manager</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
-            Studio pregled
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-            Pregled rezervacij, urejanja, rokov in plačil za fotografski workflow.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="FotoFlow Manager"
+        title="Studio pregled"
+        description="Pregled rezervacij, urejanja, rokov in plačil za fotografski workflow."
+        actions={
+          <>
           <button className="button-secondary" onClick={toggleFinanceVisibility}>
             {showFinance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             {showFinance ? "Skrij finance" : "Prikaži finance"}
@@ -108,8 +104,9 @@ export default function DashboardPage() {
             <Plus className="h-4 w-4" />
             Nov projekt
           </button>
-        </div>
-      </section>
+          </>
+        }
+      />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard

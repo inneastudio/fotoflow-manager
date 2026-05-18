@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Archive, Filter, RotateCcw, Search } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { ProjectCard } from "@/components/project-card";
 import { ProjectModal } from "@/components/project-modal";
 import type { PaymentStatus, Project, WorkflowStatus } from "@/lib/types";
@@ -82,21 +83,17 @@ export default function ArchivePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow">Zaključeno</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
-            Arhiv
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-            Zaključeni projekti ostanejo tukaj, glavni pregled pa ostane čist.
-          </p>
-        </div>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Zaključeno"
+        title="Arhiv"
+        description="Zaključeni projekti ostanejo tukaj, glavni pregled pa ostane čist."
+        actions={
         <Link href="/projects" className="button-secondary">
           Projekti
         </Link>
-      </section>
+        }
+      />
 
       <section className="grid gap-3 md:grid-cols-3">
         <div className="surface rounded-lg p-4">

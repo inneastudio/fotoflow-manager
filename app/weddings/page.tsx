@@ -15,6 +15,7 @@ import {
   WalletCards
 } from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
+import { PageHeader } from "@/components/page-header";
 import { ProjectModal } from "@/components/project-modal";
 import { StatusBadge } from "@/components/status-badge";
 import { useProjects } from "@/lib/use-projects";
@@ -79,17 +80,17 @@ export default function WeddingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow">Poseben workflow</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
-            Poroke
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-            Pregled poročnih projektov, rokov, plačil in faz obdelave.
-          </p>
-        </div>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Poseben workflow"
+        title="Poroke"
+        description="Pregled poročnih projektov, rokov, plačil in faz obdelave."
+        actions={
+          <>
+            <Link href="/weddings/calendar" className="button-secondary">
+              <CalendarHeart className="h-4 w-4" />
+              Koledar porok
+            </Link>
         <button
           className="button-primary"
           onClick={() => {
@@ -100,14 +101,9 @@ export default function WeddingsPage() {
           <Plus className="h-4 w-4" />
           Nova poroka
         </button>
-      </section>
-
-      <div className="flex justify-end">
-        <Link href="/weddings/calendar" className="button-secondary">
-          <CalendarHeart className="h-4 w-4" />
-          Koledar porok
-        </Link>
-      </div>
+          </>
+        }
+      />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <MetricCard
