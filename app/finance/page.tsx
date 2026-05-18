@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   CircleDollarSign,
   Clapperboard,
@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/page-header";
 import { PaymentMethodLabel } from "@/components/payment-method-label";
 import { RevenueChart } from "@/components/revenue-chart";
 import { StatusBadge } from "@/components/status-badge";
+import { useFinanceSettings } from "@/lib/use-finance-settings";
 import { useProjects } from "@/lib/use-projects";
 import { photographers, type Project, type ProjectFormValues } from "@/lib/types";
 import {
@@ -23,25 +24,17 @@ import {
   getMonthlyRevenue
 } from "@/lib/utils";
 
-const MONTHLY_REVENUE_GOAL_KEY = "fotoflow-manager-monthly-revenue-goal";
-
 export default function FinancePage() {
   const { projects, loading, updateProject } = useProjects();
   const [photographerFilter, setPhotographerFilter] = useState("Vsi");
-  const [monthlyGoal, setMonthlyGoal] = useState(0);
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem(MONTHLY_REVENUE_GOAL_KEY);
-    if (saved) setMonthlyGoal(Number(saved));
-  }, []);
+  const { monthlyRevenueGoal, updateFinanceSettings } = useFinanceSettings();
 
   function updateMonthlyGoal(value: number) {
     const normalizedValue = Math.max(Number(value || 0), 0);
-    setMonthlyGoal(normalizedValue);
-    window.localStorage.setItem(
-      MONTHLY_REVENUE_GOAL_KEY,
-      String(normalizedValue)
-    );
+    updateFinanceSettings((current) => ({
+      ...current,
+      monthlyRevenueGoal: normalizedValue
+    }));
   }
 
   const photographerOptions = useMemo(() => {
@@ -68,10 +61,10 @@ export default function FinancePage() {
   const averagePaidProject = paidProjects.length
     ? Math.round(totalRevenue / paidProjects.length)
     : 0;
-  const monthlyGoalProgress = monthlyGoal
-    ? Math.min(Math.round((monthlyRevenue / monthlyGoal) * 100), 999)
+  const monthlyGoalProgress = monthlyRevenueGoal
+    ? Math.min(Math.round((monthlyRevenue / monthlyRevenueGoal) * 100), 999)
     : 0;
-  const monthlyGoalRemaining = Math.max(monthlyGoal - monthlyRevenue, 0);
+  const monthlyGoalRemaining = Math.max(monthlyRevenueGoal - monthlyRevenue, 0);
 
   const unpaidProjects = filteredProjects
     .filter(
@@ -175,7 +168,7 @@ export default function FinancePage() {
                 min="0"
                 step="100"
                 type="number"
-                value={monthlyGoal}
+                value={monthlyRevenueGoal}
                 onChange={(event) => updateMonthlyGoal(Number(event.target.value))}
               />
             </label>
@@ -192,7 +185,7 @@ export default function FinancePage() {
               <div className="text-right">
                 <p className="text-sm text-muted">Uspešnost</p>
                 <p className="mt-1 font-display text-3xl font-semibold text-ink">
-                  {monthlyGoal ? `${monthlyGoalProgress}%` : "Ni cilja"}
+                  {monthlyRevenueGoal ? `${monthlyGoalProgress}%` : "Ni cilja"}
                 </p>
               </div>
             </div>
@@ -200,7 +193,7 @@ export default function FinancePage() {
               <div
                 className="h-full rounded-full bg-clay transition-all"
                 style={{
-                  width: `${monthlyGoal ? Math.min(monthlyGoalProgress, 100) : 0}%`
+                  width: `${monthlyRevenueGoal ? Math.min(monthlyGoalProgress, 100) : 0}%`
                 }}
               />
             </div>

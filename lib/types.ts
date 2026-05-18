@@ -135,6 +135,15 @@ export type StudioDocument = {
   updated_at: string;
 };
 
+export type AppSetting = {
+  id: string;
+  user_id?: string | null;
+  key: string;
+  value: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProjectFormValues = Omit<
   Project,
   "id" | "user_id" | "created_at" | "updated_at" | "balance"

@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/components/auth-provider";
+import { supabase } from "@/lib/supabase";
 
 export type TemplateClause = {
   id: string;
@@ -23,6 +25,7 @@ export type DocumentTemplates = {
 };
 
 const STORAGE_KEY = "fotoflow-manager-document-templates";
+const SETTINGS_KEY = "document_templates";
 
 export const defaultDocumentTemplates: DocumentTemplates = {
   contractIntro:
@@ -302,19 +305,64 @@ function writeTemplates(templates: DocumentTemplates) {
 }
 
 export function useDocumentTemplates() {
+  const { user, demoMode, loading: authLoading } = useAuth();
   const [templates, setTemplates] = useState<DocumentTemplates>(defaultDocumentTemplates);
 
+  const persistTemplates = useCallback(
+    async (next: DocumentTemplates) => {
+      writeTemplates(next);
+
+      if (!supabase || !user || demoMode) return;
+
+      await supabase
+        .from("app_settings")
+        .upsert(
+          {
+            user_id: user.id,
+            key: SETTINGS_KEY,
+            value: next as unknown as Record<string, unknown>
+          },
+          { onConflict: "user_id,key" }
+        );
+    },
+    [demoMode, user]
+  );
+
   useEffect(() => {
-    setTemplates(readTemplates());
-  }, []);
+    if (authLoading) return;
+
+    async function loadTemplates() {
+      const localTemplates = readTemplates();
+      setTemplates(localTemplates);
+
+      if (!supabase || !user || demoMode) return;
+
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", SETTINGS_KEY)
+        .maybeSingle();
+
+      if (error || !data?.value) {
+        await persistTemplates(localTemplates);
+        return;
+      }
+
+      const next = normalizeTemplates(data.value as Partial<DocumentTemplates>);
+      setTemplates(next);
+      writeTemplates(next);
+    }
+
+    loadTemplates();
+  }, [authLoading, demoMode, persistTemplates, user]);
 
   const updateTemplates = useCallback((updater: (current: DocumentTemplates) => DocumentTemplates) => {
     setTemplates((current) => {
       const next = updater(current);
-      writeTemplates(next);
+      void persistTemplates(next);
       return next;
     });
-  }, []);
+  }, [persistTemplates]);
 
   const resetTemplates = useCallback(() => {
     updateTemplates(() => defaultDocumentTemplates);

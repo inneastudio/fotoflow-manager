@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/components/auth-provider";
+import { supabase } from "@/lib/supabase";
 import {
   shootTypes,
   workflowStatuses as defaultWorkflowStatuses
@@ -29,6 +31,7 @@ type StudioSettings = {
 };
 
 const STORAGE_KEY = "fotoflow-manager-settings";
+const SETTINGS_KEY = "studio_settings";
 
 export const defaultShootTypeOptions: ShootTypeOption[] = shootTypes.map((name) => ({
   name,
@@ -78,6 +81,51 @@ function normalizeWeddingPackages(
     .filter((option) => option.name);
 }
 
+function normalizeSettings(value: Partial<StudioSettings> | null): StudioSettings {
+  const savedOptions = Array.isArray(value?.shootTypeOptions)
+    ? value.shootTypeOptions
+    : [];
+  const optionNames = new Set(savedOptions.map((option) => option.name));
+  const savedStatuses = Array.isArray(value?.workflowStatuses)
+    ? value.workflowStatuses
+    : [];
+  const cleanSavedStatuses = savedStatuses
+    .map((status) => String(status).trim())
+    .filter(Boolean);
+  const statusNames = new Set(
+    cleanSavedStatuses.map((status) => status.toLowerCase())
+  );
+
+  return {
+    shootTypeOptions: [
+      ...savedOptions,
+      ...defaultShootTypeOptions.filter((option) => !optionNames.has(option.name))
+    ].map((option) => ({
+      name: String(option.name).trim(),
+      deliveryWorkdays: Math.max(Number(option.deliveryWorkdays || 0), 0),
+      fixedPrice: Math.max(Number(option.fixedPrice || 0), 0)
+    })),
+    workflowStatuses: [
+      ...cleanSavedStatuses,
+      ...defaultWorkflowStatusOptions.filter(
+        (status) => !statusNames.has(status.toLowerCase())
+      )
+    ],
+    weddingPhotoPackages: normalizeWeddingPackages(
+      value?.weddingPhotoPackages,
+      defaultWeddingPhotoPackages
+    ),
+    weddingVideoPackages: normalizeWeddingPackages(
+      value?.weddingVideoPackages,
+      defaultWeddingVideoPackages
+    ),
+    weddingBoothPackages: normalizeWeddingPackages(
+      value?.weddingBoothPackages,
+      defaultWeddingBoothPackages
+    )
+  };
+}
+
 function readSettings(): StudioSettings {
   if (typeof window === "undefined") {
     return {
@@ -101,50 +149,7 @@ function readSettings(): StudioSettings {
   }
 
   try {
-    const parsed = JSON.parse(saved) as Partial<StudioSettings>;
-    const savedOptions = Array.isArray(parsed.shootTypeOptions)
-      ? parsed.shootTypeOptions
-      : [];
-    const optionNames = new Set(savedOptions.map((option) => option.name));
-
-    const savedStatuses = Array.isArray(parsed.workflowStatuses)
-      ? parsed.workflowStatuses
-      : [];
-    const cleanSavedStatuses = savedStatuses
-      .map((status) => String(status).trim())
-      .filter(Boolean);
-    const statusNames = new Set(
-      cleanSavedStatuses.map((status) => status.toLowerCase())
-    );
-
-    return {
-      shootTypeOptions: [
-        ...savedOptions,
-        ...defaultShootTypeOptions.filter((option) => !optionNames.has(option.name))
-      ].map((option) => ({
-        name: String(option.name).trim(),
-        deliveryWorkdays: Math.max(Number(option.deliveryWorkdays || 0), 0),
-        fixedPrice: Math.max(Number(option.fixedPrice || 0), 0)
-      })),
-      workflowStatuses: [
-        ...cleanSavedStatuses,
-        ...defaultWorkflowStatusOptions.filter(
-          (status) => !statusNames.has(status.toLowerCase())
-        )
-      ],
-      weddingPhotoPackages: normalizeWeddingPackages(
-        parsed.weddingPhotoPackages,
-        defaultWeddingPhotoPackages
-      ),
-      weddingVideoPackages: normalizeWeddingPackages(
-        parsed.weddingVideoPackages,
-        defaultWeddingVideoPackages
-      ),
-      weddingBoothPackages: normalizeWeddingPackages(
-        parsed.weddingBoothPackages,
-        defaultWeddingBoothPackages
-      )
-    };
+    return normalizeSettings(JSON.parse(saved) as Partial<StudioSettings>);
   } catch {
     return {
       shootTypeOptions: defaultShootTypeOptions,
@@ -162,6 +167,7 @@ function writeSettings(settings: StudioSettings) {
 }
 
 export function useStudioSettings() {
+  const { user, demoMode, loading: authLoading } = useAuth();
   const [settings, setSettings] = useState<StudioSettings>({
     shootTypeOptions: defaultShootTypeOptions,
     workflowStatuses: defaultWorkflowStatusOptions,
@@ -170,17 +176,61 @@ export function useStudioSettings() {
     weddingBoothPackages: defaultWeddingBoothPackages
   });
 
+  const persistSettings = useCallback(
+    async (next: StudioSettings) => {
+      writeSettings(next);
+
+      if (!supabase || !user || demoMode) return;
+
+      await supabase
+        .from("app_settings")
+        .upsert(
+          {
+            user_id: user.id,
+            key: SETTINGS_KEY,
+            value: next as unknown as Record<string, unknown>
+          },
+          { onConflict: "user_id,key" }
+        );
+    },
+    [demoMode, user]
+  );
+
   useEffect(() => {
-    setSettings(readSettings());
-  }, []);
+    if (authLoading) return;
+
+    async function loadSettings() {
+      const localSettings = readSettings();
+      setSettings(localSettings);
+
+      if (!supabase || !user || demoMode) return;
+
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", SETTINGS_KEY)
+        .maybeSingle();
+
+      if (error || !data?.value) {
+        await persistSettings(localSettings);
+        return;
+      }
+
+      const next = normalizeSettings(data.value as Partial<StudioSettings>);
+      setSettings(next);
+      writeSettings(next);
+    }
+
+    loadSettings();
+  }, [authLoading, demoMode, persistSettings, user]);
 
   const updateSettings = useCallback((updater: (current: StudioSettings) => StudioSettings) => {
     setSettings((current) => {
       const next = updater(current);
-      writeSettings(next);
+      void persistSettings(next);
       return next;
     });
-  }, []);
+  }, [persistSettings]);
 
   const addShootType = useCallback(
     (name: string, deliveryWorkdays: number, fixedPrice = 0) => {

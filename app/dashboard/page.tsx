@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   AlertCircle,
   Archive,
@@ -21,6 +21,7 @@ import { PageHeader } from "@/components/page-header";
 import { ProjectModal } from "@/components/project-modal";
 import { RevenueChart } from "@/components/revenue-chart";
 import { StatusBadge } from "@/components/status-badge";
+import { useFinanceSettings } from "@/lib/use-finance-settings";
 import { countReminders, getProjectReminders, type ReminderItem } from "@/lib/project-insights";
 import { useProjects } from "@/lib/use-projects";
 import {
@@ -33,24 +34,19 @@ import {
   sortByDateDesc
 } from "@/lib/utils";
 
-const FINANCE_VISIBILITY_KEY = "fotoflow-manager-show-dashboard-finance";
-
 export default function DashboardPage() {
   const { projects, loading, createProject } = useProjects();
   const [modalOpen, setModalOpen] = useState(false);
-  const [showFinance, setShowFinance] = useState(true);
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem(FINANCE_VISIBILITY_KEY);
-    if (saved === "false") setShowFinance(false);
-  }, []);
+  const {
+    showDashboardFinance: showFinance,
+    updateFinanceSettings
+  } = useFinanceSettings();
 
   function toggleFinanceVisibility() {
-    setShowFinance((current) => {
-      const next = !current;
-      window.localStorage.setItem(FINANCE_VISIBILITY_KEY, String(next));
-      return next;
-    });
+    updateFinanceSettings((current) => ({
+      ...current,
+      showDashboardFinance: !current.showDashboardFinance
+    }));
   }
 
   const stats = useMemo(() => {

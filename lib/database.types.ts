@@ -1,4 +1,4 @@
-import type { Project, StudioDocument } from "@/lib/types";
+import type { AppSetting, Project, StudioDocument } from "@/lib/types";
 
 export type Database = {
   public: {
@@ -23,6 +23,18 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Omit<StudioDocument, "id" | "created_at" | "updated_at">> & {
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      app_settings: {
+        Row: AppSetting;
+        Insert: Omit<AppSetting, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<AppSetting, "id" | "created_at" | "updated_at">> & {
           updated_at?: string;
         };
         Relationships: [];
