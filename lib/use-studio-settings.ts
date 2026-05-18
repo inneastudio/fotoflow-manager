@@ -12,9 +12,20 @@ export type ShootTypeOption = {
   fixedPrice: number;
 };
 
+export type WeddingPackageOption = {
+  id: string;
+  name: string;
+  price: number;
+};
+
+export type WeddingPackageGroup = "photo" | "video" | "booth";
+
 type StudioSettings = {
   shootTypeOptions: ShootTypeOption[];
   workflowStatuses: string[];
+  weddingPhotoPackages: WeddingPackageOption[];
+  weddingVideoPackages: WeddingPackageOption[];
+  weddingBoothPackages: WeddingPackageOption[];
 };
 
 const STORAGE_KEY = "fotoflow-manager-settings";
@@ -34,11 +45,47 @@ export const defaultShootTypeOptions: ShootTypeOption[] = shootTypes.map((name) 
 
 export const defaultWorkflowStatusOptions = [...defaultWorkflowStatuses];
 
+export const defaultWeddingPhotoPackages: WeddingPackageOption[] = [
+  { id: "photo-1", name: "Paket 1 - do 4 ure", price: 490 },
+  { id: "photo-2", name: "Paket 2 - do 7 ur", price: 790 },
+  { id: "photo-3", name: "Paket 3 - do 10 ur", price: 990 },
+  { id: "photo-4", name: "Paket 4 - več kot 13 ur", price: 1490 }
+];
+
+export const defaultWeddingVideoPackages: WeddingPackageOption[] = [
+  { id: "video-highlight", name: "Highlights film", price: 0 },
+  { id: "video-full-day", name: "Celodnevno snemanje", price: 0 }
+];
+
+export const defaultWeddingBoothPackages: WeddingPackageOption[] = [
+  { id: "booth-standard", name: "Standard (2 h)", price: 250 },
+  { id: "booth-party", name: "Party (3 h)", price: 290 },
+  { id: "booth-premium", name: "Premium (4 h)", price: 340 }
+];
+
+function normalizeWeddingPackages(
+  packages: WeddingPackageOption[] | undefined,
+  defaults: WeddingPackageOption[]
+) {
+  const source = Array.isArray(packages) ? packages : defaults;
+
+  return source
+    .map((option) => ({
+      id: String(option.id || crypto.randomUUID()),
+      name: String(option.name || "").trim(),
+      price: Math.max(Number(option.price || 0), 0)
+    }))
+    .filter((option) => option.name);
+}
+
 function readSettings(): StudioSettings {
   if (typeof window === "undefined") {
     return {
       shootTypeOptions: defaultShootTypeOptions,
-      workflowStatuses: defaultWorkflowStatusOptions
+      workflowStatuses: defaultWorkflowStatusOptions,
+      weddingPhotoPackages: defaultWeddingPhotoPackages,
+      weddingVideoPackages: defaultWeddingVideoPackages,
+      weddingBoothPackages: defaultWeddingBoothPackages
     };
   }
 
@@ -46,7 +93,10 @@ function readSettings(): StudioSettings {
   if (!saved) {
     return {
       shootTypeOptions: defaultShootTypeOptions,
-      workflowStatuses: defaultWorkflowStatusOptions
+      workflowStatuses: defaultWorkflowStatusOptions,
+      weddingPhotoPackages: defaultWeddingPhotoPackages,
+      weddingVideoPackages: defaultWeddingVideoPackages,
+      weddingBoothPackages: defaultWeddingBoothPackages
     };
   }
 
@@ -81,12 +131,27 @@ function readSettings(): StudioSettings {
         ...defaultWorkflowStatusOptions.filter(
           (status) => !statusNames.has(status.toLowerCase())
         )
-      ]
+      ],
+      weddingPhotoPackages: normalizeWeddingPackages(
+        parsed.weddingPhotoPackages,
+        defaultWeddingPhotoPackages
+      ),
+      weddingVideoPackages: normalizeWeddingPackages(
+        parsed.weddingVideoPackages,
+        defaultWeddingVideoPackages
+      ),
+      weddingBoothPackages: normalizeWeddingPackages(
+        parsed.weddingBoothPackages,
+        defaultWeddingBoothPackages
+      )
     };
   } catch {
     return {
       shootTypeOptions: defaultShootTypeOptions,
-      workflowStatuses: defaultWorkflowStatusOptions
+      workflowStatuses: defaultWorkflowStatusOptions,
+      weddingPhotoPackages: defaultWeddingPhotoPackages,
+      weddingVideoPackages: defaultWeddingVideoPackages,
+      weddingBoothPackages: defaultWeddingBoothPackages
     };
   }
 }
@@ -99,7 +164,10 @@ function writeSettings(settings: StudioSettings) {
 export function useStudioSettings() {
   const [settings, setSettings] = useState<StudioSettings>({
     shootTypeOptions: defaultShootTypeOptions,
-    workflowStatuses: defaultWorkflowStatusOptions
+    workflowStatuses: defaultWorkflowStatusOptions,
+    weddingPhotoPackages: defaultWeddingPhotoPackages,
+    weddingVideoPackages: defaultWeddingVideoPackages,
+    weddingBoothPackages: defaultWeddingBoothPackages
   });
 
   useEffect(() => {
@@ -241,31 +309,136 @@ export function useStudioSettings() {
     }));
   }, [updateSettings]);
 
+  function packageKey(group: WeddingPackageGroup) {
+    if (group === "video") return "weddingVideoPackages";
+    if (group === "booth") return "weddingBoothPackages";
+    return "weddingPhotoPackages";
+  }
+
+  function defaultPackagesFor(group: WeddingPackageGroup) {
+    if (group === "video") return defaultWeddingVideoPackages;
+    if (group === "booth") return defaultWeddingBoothPackages;
+    return defaultWeddingPhotoPackages;
+  }
+
+  const addWeddingPackage = useCallback(
+    (group: WeddingPackageGroup, name: string, price: number) => {
+      const cleanName = name.trim();
+      if (!cleanName) return;
+
+      updateSettings((current) => {
+        const key = packageKey(group);
+        const exists = current[key].some(
+          (option) => option.name.toLowerCase() === cleanName.toLowerCase()
+        );
+        if (exists) return current;
+
+        return {
+          ...current,
+          [key]: [
+            ...current[key],
+            {
+              id: crypto.randomUUID(),
+              name: cleanName,
+              price: Math.max(Number(price || 0), 0)
+            }
+          ]
+        };
+      });
+    },
+    [updateSettings]
+  );
+
+  const updateWeddingPackage = useCallback(
+    (
+      group: WeddingPackageGroup,
+      id: string,
+      values: Partial<Omit<WeddingPackageOption, "id">>
+    ) => {
+      updateSettings((current) => {
+        const key = packageKey(group);
+        return {
+          ...current,
+          [key]: current[key].map((option) =>
+            option.id === id
+              ? {
+                  ...option,
+                  name: values.name === undefined ? option.name : values.name,
+                  price:
+                    values.price === undefined
+                      ? option.price
+                      : Math.max(Number(values.price || 0), 0)
+                }
+              : option
+          )
+        };
+      });
+    },
+    [updateSettings]
+  );
+
+  const removeWeddingPackage = useCallback(
+    (group: WeddingPackageGroup, id: string) => {
+      updateSettings((current) => {
+        const key = packageKey(group);
+        return {
+          ...current,
+          [key]: current[key].filter((option) => option.id !== id)
+        };
+      });
+    },
+    [updateSettings]
+  );
+
+  const resetWeddingPackages = useCallback(
+    (group: WeddingPackageGroup) => {
+      updateSettings((current) => ({
+        ...current,
+        [packageKey(group)]: defaultPackagesFor(group)
+      }));
+    },
+    [updateSettings]
+  );
+
   return useMemo(
     () => ({
       shootTypeOptions: settings.shootTypeOptions,
       shootTypes: settings.shootTypeOptions.map((option) => option.name),
       workflowStatuses: settings.workflowStatuses,
+      weddingPhotoPackages: settings.weddingPhotoPackages,
+      weddingVideoPackages: settings.weddingVideoPackages,
+      weddingBoothPackages: settings.weddingBoothPackages,
       addWorkflowStatus,
       addShootType,
+      addWeddingPackage,
       renameShootType,
+      removeWeddingPackage,
       removeWorkflowStatus,
       removeShootType,
+      resetWeddingPackages,
       resetWorkflowStatuses,
       resetShootTypes,
-      updateShootType
+      updateShootType,
+      updateWeddingPackage
     }),
     [
       addWorkflowStatus,
       addShootType,
+      addWeddingPackage,
       renameShootType,
+      removeWeddingPackage,
       removeWorkflowStatus,
       removeShootType,
+      resetWeddingPackages,
       resetWorkflowStatuses,
       resetShootTypes,
       settings.shootTypeOptions,
+      settings.weddingBoothPackages,
+      settings.weddingPhotoPackages,
+      settings.weddingVideoPackages,
       settings.workflowStatuses,
-      updateShootType
+      updateShootType,
+      updateWeddingPackage
     ]
   );
 }

@@ -330,21 +330,28 @@ function WeddingPackageCard({ project }: { project: Project }) {
     {
       label: "Foto paket",
       name: project.wedding_package || "Ni dodano",
-      price: project.wedding_package_price ?? 0
+      price: project.wedding_package_price ?? 0,
+      detail: ""
     },
     {
       label: "Snemanje",
       name: project.wedding_video_enabled
         ? project.wedding_video_package || "Vključeno"
         : "Ni vključeno",
-      price: project.wedding_video_enabled ? project.wedding_video_price ?? 0 : 0
+      price: project.wedding_video_enabled ? project.wedding_video_price ?? 0 : 0,
+      detail: project.wedding_video_enabled
+        ? project.wedding_video_provider_paid
+          ? "Izvajalec plačan"
+          : "Izvajalec še ni plačan"
+        : ""
     },
     {
       label: "Photobooth",
       name: project.wedding_photobooth_enabled
         ? project.wedding_photobooth_package || "Vključeno"
         : "Ni vključeno",
-      price: project.wedding_photobooth_enabled ? project.wedding_photobooth_price ?? 0 : 0
+      price: project.wedding_photobooth_enabled ? project.wedding_photobooth_price ?? 0 : 0,
+      detail: ""
     }
   ];
   const total = rows.reduce((sum, row) => sum + Number(row.price || 0), 0);
@@ -358,6 +365,9 @@ function WeddingPackageCard({ project }: { project: Project }) {
             <div>
               <p className="text-sm font-semibold text-ink">{row.label}</p>
               <p className="mt-1 text-sm text-muted">{row.name}</p>
+              {row.detail ? (
+                <p className="mt-1 text-xs font-semibold text-muted">{row.detail}</p>
+              ) : null}
             </div>
             <p className="text-sm font-semibold text-ink">{formatCurrency(row.price)}</p>
           </div>

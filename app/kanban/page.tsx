@@ -188,6 +188,7 @@ function toFormValues(project: Project): ProjectFormValues {
     wedding_video_enabled: Boolean(project.wedding_video_enabled),
     wedding_video_package: project.wedding_video_package ?? "",
     wedding_video_price: Number(project.wedding_video_price ?? 0),
+    wedding_video_provider_paid: Boolean(project.wedding_video_provider_paid),
     wedding_photobooth_enabled: Boolean(project.wedding_photobooth_enabled),
     wedding_photobooth_package: project.wedding_photobooth_package ?? "",
     wedding_photobooth_price: Number(project.wedding_photobooth_price ?? 0),

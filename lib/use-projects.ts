@@ -31,6 +31,7 @@ function ensureProjectShape(project: Project): Project {
     wedding_video_enabled: Boolean(project.wedding_video_enabled),
     wedding_video_package: project.wedding_video_package ?? "",
     wedding_video_price: Number(project.wedding_video_price ?? 0),
+    wedding_video_provider_paid: Boolean(project.wedding_video_provider_paid),
     wedding_photobooth_enabled: Boolean(
       project.wedding_photobooth_enabled ??
         (project.wedding_photobooth_package ||
@@ -63,6 +64,28 @@ function readLocalProjects() {
 function writeLocalProjects(projects: Project[]) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+}
+
+function isMissingOptionalColumn(message: string) {
+  return (
+    message.includes("schema cache") &&
+    (message.includes("client_address") ||
+      message.includes("wedding_video_provider_paid"))
+  );
+}
+
+function omitMissingOptionalColumns<
+  T extends {
+    client_address?: string;
+    wedding_video_provider_paid?: boolean;
+  }
+>(value: T) {
+  const {
+    client_address: _clientAddress,
+    wedding_video_provider_paid: _weddingVideoProviderPaid,
+    ...rest
+  } = value;
+  return rest;
 }
 
 function normalizeProject(values: ProjectFormValues, existing?: Project): Project {
@@ -104,6 +127,7 @@ function normalizeProject(values: ProjectFormValues, existing?: Project): Projec
     wedding_video_enabled: Boolean(values.wedding_video_enabled),
     wedding_video_package: values.wedding_video_package?.trim() ?? "",
     wedding_video_price: Number(values.wedding_video_price || 0),
+    wedding_video_provider_paid: Boolean(values.wedding_video_provider_paid),
     wedding_photobooth_enabled: Boolean(values.wedding_photobooth_enabled),
     wedding_photobooth_package: values.wedding_photobooth_package?.trim() ?? "",
     wedding_photobooth_price: Number(values.wedding_photobooth_price || 0),
@@ -166,16 +190,29 @@ export function useProjects() {
       const project = normalizeProject(values);
 
       if (supabase && user && !demoMode) {
-        const { data, error: mutationError } = await supabase
+        const insertPayload = { ...project, user_id: user.id };
+        let { data, error: mutationError } = await supabase
           .from("projects")
-          .insert({ ...project, user_id: user.id })
+          .insert(insertPayload)
           .select()
           .single();
 
-        if (mutationError) throw new Error(mutationError.message);
+        if (mutationError && isMissingOptionalColumn(mutationError.message)) {
+          const retry = await supabase
+            .from("projects")
+            .insert(omitMissingOptionalColumns(insertPayload))
+            .select()
+            .single();
+          data = retry.data;
+          mutationError = retry.error;
+        }
 
-        setProjects((current) => [data, ...current]);
-        return data;
+        if (mutationError) throw new Error(mutationError.message);
+        if (!data) throw new Error("Projekt ni bil shranjen.");
+
+        const savedProject = ensureProjectShape(data);
+        setProjects((current) => [savedProject, ...current]);
+        return savedProject;
       }
 
       setProjects((current) => {
@@ -197,55 +234,70 @@ export function useProjects() {
       const updated = normalizeProject(values, existing);
 
       if (supabase && user && !demoMode) {
-        const { data, error: mutationError } = await supabase
+        const updatePayload = {
+          project_name: updated.project_name,
+          client_name: updated.client_name,
+          client_address: updated.client_address,
+          email: updated.email,
+          phone: updated.phone,
+          shoot_type: updated.shoot_type,
+          photographer: updated.photographer,
+          shoot_date: updated.shoot_date,
+          shoot_time: updated.shoot_time,
+          location: updated.location,
+          workflow_status: updated.workflow_status,
+          payment_status: updated.payment_status,
+          payment_method: updated.payment_method,
+          amount: updated.amount,
+          deposit: updated.deposit,
+          balance: updated.balance,
+          delivery_workdays: updated.delivery_workdays,
+          delivery_due: updated.delivery_due,
+          gallery_url: updated.gallery_url,
+          drive_url: updated.drive_url,
+          contract_file_url: updated.contract_file_url,
+          timeline_file_url: updated.timeline_file_url,
+          wedding_status_dates: updated.wedding_status_dates,
+          wedding_package: updated.wedding_package,
+          wedding_package_price: updated.wedding_package_price,
+          wedding_video_enabled: updated.wedding_video_enabled,
+          wedding_video_package: updated.wedding_video_package,
+          wedding_video_price: updated.wedding_video_price,
+          wedding_video_provider_paid: updated.wedding_video_provider_paid,
+          wedding_photobooth_enabled: updated.wedding_photobooth_enabled,
+          wedding_photobooth_package: updated.wedding_photobooth_package,
+          wedding_photobooth_price: updated.wedding_photobooth_price,
+          selected_photos: updated.selected_photos,
+          notes: updated.notes,
+          retouch_notes: updated.retouch_notes,
+          updated_at: updated.updated_at
+        };
+        let { data, error: mutationError } = await supabase
           .from("projects")
-          .update({
-            project_name: updated.project_name,
-            client_name: updated.client_name,
-            client_address: updated.client_address,
-            email: updated.email,
-            phone: updated.phone,
-            shoot_type: updated.shoot_type,
-            photographer: updated.photographer,
-            shoot_date: updated.shoot_date,
-            shoot_time: updated.shoot_time,
-            location: updated.location,
-            workflow_status: updated.workflow_status,
-            payment_status: updated.payment_status,
-            payment_method: updated.payment_method,
-            amount: updated.amount,
-            deposit: updated.deposit,
-            balance: updated.balance,
-            delivery_workdays: updated.delivery_workdays,
-            delivery_due: updated.delivery_due,
-            gallery_url: updated.gallery_url,
-            drive_url: updated.drive_url,
-            contract_file_url: updated.contract_file_url,
-            timeline_file_url: updated.timeline_file_url,
-            wedding_status_dates: updated.wedding_status_dates,
-            wedding_package: updated.wedding_package,
-            wedding_package_price: updated.wedding_package_price,
-            wedding_video_enabled: updated.wedding_video_enabled,
-            wedding_video_package: updated.wedding_video_package,
-            wedding_video_price: updated.wedding_video_price,
-            wedding_photobooth_enabled: updated.wedding_photobooth_enabled,
-            wedding_photobooth_package: updated.wedding_photobooth_package,
-            wedding_photobooth_price: updated.wedding_photobooth_price,
-            selected_photos: updated.selected_photos,
-            notes: updated.notes,
-            retouch_notes: updated.retouch_notes,
-            updated_at: updated.updated_at
-          })
+          .update(updatePayload)
           .eq("id", projectId)
           .select()
           .single();
 
-        if (mutationError) throw new Error(mutationError.message);
+        if (mutationError && isMissingOptionalColumn(mutationError.message)) {
+          const retry = await supabase
+            .from("projects")
+            .update(omitMissingOptionalColumns(updatePayload))
+            .eq("id", projectId)
+            .select()
+            .single();
+          data = retry.data;
+          mutationError = retry.error;
+        }
 
+        if (mutationError) throw new Error(mutationError.message);
+        if (!data) throw new Error("Projekt ni bil shranjen.");
+
+        const savedProject = ensureProjectShape(data);
         setProjects((current) =>
-          current.map((project) => (project.id === projectId ? data : project))
+          current.map((project) => (project.id === projectId ? savedProject : project))
         );
-        return data;
+        return savedProject;
       }
 
       setProjects((current) => {
@@ -307,6 +359,7 @@ export function useProjects() {
         wedding_video_enabled: Boolean(existing.wedding_video_enabled),
         wedding_video_package: existing.wedding_video_package ?? "",
         wedding_video_price: Number(existing.wedding_video_price ?? 0),
+        wedding_video_provider_paid: Boolean(existing.wedding_video_provider_paid),
         wedding_photobooth_enabled: Boolean(existing.wedding_photobooth_enabled),
         wedding_photobooth_package: existing.wedding_photobooth_package ?? "",
         wedding_photobooth_price: Number(existing.wedding_photobooth_price ?? 0),

@@ -57,6 +57,7 @@ function defaultValues(initialValues?: Partial<ProjectFormValues>): ProjectFormV
     wedding_video_enabled: false,
     wedding_video_package: "",
     wedding_video_price: 0,
+    wedding_video_provider_paid: false,
     wedding_photobooth_enabled: false,
     wedding_photobooth_package: "",
     wedding_photobooth_price: 0,
@@ -74,7 +75,14 @@ export function ProjectForm({
   onSubmit,
   onCancel
 }: ProjectFormProps) {
-  const { shootTypeOptions, shootTypes, workflowStatuses } = useStudioSettings();
+  const {
+    shootTypeOptions,
+    shootTypes,
+    weddingBoothPackages,
+    weddingPhotoPackages,
+    weddingVideoPackages,
+    workflowStatuses
+  } = useStudioSettings();
   const [values, setValues] = useState<ProjectFormValues>(defaultValues);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +126,7 @@ export function ProjectForm({
       wedding_video_enabled: Boolean(project.wedding_video_enabled),
       wedding_video_package: project.wedding_video_package ?? "",
       wedding_video_price: Number(project.wedding_video_price ?? 0),
+      wedding_video_provider_paid: Boolean(project.wedding_video_provider_paid),
       wedding_photobooth_enabled: Boolean(project.wedding_photobooth_enabled),
       wedding_photobooth_package: project.wedding_photobooth_package ?? "",
       wedding_photobooth_price: Number(project.wedding_photobooth_price ?? 0),
@@ -158,6 +167,63 @@ export function ProjectForm({
     value: ProjectFormValues[K]
   ) {
     setValues((current) => ({ ...current, [key]: value }));
+  }
+
+  function calculateWeddingTotal(nextValues: ProjectFormValues) {
+    return (
+      Number(nextValues.wedding_package_price || 0) +
+      (nextValues.wedding_video_enabled ? Number(nextValues.wedding_video_price || 0) : 0) +
+      (nextValues.wedding_photobooth_enabled
+        ? Number(nextValues.wedding_photobooth_price || 0)
+        : 0)
+    );
+  }
+
+  function updateWeddingOffer(changes: Partial<ProjectFormValues>) {
+    setValues((current) => {
+      const next = { ...current, ...changes };
+      return {
+        ...next,
+        amount: calculateWeddingTotal(next)
+      };
+    });
+  }
+
+  function applyWeddingPackage(
+    kind: "photo" | "video" | "booth",
+    packageId: string
+  ) {
+    const options =
+      kind === "video"
+        ? weddingVideoPackages
+        : kind === "booth"
+          ? weddingBoothPackages
+          : weddingPhotoPackages;
+    const selectedPackage = options.find((option) => option.id === packageId);
+    if (!selectedPackage) return;
+
+    if (kind === "video") {
+      updateWeddingOffer({
+        wedding_video_enabled: true,
+        wedding_video_package: selectedPackage.name,
+        wedding_video_price: selectedPackage.price
+      });
+      return;
+    }
+
+    if (kind === "booth") {
+      updateWeddingOffer({
+        wedding_photobooth_enabled: true,
+        wedding_photobooth_package: selectedPackage.name,
+        wedding_photobooth_price: selectedPackage.price
+      });
+      return;
+    }
+
+    updateWeddingOffer({
+      wedding_package: selectedPackage.name,
+      wedding_package_price: selectedPackage.price
+    });
   }
 
   function updateWeddingDate(status: string, date: string) {
@@ -553,6 +619,23 @@ export function ProjectForm({
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
+              <label className="space-y-1.5 md:col-span-2">
+                <span className="text-sm font-medium text-ink">
+                  Izberi foto paket iz nastavitev
+                </span>
+                <select
+                  className="input"
+                  value=""
+                  onChange={(event) => applyWeddingPackage("photo", event.target.value)}
+                >
+                  <option value="">Izberi paket ...</option>
+                  {weddingPhotoPackages.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.name} · {formatCurrency(option.price)}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <label className="space-y-1.5">
                 <span className="text-sm font-medium text-ink">Foto paket</span>
                 <input
@@ -571,7 +654,9 @@ export function ProjectForm({
                   type="number"
                   value={values.wedding_package_price}
                   onChange={(event) =>
-                    updateValue("wedding_package_price", Number(event.target.value))
+                    updateWeddingOffer({
+                      wedding_package_price: Number(event.target.value)
+                    })
                   }
                 />
               </label>
@@ -580,13 +665,32 @@ export function ProjectForm({
                   type="checkbox"
                   checked={values.wedding_video_enabled}
                   onChange={(event) =>
-                    updateValue("wedding_video_enabled", event.target.checked)
+                    updateWeddingOffer({
+                      wedding_video_enabled: event.target.checked
+                    })
                   }
                 />
                 Dodaj snemanje
               </label>
               {values.wedding_video_enabled ? (
                 <>
+                  <label className="space-y-1.5 md:col-span-2">
+                    <span className="text-sm font-medium text-ink">
+                      Izberi paket snemanja iz nastavitev
+                    </span>
+                    <select
+                      className="input"
+                      value=""
+                      onChange={(event) => applyWeddingPackage("video", event.target.value)}
+                    >
+                      <option value="">Izberi snemanje ...</option>
+                      {weddingVideoPackages.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.name} · {formatCurrency(option.price)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   <label className="space-y-1.5">
                     <span className="text-sm font-medium text-ink">Paket snemanja</span>
                     <input
@@ -607,9 +711,21 @@ export function ProjectForm({
                       type="number"
                       value={values.wedding_video_price}
                       onChange={(event) =>
-                        updateValue("wedding_video_price", Number(event.target.value))
+                        updateWeddingOffer({
+                          wedding_video_price: Number(event.target.value)
+                        })
                       }
                     />
+                  </label>
+                  <label className="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-ink md:col-span-2">
+                    <input
+                      type="checkbox"
+                      checked={values.wedding_video_provider_paid}
+                      onChange={(event) =>
+                        updateValue("wedding_video_provider_paid", event.target.checked)
+                      }
+                    />
+                    Zunanji izvajalec za snemanje je plačan
                   </label>
                 </>
               ) : null}
@@ -618,13 +734,32 @@ export function ProjectForm({
                   type="checkbox"
                   checked={values.wedding_photobooth_enabled}
                   onChange={(event) =>
-                    updateValue("wedding_photobooth_enabled", event.target.checked)
+                    updateWeddingOffer({
+                      wedding_photobooth_enabled: event.target.checked
+                    })
                   }
                 />
                 Dodaj photobooth
               </label>
               {values.wedding_photobooth_enabled ? (
                 <>
+                  <label className="space-y-1.5 md:col-span-2">
+                    <span className="text-sm font-medium text-ink">
+                      Izberi photobooth paket iz nastavitev
+                    </span>
+                    <select
+                      className="input"
+                      value=""
+                      onChange={(event) => applyWeddingPackage("booth", event.target.value)}
+                    >
+                      <option value="">Izberi booth ...</option>
+                      {weddingBoothPackages.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.name} · {formatCurrency(option.price)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   <label className="space-y-1.5">
                     <span className="text-sm font-medium text-ink">Photobooth paket</span>
                     <input
@@ -645,7 +780,9 @@ export function ProjectForm({
                       type="number"
                       value={values.wedding_photobooth_price}
                       onChange={(event) =>
-                        updateValue("wedding_photobooth_price", Number(event.target.value))
+                        updateWeddingOffer({
+                          wedding_photobooth_price: Number(event.target.value)
+                        })
                       }
                     />
                   </label>

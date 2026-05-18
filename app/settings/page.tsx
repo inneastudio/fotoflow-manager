@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
+  Camera,
   CheckCircle2,
   Database,
   FileText,
@@ -10,29 +11,44 @@ import {
   Plus,
   RotateCcw,
   ShieldCheck,
+  Sparkles,
   Trash2,
+  Video,
   Workflow
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
 import { useAuth } from "@/components/auth-provider";
 import { useDocumentTemplates } from "@/lib/document-templates";
 import { paymentStatuses } from "@/lib/types";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { useStudioSettings } from "@/lib/use-studio-settings";
+import {
+  type WeddingPackageGroup,
+  type WeddingPackageOption,
+  useStudioSettings
+} from "@/lib/use-studio-settings";
+import { formatCurrency } from "@/lib/utils";
 
 export default function SettingsPage() {
   const { user, demoMode, signOut } = useAuth();
   const {
     shootTypeOptions,
+    weddingPhotoPackages,
+    weddingVideoPackages,
+    weddingBoothPackages,
     workflowStatuses,
     addWorkflowStatus,
     addShootType,
+    addWeddingPackage,
     renameShootType,
+    removeWeddingPackage,
     removeWorkflowStatus,
     removeShootType,
+    resetWeddingPackages,
     resetWorkflowStatuses,
     resetShootTypes,
-    updateShootType
+    updateShootType,
+    updateWeddingPackage
   } = useStudioSettings();
   const { templates, updateTemplates, resetTemplates } = useDocumentTemplates();
   const [newShootType, setNewShootType] = useState("");
@@ -204,6 +220,42 @@ export default function SettingsPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-3">
+        <WeddingPackageSettings
+          title="Fotografiranje"
+          description="Poročni foto paketi, ki jih izbiraš pri poroki."
+          icon={Camera}
+          group="photo"
+          packages={weddingPhotoPackages}
+          onAdd={addWeddingPackage}
+          onUpdate={updateWeddingPackage}
+          onRemove={removeWeddingPackage}
+          onReset={resetWeddingPackages}
+        />
+        <WeddingPackageSettings
+          title="Snemanje"
+          description="Video paketi in cene zunanjega izvajalca."
+          icon={Video}
+          group="video"
+          packages={weddingVideoPackages}
+          onAdd={addWeddingPackage}
+          onUpdate={updateWeddingPackage}
+          onRemove={removeWeddingPackage}
+          onReset={resetWeddingPackages}
+        />
+        <WeddingPackageSettings
+          title="Photobooth"
+          description="Booth paketi, ki se prištejejo k poroki."
+          icon={Sparkles}
+          group="booth"
+          packages={weddingBoothPackages}
+          onAdd={addWeddingPackage}
+          onUpdate={updateWeddingPackage}
+          onRemove={removeWeddingPackage}
+          onReset={resetWeddingPackages}
+        />
       </section>
 
       <section className="surface rounded-lg p-4 sm:p-5">
@@ -599,6 +651,138 @@ export default function SettingsPage() {
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function WeddingPackageSettings({
+  title,
+  description,
+  icon: Icon,
+  group,
+  packages,
+  onAdd,
+  onUpdate,
+  onRemove,
+  onReset
+}: {
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  group: WeddingPackageGroup;
+  packages: WeddingPackageOption[];
+  onAdd: (group: WeddingPackageGroup, name: string, price: number) => void;
+  onUpdate: (
+    group: WeddingPackageGroup,
+    id: string,
+    values: Partial<Omit<WeddingPackageOption, "id">>
+  ) => void;
+  onRemove: (group: WeddingPackageGroup, id: string) => void;
+  onReset: (group: WeddingPackageGroup) => void;
+}) {
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState(0);
+
+  function handleAdd(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onAdd(group, name, price);
+    setName("");
+    setPrice(0);
+  }
+
+  return (
+    <div className="surface rounded-lg p-4 sm:p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <Icon className="h-5 w-5 text-clay" />
+            <h2 className="font-display text-2xl font-semibold">{title}</h2>
+          </div>
+          <p className="mt-2 text-sm leading-6 text-muted">{description}</p>
+        </div>
+        <button className="button-secondary" type="button" onClick={() => onReset(group)}>
+          <RotateCcw className="h-4 w-4" />
+          Ponastavi
+        </button>
+      </div>
+
+      <form onSubmit={handleAdd} className="mt-5 grid gap-3 sm:grid-cols-[1fr_120px_auto]">
+        <label className="space-y-1.5">
+          <span className="text-sm font-medium text-ink">Ime paketa</span>
+          <input
+            className="input"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="npr. Paket 1"
+          />
+        </label>
+        <label className="space-y-1.5">
+          <span className="text-sm font-medium text-ink">Cena</span>
+          <input
+            className="input"
+            min="0"
+            step="1"
+            type="number"
+            value={price}
+            onChange={(event) => setPrice(Number(event.target.value))}
+          />
+        </label>
+        <button className="button-primary self-end" type="submit">
+          <Plus className="h-4 w-4" />
+          Dodaj
+        </button>
+      </form>
+
+      <div className="mt-5 space-y-3">
+        {packages.map((item) => (
+          <div key={item.id} className="rounded-lg border border-line bg-white/70 p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <input
+                  className="input"
+                  value={item.name}
+                  onChange={(event) =>
+                    onUpdate(group, item.id, { name: event.target.value })
+                  }
+                />
+                <p className="mt-2 text-sm font-semibold text-muted">
+                  {formatCurrency(item.price)}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="button-ghost h-9 w-9 p-0 text-rose hover:text-rose"
+                onClick={() => onRemove(group, item.id)}
+                aria-label={`Odstrani ${item.name}`}
+                title="Odstrani"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+            <label className="mt-3 block space-y-1.5">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+                Cena paketa
+              </span>
+              <input
+                className="input"
+                min="0"
+                step="1"
+                type="number"
+                value={item.price}
+                onChange={(event) =>
+                  onUpdate(group, item.id, { price: Number(event.target.value) })
+                }
+              />
+            </label>
+          </div>
+        ))}
+
+        {!packages.length ? (
+          <p className="rounded-lg border border-line bg-white/60 p-3 text-sm text-muted">
+            Ni dodanih paketov.
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

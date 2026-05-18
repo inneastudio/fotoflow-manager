@@ -102,6 +102,7 @@ export type Project = {
   wedding_video_enabled?: boolean;
   wedding_video_package?: string;
   wedding_video_price?: number;
+  wedding_video_provider_paid?: boolean;
   wedding_photobooth_enabled?: boolean;
   wedding_photobooth_package?: string;
   wedding_photobooth_price?: number;
@@ -146,6 +147,7 @@ export type ProjectFormValues = Omit<
   wedding_video_enabled: boolean;
   wedding_video_package: string;
   wedding_video_price: number;
+  wedding_video_provider_paid: boolean;
   wedding_photobooth_enabled: boolean;
   wedding_photobooth_package: string;
   wedding_photobooth_price: number;

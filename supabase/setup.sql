@@ -61,6 +61,9 @@ alter table public.projects
 add column if not exists delivery_workdays integer not null default 8
 check (delivery_workdays >= 0);
 
+alter table public.projects
+add column if not exists wedding_video_provider_paid boolean not null default false;
+
 alter table public.projects drop constraint if exists projects_workflow_status_check;
 
 create index if not exists projects_user_id_idx on public.projects (user_id);

@@ -2,13 +2,19 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { CircleDollarSign, ReceiptText, TrendingUp, WalletCards } from "lucide-react";
+import {
+  CircleDollarSign,
+  Clapperboard,
+  ReceiptText,
+  TrendingUp,
+  WalletCards
+} from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
 import { PaymentMethodLabel } from "@/components/payment-method-label";
 import { RevenueChart } from "@/components/revenue-chart";
 import { StatusBadge } from "@/components/status-badge";
 import { useProjects } from "@/lib/use-projects";
-import { photographers } from "@/lib/types";
+import { photographers, type Project, type ProjectFormValues } from "@/lib/types";
 import {
   formatCurrency,
   formatDate,
@@ -17,7 +23,7 @@ import {
 } from "@/lib/utils";
 
 export default function FinancePage() {
-  const { projects, loading } = useProjects();
+  const { projects, loading, updateProject } = useProjects();
   const [photographerFilter, setPhotographerFilter] = useState("Vsi");
   const photographerOptions = useMemo(() => {
     return Array.from(
@@ -42,6 +48,23 @@ export default function FinancePage() {
   const unpaidProjects = filteredProjects
     .filter((project) => project.payment_status !== "Plačano")
     .sort((a, b) => b.balance - a.balance);
+  const weddingVideoProjects = filteredProjects
+    .filter((project) => project.wedding_video_enabled)
+    .sort((a, b) => a.shoot_date.localeCompare(b.shoot_date));
+  const unpaidVideoProviders = weddingVideoProjects.filter(
+    (project) => !project.wedding_video_provider_paid
+  );
+  const unpaidVideoProviderAmount = unpaidVideoProviders.reduce(
+    (sum, project) => sum + Number(project.wedding_video_price || 0),
+    0
+  );
+
+  async function toggleVideoProviderPaid(project: Project) {
+    await updateProject(project.id, {
+      ...toProjectFormValues(project),
+      wedding_video_provider_paid: !project.wedding_video_provider_paid
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -160,6 +183,78 @@ export default function FinancePage() {
         </div>
       </section>
 
+      <section className="surface rounded-lg p-4 sm:p-5">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="eyebrow">Poroke</p>
+            <h2 className="mt-1 font-display text-2xl font-semibold">
+              Zunanji izvajalci za snemanje
+            </h2>
+            <p className="mt-2 text-sm text-muted">
+              Ločen pregled snemanja, da vidiš komu je še treba plačati.
+            </p>
+          </div>
+          <div className="rounded-lg border border-line bg-white/70 px-3 py-2 text-sm font-semibold text-muted">
+            Odprto: {unpaidVideoProviders.length} ·{" "}
+            {formatCurrency(unpaidVideoProviderAmount)}
+          </div>
+        </div>
+
+        <div className="divide-y divide-line">
+          {weddingVideoProjects.length ? (
+            weddingVideoProjects.map((project) => (
+              <div
+                key={project.id}
+                className="grid gap-3 py-3 md:grid-cols-[1fr_0.45fr_0.45fr_auto] md:items-center"
+              >
+                <Link href={`/projects/${project.id}`} className="min-w-0">
+                  <p className="font-semibold text-ink">
+                    {project.project_name || project.client_name}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">
+                    {project.wedding_video_package || "Snemanje"} ·{" "}
+                    {formatDate(project.shoot_date)}
+                  </p>
+                </Link>
+                <div>
+                  <p className="text-xs text-muted">Cena snemanja</p>
+                  <p className="mt-1 font-semibold text-ink">
+                    {formatCurrency(project.wedding_video_price ?? 0)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted">Status izvajalca</p>
+                  <span
+                    className={[
+                      "mt-1 inline-flex rounded-lg border px-2.5 py-1 text-xs font-semibold",
+                      project.wedding_video_provider_paid
+                        ? "border-olive/20 bg-olive/10 text-olive"
+                        : "border-rose/25 bg-rose/10 text-rose"
+                    ].join(" ")}
+                  >
+                    {project.wedding_video_provider_paid ? "Plačano" : "Ni plačano"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="button-secondary justify-center"
+                  onClick={() => toggleVideoProviderPaid(project)}
+                >
+                  <Clapperboard className="h-4 w-4" />
+                  {project.wedding_video_provider_paid
+                    ? "Označi neplačano"
+                    : "Označi plačano"}
+                </button>
+              </div>
+            ))
+          ) : (
+            <p className="rounded-lg border border-line bg-white/60 p-3 text-sm text-muted">
+              Ni porok z dodanim snemanjem.
+            </p>
+          )}
+        </div>
+      </section>
+
       <section className="surface rounded-lg overflow-hidden">
         <div className="border-b border-line p-4 sm:p-5">
           <p className="eyebrow">Pregled</p>
@@ -209,4 +304,22 @@ export default function FinancePage() {
       </section>
     </div>
   );
+}
+
+function toProjectFormValues(project: Project): ProjectFormValues {
+  return {
+    ...project,
+    contract_file_url: project.contract_file_url ?? "",
+    timeline_file_url: project.timeline_file_url ?? "",
+    wedding_status_dates: project.wedding_status_dates ?? {},
+    wedding_package: project.wedding_package ?? "",
+    wedding_package_price: Number(project.wedding_package_price ?? 0),
+    wedding_video_enabled: Boolean(project.wedding_video_enabled),
+    wedding_video_package: project.wedding_video_package ?? "",
+    wedding_video_price: Number(project.wedding_video_price ?? 0),
+    wedding_video_provider_paid: Boolean(project.wedding_video_provider_paid),
+    wedding_photobooth_enabled: Boolean(project.wedding_photobooth_enabled),
+    wedding_photobooth_package: project.wedding_photobooth_package ?? "",
+    wedding_photobooth_price: Number(project.wedding_photobooth_price ?? 0)
+  };
 }
