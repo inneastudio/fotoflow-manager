@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CircleDollarSign,
   Clapperboard,
   ReceiptText,
+  Target,
   TrendingUp,
   WalletCards
 } from "lucide-react";
@@ -18,13 +19,30 @@ import { photographers, type Project, type ProjectFormValues } from "@/lib/types
 import {
   formatCurrency,
   formatDate,
-  getMonthlyRevenue,
-  getOutstandingAmount
+  getMonthlyRevenue
 } from "@/lib/utils";
+
+const MONTHLY_REVENUE_GOAL_KEY = "fotoflow-manager-monthly-revenue-goal";
 
 export default function FinancePage() {
   const { projects, loading, updateProject } = useProjects();
   const [photographerFilter, setPhotographerFilter] = useState("Vsi");
+  const [monthlyGoal, setMonthlyGoal] = useState(0);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(MONTHLY_REVENUE_GOAL_KEY);
+    if (saved) setMonthlyGoal(Number(saved));
+  }, []);
+
+  function updateMonthlyGoal(value: number) {
+    const normalizedValue = Math.max(Number(value || 0), 0);
+    setMonthlyGoal(normalizedValue);
+    window.localStorage.setItem(
+      MONTHLY_REVENUE_GOAL_KEY,
+      String(normalizedValue)
+    );
+  }
+
   const photographerOptions = useMemo(() => {
     return Array.from(
       new Set([
@@ -42,11 +60,24 @@ export default function FinancePage() {
     .filter((project) => project.payment_status === "Plačano")
     .reduce((sum, project) => sum + project.amount, 0);
   const deposits = filteredProjects.reduce((sum, project) => sum + project.deposit, 0);
-  const outstanding = getOutstandingAmount(filteredProjects);
   const monthlyRevenue = getMonthlyRevenue(filteredProjects);
+  const paidProjects = filteredProjects.filter(
+    (project) => project.payment_status === "Plačano"
+  );
+  const averagePaidProject = paidProjects.length
+    ? Math.round(totalRevenue / paidProjects.length)
+    : 0;
+  const monthlyGoalProgress = monthlyGoal
+    ? Math.min(Math.round((monthlyRevenue / monthlyGoal) * 100), 999)
+    : 0;
+  const monthlyGoalRemaining = Math.max(monthlyGoal - monthlyRevenue, 0);
 
   const unpaidProjects = filteredProjects
-    .filter((project) => project.payment_status !== "Plačano")
+    .filter(
+      (project) =>
+        project.workflow_status === "Zaključeno" &&
+        project.payment_status !== "Plačano"
+    )
     .sort((a, b) => b.balance - a.balance);
   const weddingVideoProjects = filteredProjects
     .filter((project) => project.wedding_video_enabled)
@@ -119,11 +150,79 @@ export default function FinancePage() {
         />
         <MetricCard
           label="Odprto"
-          value={formatCurrency(outstanding)}
-          detail="Preostanek za plačilo"
+          value={formatCurrency(
+            unpaidProjects.reduce((sum, project) => sum + project.balance, 0)
+          )}
+          detail="Zaključeno, še ne plačano"
           icon={WalletCards}
           tone="rose"
         />
+      </section>
+
+      <section className="surface rounded-lg p-4 sm:p-5">
+        <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <div className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-clay" />
+              <div>
+                <p className="eyebrow">Mesečna kvota</p>
+                <h2 className="mt-1 font-display text-2xl font-semibold text-ink">
+                  Cilj prometa
+                </h2>
+              </div>
+            </div>
+            <label className="mt-4 block max-w-xs space-y-1.5">
+              <span className="text-sm font-medium text-ink">Želeni mesečni promet</span>
+              <input
+                className="input"
+                min="0"
+                step="100"
+                type="number"
+                value={monthlyGoal}
+                onChange={(event) => updateMonthlyGoal(Number(event.target.value))}
+              />
+            </label>
+          </div>
+
+          <div>
+            <div className="mb-3 flex items-end justify-between gap-4">
+              <div>
+                <p className="text-sm text-muted">Ta mesec</p>
+                <p className="mt-1 font-display text-3xl font-semibold text-ink">
+                  {formatCurrency(monthlyRevenue)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted">Uspešnost</p>
+                <p className="mt-1 font-display text-3xl font-semibold text-ink">
+                  {monthlyGoal ? `${monthlyGoalProgress}%` : "Ni cilja"}
+                </p>
+              </div>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-mist">
+              <div
+                className="h-full rounded-full bg-clay transition-all"
+                style={{
+                  width: `${monthlyGoal ? Math.min(monthlyGoalProgress, 100) : 0}%`
+                }}
+              />
+            </div>
+            <div className="mt-3 grid gap-2 text-sm text-muted sm:grid-cols-2">
+              <p>
+                Do cilja manjka{" "}
+                <span className="font-semibold text-ink">
+                  {formatCurrency(monthlyGoalRemaining)}
+                </span>
+              </p>
+              <p>
+                Povprečen plačan projekt{" "}
+                <span className="font-semibold text-ink">
+                  {formatCurrency(averagePaidProject)}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -135,6 +234,9 @@ export default function FinancePage() {
             <h2 className="mt-1 font-display text-2xl font-semibold">
               Neplačani projekti
             </h2>
+            <p className="mt-2 text-sm text-muted">
+              Prikazani so samo zaključeni projekti, ki še niso označeni kot plačani.
+            </p>
           </div>
 
           <div className="space-y-3">

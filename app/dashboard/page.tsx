@@ -74,7 +74,11 @@ export default function DashboardPage() {
   const reminders = useMemo(() => getProjectReminders(projects), [projects]);
   const reminderCount = countReminders(reminders);
   const unpaidProjects = projects
-    .filter((project) => project.payment_status !== "Plačano")
+    .filter(
+      (project) =>
+        project.workflow_status === "Zaključeno" &&
+        project.payment_status !== "Plačano"
+    )
     .sort((a, b) => b.balance - a.balance)
     .slice(0, 4);
   const recentProjects = sortByDateDesc(projects).slice(0, 5);
