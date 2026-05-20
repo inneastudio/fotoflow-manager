@@ -16,6 +16,7 @@ import { paymentStatuses } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
 import { useStudioSettings } from "@/lib/use-studio-settings";
 import {
+  getProjectTitle,
   sortByNearestUpcoming
 } from "@/lib/utils";
 
@@ -421,7 +422,7 @@ function ReminderColumn({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-ink">
-                    {project.project_name || project.client_name}
+                    {getProjectTitle(project)}
                   </p>
                   <p className="mt-1 text-xs text-muted">{label}</p>
                   <p className="mt-1 text-xs text-muted">

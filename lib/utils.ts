@@ -47,6 +47,30 @@ export function calculateBalance(amount: number, deposit: number) {
   return Math.max(Number(amount || 0) - Number(deposit || 0), 0);
 }
 
+export function isWeddingProject(project: Pick<Project, "shoot_type">) {
+  return String(project.shoot_type).toLowerCase().includes("poroka");
+}
+
+export function getProjectTitle(
+  project: Pick<Project, "client_name" | "project_name" | "shoot_type">
+) {
+  return isWeddingProject(project)
+    ? project.project_name || project.client_name
+    : String(project.shoot_type);
+}
+
+export function getProjectSubtitle(
+  project: Pick<Project, "client_name" | "project_name" | "shoot_type">
+) {
+  if (isWeddingProject(project)) {
+    return project.project_name ? project.client_name : String(project.shoot_type);
+  }
+
+  return project.project_name
+    ? `${project.client_name} · ${project.project_name}`
+    : project.client_name;
+}
+
 export function toDateInputValue(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");

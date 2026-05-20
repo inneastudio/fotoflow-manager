@@ -21,7 +21,9 @@ import { photographers, type Project, type ProjectFormValues } from "@/lib/types
 import {
   formatCurrency,
   formatDate,
-  getMonthlyRevenue
+  getMonthlyRevenue,
+  getProjectSubtitle,
+  getProjectTitle
 } from "@/lib/utils";
 
 export default function FinancePage() {
@@ -244,11 +246,11 @@ export default function FinancePage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold text-ink">
-                        {project.project_name || project.client_name}
+                        {getProjectTitle(project)}
                       </p>
-                      {project.project_name ? (
-                        <p className="mt-1 text-xs text-muted">{project.client_name}</p>
-                      ) : null}
+                      <p className="mt-1 text-xs text-muted">
+                        {getProjectSubtitle(project)}
+                      </p>
                       <p className="mt-1 text-sm text-muted">
                         Rok oddaje: {formatDate(project.delivery_due)}
                       </p>
@@ -303,7 +305,7 @@ export default function FinancePage() {
               >
                 <Link href={`/projects/${project.id}`} className="min-w-0">
                   <p className="font-semibold text-ink">
-                    {project.project_name || project.client_name}
+                    {getProjectTitle(project)}
                   </p>
                   <p className="mt-1 text-sm text-muted">
                     {project.wedding_video_package || "Snemanje"} ·{" "}
@@ -365,11 +367,11 @@ export default function FinancePage() {
             >
               <div>
                 <p className="font-semibold text-ink">
-                  {project.project_name || project.client_name}
+                  {getProjectTitle(project)}
                 </p>
-                {project.project_name ? (
-                  <p className="mt-1 text-xs text-muted">{project.client_name}</p>
-                ) : null}
+                <p className="mt-1 text-xs text-muted">
+                  {getProjectSubtitle(project)}
+                </p>
                 <p className="mt-1 text-sm text-muted">
                   {project.shoot_type} · {project.photographer}
                 </p>

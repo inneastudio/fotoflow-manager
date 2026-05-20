@@ -29,6 +29,8 @@ import { weddingWorkflowStatuses, type Project } from "@/lib/types";
 import {
   formatCurrency,
   formatDate,
+  getProjectSubtitle,
+  getProjectTitle,
   getNextWorkflowStatus,
   getStatusProgress
 } from "@/lib/utils";
@@ -135,13 +137,13 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
             <ArrowLeft className="h-4 w-4" />
             Projekti
           </Link>
-          <p className="eyebrow">{project.shoot_type}</p>
+          <p className="eyebrow">{isWedding ? project.shoot_type : project.client_name}</p>
           <h1 className="mt-2 font-display text-4xl font-semibold text-ink md:text-5xl">
-            {project.project_name || project.client_name}
+            {getProjectTitle(project)}
           </h1>
-          {project.project_name ? (
-            <p className="mt-2 text-lg font-medium text-muted">{project.client_name}</p>
-          ) : null}
+          <p className="mt-2 text-lg font-medium text-muted">
+            {getProjectSubtitle(project)}
+          </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <StatusBadge>{project.workflow_status}</StatusBadge>
             <StatusBadge type="payment">{project.payment_status}</StatusBadge>

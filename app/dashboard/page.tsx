@@ -30,6 +30,8 @@ import {
   formatShortDate,
   getMonthlyRevenue,
   getOutstandingAmount,
+  getProjectSubtitle,
+  getProjectTitle,
   isSameDay,
   sortByDateDesc
 } from "@/lib/utils";
@@ -206,11 +208,11 @@ export default function DashboardPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold text-ink">
-                        {project.project_name || project.client_name}
+                        {getProjectTitle(project)}
                       </p>
-                      {project.project_name ? (
-                        <p className="mt-1 text-xs text-muted">{project.client_name}</p>
-                      ) : null}
+                      <p className="mt-1 text-xs text-muted">
+                        {getProjectSubtitle(project)}
+                      </p>
                       <p className="mt-1 text-sm text-muted">{project.location}</p>
                     </div>
                     <StatusBadge>{project.workflow_status}</StatusBadge>
@@ -245,10 +247,10 @@ export default function DashboardPage() {
               <ProjectListItem key={project.id} projectId={project.id}>
                 <div>
                   <p className="font-semibold text-ink">
-                    {project.project_name || project.client_name}
+                    {getProjectTitle(project)}
                   </p>
                   <p className="mt-1 text-sm text-muted">
-                    {project.shoot_type} · {formatShortDate(project.shoot_date)}
+                    {getProjectSubtitle(project)} · {formatShortDate(project.shoot_date)}
                   </p>
                 </div>
                 <StatusBadge>{project.workflow_status}</StatusBadge>
@@ -275,7 +277,7 @@ export default function DashboardPage() {
                   <ProjectListItem key={project.id} projectId={project.id}>
                     <div>
                       <p className="font-semibold text-ink">
-                        {project.project_name || project.client_name}
+                        {getProjectTitle(project)}
                       </p>
                       <p className="mt-1 text-sm text-muted">
                         Rok: {formatDate(project.delivery_due)}
@@ -344,7 +346,7 @@ function PriorityList({
               className="block rounded-lg border border-line bg-paper/80 p-2 transition hover:border-clay/35"
             >
               <p className="truncate text-sm font-semibold text-ink">
-                {project.project_name || project.client_name}
+                {getProjectTitle(project)}
               </p>
               <p className="mt-1 text-xs text-muted">{label}</p>
             </Link>

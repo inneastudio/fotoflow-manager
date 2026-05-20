@@ -14,7 +14,12 @@ import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import type { Project } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
-import { formatDate, formatShortDate, sortByDateDesc } from "@/lib/utils";
+import {
+  formatDate,
+  formatShortDate,
+  getProjectTitle,
+  sortByDateDesc
+} from "@/lib/utils";
 
 const weekDays = ["Pon", "Tor", "Sre", "Čet", "Pet", "Sob", "Ned"];
 
@@ -331,7 +336,7 @@ export default function CalendarPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-ink">
-                          {project.project_name || project.client_name}
+                          {getProjectTitle(project)}
                         </p>
                         <p className="mt-1 text-sm text-muted">
                           {formatShortDate(project.shoot_date)}

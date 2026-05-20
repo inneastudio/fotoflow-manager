@@ -24,7 +24,7 @@ import { useDocumentTemplates } from "@/lib/document-templates";
 import type { DocumentType, Project, StudioDocument } from "@/lib/types";
 import { useDocuments } from "@/lib/use-documents";
 import { useProjects } from "@/lib/use-projects";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getProjectTitle } from "@/lib/utils";
 
 const documentTypeLabels: Record<DocumentType, string> = {
   contract: "Poročna pogodba",
@@ -104,7 +104,7 @@ export default function DocumentsPage() {
               {weddingProjects.length ? (
                 weddingProjects.map((project) => (
                   <option key={project.id} value={project.id}>
-                    {project.project_name || project.client_name} · {formatDate(project.shoot_date)}
+                    {getProjectTitle(project)} · {formatDate(project.shoot_date)}
                   </option>
                 ))
               ) : (

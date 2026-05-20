@@ -14,7 +14,12 @@ import { StatusBadge } from "@/components/status-badge";
 import type { PaymentStatus, Project, WorkflowStatus } from "@/lib/types";
 import { paymentStatuses, weddingWorkflowStatuses } from "@/lib/types";
 import { useStudioSettings } from "@/lib/use-studio-settings";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import {
+  formatCurrency,
+  formatDate,
+  getProjectSubtitle,
+  getProjectTitle
+} from "@/lib/utils";
 
 type ProjectCardProps = {
   project: Project;
@@ -39,7 +44,8 @@ export function ProjectCard({
       project.workflow_status
     ].filter(Boolean))
   );
-  const projectTitle = project.project_name || project.client_name;
+  const projectTitle = getProjectTitle(project);
+  const projectSubtitle = getProjectSubtitle(project);
 
   return (
     <article className="surface rounded-lg px-4 py-3 transition hover:-translate-y-0.5 hover:border-clay/35 hover:bg-white/75 hover:shadow-soft">
@@ -52,11 +58,7 @@ export function ProjectCard({
             {projectTitle}
           </Link>
           <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
-            {project.project_name ? (
-              <span className="truncate">{project.client_name}</span>
-            ) : null}
-            {project.project_name ? <span className="text-muted/50">·</span> : null}
-            <span className="truncate">{project.shoot_type}</span>
+            <span className="truncate">{projectSubtitle}</span>
           </div>
         </div>
 

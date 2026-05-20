@@ -9,7 +9,13 @@ import type { Project, ProjectFormValues, WorkflowStatus } from "@/lib/types";
 import { weddingWorkflowStatuses } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
 import { useStudioSettings } from "@/lib/use-studio-settings";
-import { formatCurrency, formatShortDate, sortByNearestUpcoming } from "@/lib/utils";
+import {
+  formatCurrency,
+  formatShortDate,
+  getProjectSubtitle,
+  getProjectTitle,
+  sortByNearestUpcoming
+} from "@/lib/utils";
 
 export default function KanbanPage() {
   const { projects, loading, updateProject } = useProjects();
@@ -113,11 +119,9 @@ function KanbanCard({
         href={`/projects/${project.id}`}
         className="block font-display text-lg font-semibold text-ink hover:text-clay"
       >
-        {project.project_name || project.client_name}
+        {getProjectTitle(project)}
       </Link>
-      {project.project_name ? (
-        <p className="mt-1 text-xs text-muted">{project.client_name}</p>
-      ) : null}
+      <p className="mt-1 text-xs text-muted">{getProjectSubtitle(project)}</p>
       <div className="mt-3 space-y-1.5 text-xs text-muted">
         <p className="flex items-center gap-2">
           <CalendarDays className="h-3.5 w-3.5 text-clay" />

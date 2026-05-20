@@ -7,7 +7,13 @@ import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import type { Project } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
-import { formatCurrency, formatDate, sortByDateDesc } from "@/lib/utils";
+import {
+  formatCurrency,
+  formatDate,
+  getProjectSubtitle,
+  getProjectTitle,
+  sortByDateDesc
+} from "@/lib/utils";
 
 type ClientSummary = {
   name: string;
@@ -145,10 +151,10 @@ export default function ClientsPage() {
 
                 <div className="min-w-0 text-sm">
                   <p className="truncate font-semibold text-ink">
-                    {client.latest.project_name || client.latest.shoot_type}
+                    {getProjectTitle(client.latest)}
                   </p>
                   <p className="mt-1 truncate text-muted">
-                    {client.latest.shoot_type} · {formatDate(client.latest.shoot_date)}
+                    {getProjectSubtitle(client.latest)} · {formatDate(client.latest.shoot_date)}
                   </p>
                 </div>
 
