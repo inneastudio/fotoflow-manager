@@ -34,6 +34,17 @@ function supportsPush() {
   );
 }
 
+async function getReadyServiceWorkerRegistration() {
+  const existingRegistration = await navigator.serviceWorker.getRegistration("/");
+  const registration =
+    existingRegistration ?? (await navigator.serviceWorker.register("/sw.js", { scope: "/" }));
+
+  if (registration.active) return registration;
+
+  await navigator.serviceWorker.ready;
+  return registration;
+}
+
 export function usePushNotifications() {
   const { user } = useAuth();
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -65,7 +76,8 @@ export function usePushNotifications() {
     }
 
     navigator.serviceWorker
-      .getRegistration()
+      .register("/sw.js", { scope: "/" })
+      .then(() => navigator.serviceWorker.ready)
       .then((registration) => registration?.pushManager.getSubscription())
       .then((subscription) => {
         setState(subscription ? "enabled" : "default");
@@ -88,7 +100,7 @@ export function usePushNotifications() {
         throw new Error("Obvestila so blokirana v brskalniku.");
       }
 
-      const registration = await navigator.serviceWorker.register("/sw.js");
+      const registration = await getReadyServiceWorkerRegistration();
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey)
