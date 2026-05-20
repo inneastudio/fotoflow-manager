@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
+  Bell,
   Camera,
   CheckCircle2,
   Database,
@@ -28,7 +29,17 @@ import {
   type WeddingPackageOption,
   useStudioSettings
 } from "@/lib/use-studio-settings";
+import { usePushNotifications } from "@/lib/use-push-notifications";
 import { formatCurrency } from "@/lib/utils";
+
+function pushStatusLabel(status: string) {
+  if (status === "enabled") return "vklopljeno na tej napravi";
+  if (status === "denied") return "blokirano v brskalniku";
+  if (status === "unsupported") return "ta brskalnik ne podpira obvestil";
+  if (status === "missing-key") return "manjka VAPID ključ";
+  if (status === "signed-out") return "potrebna je prijava";
+  return "še ni vklopljeno";
+}
 
 export default function SettingsPage() {
   const { user, demoMode, signOut } = useAuth();
@@ -52,6 +63,13 @@ export default function SettingsPage() {
     updateWeddingPackage
   } = useStudioSettings();
   const { templates, updateTemplates, resetTemplates } = useDocumentTemplates();
+  const {
+    enableNotifications,
+    error: pushError,
+    saving: pushSaving,
+    sendTestNotification,
+    state: pushState
+  } = usePushNotifications();
   const [newShootType, setNewShootType] = useState("");
   const [newWorkdays, setNewWorkdays] = useState(8);
   const [newFixedPrice, setNewFixedPrice] = useState(0);
@@ -141,6 +159,54 @@ export default function SettingsPage() {
           <p className="mt-5 rounded-lg border border-line bg-white/60 p-3 text-sm text-muted">
             Projekt je pripravljen za `npm install` in `npm run dev`.
           </p>
+        </div>
+      </section>
+
+      <section className="surface rounded-lg p-4 sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-clay" />
+              <h2 className="font-display text-2xl font-semibold">
+                Telefonski opomniki
+              </h2>
+            </div>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
+              Vsako jutro prejmeš potisno obvestilo za današnja fotografiranja,
+              deadline v manj kot 3 dneh, fotografirano in še ne shranjeno ter
+              shranjeno brez poslanega izbora 2 dni po fotografiranju.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="button-primary"
+              disabled={pushSaving || pushState === "enabled"}
+              onClick={enableNotifications}
+            >
+              <Bell className="h-4 w-4" />
+              {pushState === "enabled" ? "Obvestila dovoljena" : "Dovoli opomnike"}
+            </button>
+            <button
+              type="button"
+              className="button-secondary"
+              disabled={pushSaving || pushState !== "enabled"}
+              onClick={sendTestNotification}
+            >
+              Test
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-lg border border-line bg-white/70 p-3 text-sm">
+          <p className="font-semibold text-ink">
+            Status: {pushStatusLabel(pushState)}
+          </p>
+          <p className="mt-1 text-muted">
+            Na iPhonu mora biti FotoFlow dodan na Home Screen, potem lahko dovoliš
+            potisna obvestila.
+          </p>
+          {pushError ? <p className="mt-2 text-rose">{pushError}</p> : null}
         </div>
       </section>
 

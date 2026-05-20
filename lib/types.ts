@@ -144,6 +144,23 @@ export type AppSetting = {
   updated_at: string;
 };
 
+export type PushSubscriptionRecord = {
+  id: string;
+  user_id?: string | null;
+  endpoint: string;
+  subscription: {
+    endpoint: string;
+    expirationTime?: number | null;
+    keys: {
+      p256dh: string;
+      auth: string;
+    };
+  };
+  user_agent?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProjectFormValues = Omit<
   Project,
   "id" | "user_id" | "created_at" | "updated_at" | "balance"

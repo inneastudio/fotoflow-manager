@@ -85,6 +85,7 @@ export default function ProjectsPage() {
   ).length;
   const reminders = useMemo(() => getProjectReminders(projects), [projects]);
   const reminderCount =
+    reminders.todayShoots.length +
     reminders.deadlines.length +
     reminders.unsaved.length +
     reminders.selectionLate.length +
@@ -238,7 +239,14 @@ export default function ProjectsPage() {
             </span>
           </div>
 
-          <div className="grid gap-3 xl:grid-cols-4">
+          <div className="grid gap-3 xl:grid-cols-5">
+            <ReminderColumn
+              title="Danes za fotografirat"
+              icon={AlertCircle}
+              empty="Danes ni fotografiranj."
+              items={reminders.todayShoots}
+              onEdit={openEditProject}
+            />
             <ReminderColumn
               title="Deadline v 3 dneh"
               icon={AlertCircle}

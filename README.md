@@ -15,6 +15,7 @@ Interna Next.js aplikacija za fotografski workflow: rezervacije, statusi, roki, 
 - Izbira fotografa: Žan ali Teja
 - Način plačila: Gotovina ali TRR
 - Supabase integracija za bazo in login
+- PWA potisna obvestila za jutranje opomnike
 - Demo način brez Supabase nastavitev
 - Responsive layout: sidebar na desktopu, bottom navigation na telefonu
 
@@ -44,6 +45,11 @@ Kratka verzija:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
+VAPID_PRIVATE_KEY=your-vapid-private-key
+VAPID_SUBJECT=mailto:info@inneastudio.si
+CRON_SECRET=choose-a-long-random-secret
 ```
 
 6. Ustvari vsaj enega uporabnika v aplikaciji ali Supabase Auth.
@@ -54,6 +60,21 @@ supabase/seed.sql
 ```
 
 Seed podatki se vstavijo za prvega uporabnika v `auth.users`.
+
+## Potisna obvestila
+
+Jutranji opomnik pošlje Vercel Cron na `/api/push/daily` ob `06:00 UTC`
+(poleti približno 08:00 v Sloveniji).
+
+Za vklop:
+
+1. Ustvari VAPID ključe z `npx web-push generate-vapid-keys`.
+2. Dodaj env vrednosti v Vercel: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`.
+3. Deployaj aplikacijo.
+4. Na telefonu dodaj FotoFlow na Home Screen.
+5. V aplikaciji odpri Nastavitve in klikni `Dovoli opomnike`.
+
+Opomnik zajame današnja fotografiranja, deadline v manj kot 3 dneh, fotografirano in še ne shranjeno ter shranjeno brez poslanega izbora 2 dni po fotografiranju.
 
 ## Struktura
 

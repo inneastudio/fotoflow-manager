@@ -154,7 +154,13 @@ export default function DashboardPage() {
               {reminderCount} opomnikov
             </span>
           </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <PriorityList
+              title="Danes"
+              icon={CalendarClock}
+              items={reminders.todayShoots}
+              empty="Danes ni fotografiranj."
+            />
             <PriorityList
               title="Deadline"
               icon={AlertCircle}

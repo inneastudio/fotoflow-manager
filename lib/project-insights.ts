@@ -59,14 +59,31 @@ export function sortReminderItems(items: ReminderItem[]) {
   );
 }
 
-export function getProjectReminders(projects: Project[]) {
-  const today = new Date(new Date().toDateString());
+function toDateOnly(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function getProjectReminders(projects: Project[], date = new Date()) {
+  const todayValue = toDateOnly(date);
+  const today = projectDate(todayValue);
   const threeDaysFromNow = new Date(today);
   threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
 
   const openProjects = projects.filter(
     (project) => !deliveredStatuses.includes(String(project.workflow_status))
   );
+
+  const todayShoots = projects
+    .filter((project) => project.shoot_date === todayValue)
+    .map((project) => ({
+      project,
+      label: project.shoot_time
+        ? `Danes ob ${project.shoot_time}`
+        : "Danes, ura ni določena"
+    }));
 
   const deadlines = openProjects
     .filter((project) => {
@@ -95,16 +112,17 @@ export function getProjectReminders(projects: Project[]) {
     .filter((project) => {
       const shootDate = projectDate(project.shoot_date);
       const selectionDue = new Date(shootDate);
-      selectionDue.setDate(selectionDue.getDate() + 3);
+      selectionDue.setDate(selectionDue.getDate() + 2);
 
       return (
         today >= selectionDue &&
+        savedOrLaterStatuses.includes(String(project.workflow_status)) &&
         !selectionSentOrLaterStatuses.includes(String(project.workflow_status))
       );
     })
     .map((project) => ({
       project,
-      label: `Izbor do: ${formatShortDate(addDays(project.shoot_date, 3))}`
+      label: `Izbor do: ${formatShortDate(addDays(project.shoot_date, 2))}`
     }));
 
   const unpaidDeposits = projects
@@ -121,6 +139,7 @@ export function getProjectReminders(projects: Project[]) {
     }));
 
   return {
+    todayShoots: sortReminderItems(todayShoots),
     deadlines: sortReminderItems(deadlines),
     unsaved: sortReminderItems(unsaved),
     selectionLate: sortReminderItems(selectionLate),
@@ -130,6 +149,7 @@ export function getProjectReminders(projects: Project[]) {
 
 export function countReminders(reminders: ReturnType<typeof getProjectReminders>) {
   return (
+    reminders.todayShoots.length +
     reminders.deadlines.length +
     reminders.unsaved.length +
     reminders.selectionLate.length +
