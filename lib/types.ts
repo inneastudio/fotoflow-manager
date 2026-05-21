@@ -161,6 +161,36 @@ export type PushSubscriptionRecord = {
   updated_at: string;
 };
 
+export const socialPlatforms = [
+  "Instagram",
+  "Facebook",
+  "TikTok",
+  "Pinterest",
+  "LinkedIn",
+  "Blog"
+] as const;
+
+export const socialPostStatuses = ["Osnutek", "Planirano", "Objavljeno"] as const;
+
+export type SocialPlatform = (typeof socialPlatforms)[number];
+export type SocialPostStatus = (typeof socialPostStatuses)[number];
+
+export type SocialPost = {
+  id: string;
+  user_id?: string | null;
+  title: string;
+  platform: SocialPlatform;
+  scheduled_at: string;
+  status: SocialPostStatus;
+  caption: string;
+  gallery_url: string;
+  storage_urls: string[];
+  notes: string;
+  reminder_sent_at?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProjectFormValues = Omit<
   Project,
   "id" | "user_id" | "created_at" | "updated_at" | "balance"

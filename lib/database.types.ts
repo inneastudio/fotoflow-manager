@@ -2,6 +2,7 @@ import type {
   AppSetting,
   Project,
   PushSubscriptionRecord,
+  SocialPost,
   StudioDocument
 } from "@/lib/types";
 
@@ -54,6 +55,18 @@ export type Database = {
         Update: Partial<
           Omit<PushSubscriptionRecord, "id" | "created_at" | "updated_at">
         > & {
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      social_posts: {
+        Row: SocialPost;
+        Insert: Omit<SocialPost, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<SocialPost, "id" | "created_at" | "updated_at">> & {
           updated_at?: string;
         };
         Relationships: [];

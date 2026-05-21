@@ -13,6 +13,7 @@ import {
   FolderKanban,
   Heart,
   LayoutDashboard,
+  Megaphone,
   Settings,
   UsersRound,
   WalletCards
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/projects", label: "Projekti", icon: FolderKanban },
   { href: "/weddings", label: "Poroke", icon: Heart },
+  { href: "/social", label: "Social", icon: Megaphone },
   { href: "/documents", label: "Dokumenti", icon: FileText },
   { href: "/calendar", label: "Koledar", icon: CalendarDays },
   { href: "/statistics", label: "Statistika", icon: BarChart3 },

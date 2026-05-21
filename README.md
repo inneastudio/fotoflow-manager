@@ -16,6 +16,7 @@ Interna Next.js aplikacija za fotografski workflow: rezervacije, statusi, roki, 
 - Način plačila: Gotovina ali TRR
 - Supabase integracija za bazo in login
 - PWA potisna obvestila za jutranje opomnike
+- Social media koledar z objavami, slikami, AI pomočnikom in opomnikom 30 minut prej
 - Demo način brez Supabase nastavitev
 - Responsive layout: sidebar na desktopu, bottom navigation na telefonu
 
@@ -50,6 +51,8 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
 VAPID_PRIVATE_KEY=your-vapid-private-key
 VAPID_SUBJECT=mailto:info@inneastudio.si
 CRON_SECRET=choose-a-long-random-secret
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_MODEL=gpt-5-mini
 ```
 
 6. Ustvari vsaj enega uporabnika v aplikaciji ali Supabase Auth.
@@ -75,6 +78,8 @@ Za vklop:
 5. V aplikaciji odpri Nastavitve in klikni `Dovoli opomnike`.
 
 Opomnik zajame današnja fotografiranja, deadline v manj kot 3 dneh, fotografirano in še ne shranjeno ter shranjeno brez poslanega izbora 2 dni po fotografiranju.
+
+Social media opomniki se preverjajo vsakih 15 minut in pošljejo push približno 30 minut pred planirano objavo. AI pomočnik uporablja `OPENAI_API_KEY`; če ključ ni nastavljen, aplikacija pokaže osnovni lokalni predlog.
 
 ## Struktura
 
