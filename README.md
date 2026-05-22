@@ -17,6 +17,7 @@ Interna Next.js aplikacija za fotografski workflow: rezervacije, statusi, roki, 
 - Supabase integracija za bazo in login
 - PWA potisna obvestila za jutranje opomnike
 - Social media koledar z objavami, slikami, AI pomočnikom in opomnikom 30 minut prej
+- Email opomniki strankam en dan pred fotografiranjem prek Resend
 - Demo način brez Supabase nastavitev
 - Responsive layout: sidebar na desktopu, bottom navigation na telefonu
 
@@ -53,6 +54,9 @@ VAPID_SUBJECT=mailto:info@inneastudio.si
 CRON_SECRET=choose-a-long-random-secret
 OPENAI_API_KEY=your-openai-api-key
 OPENAI_MODEL=gpt-5-mini
+RESEND_API_KEY=re_your-resend-api-key
+RESEND_FROM_EMAIL=INNEA STUDIO <info@inneastudio.si>
+RESEND_REPLY_TO_EMAIL=info@inneastudio.si
 ```
 
 6. Ustvari vsaj enega uporabnika v aplikaciji ali Supabase Auth.
@@ -80,6 +84,8 @@ Za vklop:
 Opomnik zajame današnja fotografiranja, deadline v manj kot 3 dneh, fotografirano in še ne shranjeno ter shranjeno brez poslanega izbora 2 dni po fotografiranju.
 
 Social media opomniki se preverjajo vsakih 15 minut in pošljejo push približno 30 minut pred planirano objavo. AI pomočnik uporablja `OPENAI_API_KEY`; če ključ ni nastavljen, aplikacija pokaže osnovni lokalni predlog.
+
+Email opomniki za fotografiranja se pošljejo en dan pred terminom vsem projektom, ki imajo vpisan email. Za pošiljanje mora biti v Vercel nastavljen `RESEND_API_KEY` in preverjen pošiljatelj `RESEND_FROM_EMAIL`.
 
 ## Struktura
 

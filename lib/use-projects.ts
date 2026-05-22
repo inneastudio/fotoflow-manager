@@ -41,7 +41,8 @@ function ensureProjectShape(project: Project): Project {
     wedding_photobooth_price: Number(project.wedding_photobooth_price ?? 0),
     delivery_workdays:
       project.delivery_workdays ??
-      getBusinessDaysBetween(project.shoot_date, project.delivery_due)
+      getBusinessDaysBetween(project.shoot_date, project.delivery_due),
+    shoot_reminder_sent_at: project.shoot_reminder_sent_at ?? null
   };
 }
 
@@ -70,7 +71,8 @@ function isMissingOptionalColumn(message: string) {
   return (
     message.includes("schema cache") &&
     (message.includes("client_address") ||
-      message.includes("wedding_video_provider_paid"))
+      message.includes("wedding_video_provider_paid") ||
+      message.includes("shoot_reminder_sent_at"))
   );
 }
 
@@ -78,11 +80,13 @@ function omitMissingOptionalColumns<
   T extends {
     client_address?: string;
     wedding_video_provider_paid?: boolean;
+    shoot_reminder_sent_at?: string | null;
   }
 >(value: T) {
   const {
     client_address: _clientAddress,
     wedding_video_provider_paid: _weddingVideoProviderPaid,
+    shoot_reminder_sent_at: _shootReminderSentAt,
     ...rest
   } = value;
   return rest;
@@ -120,6 +124,8 @@ function normalizeProject(values: ProjectFormValues, existing?: Project): Projec
     delivery_due: values.delivery_due,
     gallery_url: values.gallery_url.trim(),
     drive_url: values.drive_url.trim(),
+    shoot_reminder_sent_at:
+      values.shoot_reminder_sent_at ?? existing?.shoot_reminder_sent_at ?? null,
     contract_file_url: values.contract_file_url?.trim() ?? "",
     timeline_file_url: values.timeline_file_url?.trim() ?? "",
     wedding_status_dates: values.wedding_status_dates ?? {},
@@ -256,6 +262,7 @@ export function useProjects() {
           delivery_due: updated.delivery_due,
           gallery_url: updated.gallery_url,
           drive_url: updated.drive_url,
+          shoot_reminder_sent_at: updated.shoot_reminder_sent_at,
           contract_file_url: updated.contract_file_url,
           timeline_file_url: updated.timeline_file_url,
           wedding_status_dates: updated.wedding_status_dates,

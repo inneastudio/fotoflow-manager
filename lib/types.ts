@@ -94,6 +94,7 @@ export type Project = {
   delivery_due: string;
   gallery_url: string;
   drive_url: string;
+  shoot_reminder_sent_at?: string | null;
   contract_file_url?: string;
   timeline_file_url?: string;
   wedding_status_dates?: WeddingStatusDates;

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { buildReminderSummary } from "@/lib/reminder-summary";
+import { sendShootReminderEmails } from "@/lib/shoot-email-reminders";
 import { sendPushNotification } from "@/lib/push-server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -20,6 +21,7 @@ export async function GET(request: Request) {
     );
   }
   const admin = supabaseAdmin;
+  const emailReminders = await sendShootReminderEmails(admin);
 
   const { data: subscriptions, error: subscriptionError } = await admin
     .from("push_subscriptions")
@@ -34,7 +36,10 @@ export async function GET(request: Request) {
   ) as string[];
 
   if (!userIds.length) {
-    return NextResponse.json({ sent: 0, users: 0 });
+    return NextResponse.json({
+      push: { sent: 0, users: 0 },
+      email: emailReminders
+    });
   }
 
   const { data: projects, error: projectError } = await admin
@@ -83,5 +88,8 @@ export async function GET(request: Request) {
     })
   );
 
-  return NextResponse.json({ sent, failed, users: userIds.length });
+  return NextResponse.json({
+    push: { sent, failed, users: userIds.length },
+    email: emailReminders
+  });
 }
