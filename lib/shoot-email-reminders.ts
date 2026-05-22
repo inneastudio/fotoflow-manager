@@ -1,9 +1,8 @@
 import type { Database } from "@/lib/database.types";
 import { isEmailConfigured, sendResendEmail } from "@/lib/email-server";
 import {
-  defaultShootReminderEmailHtml,
+  defaultShootReminderEmailContent,
   defaultShootReminderEmailSubject,
-  defaultShootReminderEmailText
 } from "@/lib/use-studio-settings";
 import { formatDate } from "@/lib/utils";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -59,6 +58,17 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#039;");
 }
 
+function textToHtml(content: string) {
+  return content
+    .split(/\n{2,}/)
+    .map((paragraph) => {
+      const escaped = escapeHtml(paragraph.trim()).replaceAll("\n", "<br />");
+      return escaped ? `<p>${escaped}</p>` : "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
 function buildReminderEmail(project: {
   client_name: string;
   shoot_type: string;
@@ -67,12 +77,11 @@ function buildReminderEmail(project: {
   location: string;
 }, template: {
   subject: string;
-  html: string;
-  text: string;
+  content: string;
 }) {
   const title = replaceVariables(template.subject, project);
-  const htmlContent = replaceVariables(template.html, project);
-  const text = replaceVariables(template.text, project);
+  const text = replaceVariables(template.content, project);
+  const htmlContent = textToHtml(text);
 
   const html = `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6;color:#171717;max-width:640px;margin:0 auto;padding:24px">
@@ -89,8 +98,7 @@ async function loadEmailTemplate(admin: SupabaseClient<Database>, userId: string
   if (!userId) {
     return {
       subject: defaultShootReminderEmailSubject,
-      html: defaultShootReminderEmailHtml,
-      text: defaultShootReminderEmailText
+      content: defaultShootReminderEmailContent
     };
   }
 
@@ -102,14 +110,17 @@ async function loadEmailTemplate(admin: SupabaseClient<Database>, userId: string
     .maybeSingle();
   const value = data?.value as {
     shootReminderEmailSubject?: string;
+    shootReminderEmailContent?: string;
     shootReminderEmailHtml?: string;
     shootReminderEmailText?: string;
   } | null | undefined;
 
   return {
     subject: value?.shootReminderEmailSubject || defaultShootReminderEmailSubject,
-    html: value?.shootReminderEmailHtml || defaultShootReminderEmailHtml,
-    text: value?.shootReminderEmailText || defaultShootReminderEmailText
+    content:
+      value?.shootReminderEmailContent ||
+      value?.shootReminderEmailText ||
+      defaultShootReminderEmailContent
   };
 }
 

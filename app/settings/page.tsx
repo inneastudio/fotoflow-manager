@@ -57,8 +57,7 @@ export default function SettingsPage() {
     weddingVideoPackages,
     weddingBoothPackages,
     shootReminderEmailSubject,
-    shootReminderEmailHtml,
-    shootReminderEmailText,
+    shootReminderEmailContent,
     workflowStatuses,
     addWorkflowStatus,
     addShootType,
@@ -222,9 +221,10 @@ export default function SettingsPage() {
           }
         >
           <p className="mb-4 text-sm leading-6 text-muted">
-            Uporabi spremenljivke {"{ime_stranke}"}, {"{tip_fotografiranja}"}, {"{datum_fotografiranja}"}, {"{ura_fotografiranja}"} in {"{lokacija}"}.
+            Vpiši samo besedilo, kot želiš, da ga stranka prejme. Sistem ga sam
+            oblikuje v email. Uporabi lahko {"{ime_stranke}"}, {"{tip_fotografiranja}"}, {"{datum_fotografiranja}"}, {"{ura_fotografiranja}"} in {"{lokacija}"}.
           </p>
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
             <div className="space-y-4">
               <label className="block space-y-1.5">
                 <span className="text-sm font-medium text-ink">Zadeva emaila</span>
@@ -239,41 +239,27 @@ export default function SettingsPage() {
                 />
               </label>
               <label className="block space-y-1.5">
-                <span className="text-sm font-medium text-ink">HTML vsebina</span>
+                <span className="text-sm font-medium text-ink">Vsebina emaila</span>
                 <textarea
-                  className="input min-h-72 font-mono text-xs"
-                  value={shootReminderEmailHtml}
+                  className="input min-h-80"
+                  value={shootReminderEmailContent}
                   onChange={(event) =>
                     updateShootReminderEmail({
-                      shootReminderEmailHtml: event.target.value
+                      shootReminderEmailContent: event.target.value
                     })
                   }
                 />
               </label>
             </div>
-            <div className="space-y-4">
-              <label className="block space-y-1.5">
-                <span className="text-sm font-medium text-ink">Tekstovna verzija</span>
-                <textarea
-                  className="input min-h-72"
-                  value={shootReminderEmailText}
-                  onChange={(event) =>
-                    updateShootReminderEmail({
-                      shootReminderEmailText: event.target.value
-                    })
-                  }
-                />
-              </label>
-              <div className="rounded-lg border border-line bg-white/70 p-4">
-                <p className="text-sm font-semibold text-ink">Predogled zamenjav</p>
-                <p className="mt-2 text-sm leading-6 text-muted">
-                  {"{ime_stranke}"} → Ana Novak<br />
-                  {"{tip_fotografiranja}"} → Portret<br />
-                  {"{datum_fotografiranja}"} → 23. maj 2026<br />
-                  {"{ura_fotografiranja}"} → 10:00<br />
-                  {"{lokacija}"} → Studio Fiora
-                </p>
-              </div>
+            <div className="rounded-lg border border-line bg-white/70 p-4">
+              <p className="text-sm font-semibold text-ink">Spremenljivke</p>
+              <p className="mt-2 text-sm leading-6 text-muted">
+                {"{ime_stranke}"} → Ana Novak<br />
+                {"{tip_fotografiranja}"} → Portret<br />
+                {"{datum_fotografiranja}"} → 23. maj 2026<br />
+                {"{ura_fotografiranja}"} → 10:00<br />
+                {"{lokacija}"} → Studio Fiora
+              </p>
             </div>
           </div>
         </SettingsSection>
