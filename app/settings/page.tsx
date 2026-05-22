@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Bell,
@@ -21,10 +21,21 @@ import type { LucideIcon } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
-import { useDocumentTemplates } from "@/lib/document-templates";
+import {
+  defaultDocumentTemplates,
+  useDocumentTemplates
+} from "@/lib/document-templates";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { usePushNotifications } from "@/lib/use-push-notifications";
 import {
+  defaultShootReminderEmailContent,
+  defaultShootReminderEmailSubject,
+  defaultShootTypeOptions,
+  defaultWeddingBoothPackages,
+  defaultWeddingPhotoPackages,
+  defaultWeddingVideoPackages,
+  defaultWorkflowStatusOptions,
+  type StudioSettings,
   type WeddingPackageGroup,
   type WeddingPackageOption,
   useStudioSettings
@@ -52,29 +63,10 @@ type SettingsSectionId =
 export default function SettingsPage() {
   const { user, demoMode, signOut } = useAuth();
   const {
-    shootTypeOptions,
-    weddingPhotoPackages,
-    weddingVideoPackages,
-    weddingBoothPackages,
-    shootReminderEmailSubject,
-    shootReminderEmailContent,
-    workflowStatuses,
-    addWorkflowStatus,
-    addShootType,
-    addWeddingPackage,
-    renameShootType,
-    removeWeddingPackage,
-    removeWorkflowStatus,
-    removeShootType,
-    resetWeddingPackages,
-    resetShootReminderEmail,
-    resetWorkflowStatuses,
-    resetShootTypes,
-    updateShootReminderEmail,
-    updateShootType,
-    updateWeddingPackage
+    settings,
+    saveSettings
   } = useStudioSettings();
-  const { templates, updateTemplates, resetTemplates } = useDocumentTemplates();
+  const { templates, updateTemplates } = useDocumentTemplates();
   const {
     enableNotifications,
     error: pushError,
@@ -87,14 +79,137 @@ export default function SettingsPage() {
   const [newWorkdays, setNewWorkdays] = useState(8);
   const [newFixedPrice, setNewFixedPrice] = useState(0);
   const [newWorkflowStatus, setNewWorkflowStatus] = useState("");
+  const [studioDraft, setStudioDraft] = useState<StudioSettings>(settings);
+  const [documentDraft, setDocumentDraft] = useState(templates);
+
+  useEffect(() => {
+    setStudioDraft(settings);
+  }, [settings]);
+
+  useEffect(() => {
+    setDocumentDraft(templates);
+  }, [templates]);
 
   function toggleSection(section: SettingsSectionId) {
     setOpenSection((current) => (current === section ? "account" : section));
   }
 
+  function updateStudioDraft(updater: (current: StudioSettings) => StudioSettings) {
+    setStudioDraft(updater);
+  }
+
+  function saveStudioDraft() {
+    saveSettings(studioDraft);
+  }
+
+  function defaultPackagesFor(group: WeddingPackageGroup) {
+    if (group === "video") return defaultWeddingVideoPackages;
+    if (group === "booth") return defaultWeddingBoothPackages;
+    return defaultWeddingPhotoPackages;
+  }
+
+  function packageKey(group: WeddingPackageGroup) {
+    if (group === "video") return "weddingVideoPackages";
+    if (group === "booth") return "weddingBoothPackages";
+    return "weddingPhotoPackages";
+  }
+
+  function handleAddWeddingPackage(
+    group: WeddingPackageGroup,
+    name: string,
+    price: number
+  ) {
+    const cleanName = name.trim();
+    if (!cleanName) return;
+
+    updateStudioDraft((current) => {
+      const key = packageKey(group);
+      const exists = current[key].some(
+        (option) => option.name.toLowerCase() === cleanName.toLowerCase()
+      );
+      if (exists) return current;
+
+      return {
+        ...current,
+        [key]: [
+          ...current[key],
+          {
+            id: crypto.randomUUID(),
+            name: cleanName,
+            price: Math.max(Number(price || 0), 0)
+          }
+        ]
+      };
+    });
+  }
+
+  function handleUpdateWeddingPackage(
+    group: WeddingPackageGroup,
+    id: string,
+    values: Partial<Omit<WeddingPackageOption, "id">>
+  ) {
+    updateStudioDraft((current) => {
+      const key = packageKey(group);
+
+      return {
+        ...current,
+        [key]: current[key].map((option) =>
+          option.id === id
+            ? {
+                ...option,
+                name: values.name === undefined ? option.name : values.name,
+                price:
+                  values.price === undefined
+                    ? option.price
+                    : Math.max(Number(values.price || 0), 0)
+              }
+            : option
+        )
+      };
+    });
+  }
+
+  function handleRemoveWeddingPackage(group: WeddingPackageGroup, id: string) {
+    updateStudioDraft((current) => {
+      const key = packageKey(group);
+
+      return {
+        ...current,
+        [key]: current[key].filter((option) => option.id !== id)
+      };
+    });
+  }
+
+  function handleResetWeddingPackages(group: WeddingPackageGroup) {
+    updateStudioDraft((current) => ({
+      ...current,
+      [packageKey(group)]: defaultPackagesFor(group)
+    }));
+  }
+
   function handleAddShootType(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    addShootType(newShootType, newWorkdays, newFixedPrice);
+    const cleanName = newShootType.trim();
+    if (!cleanName) return;
+
+    updateStudioDraft((current) => {
+      const exists = current.shootTypeOptions.some(
+        (option) => option.name.toLowerCase() === cleanName.toLowerCase()
+      );
+      if (exists) return current;
+
+      return {
+        ...current,
+        shootTypeOptions: [
+          ...current.shootTypeOptions,
+          {
+            name: cleanName,
+            deliveryWorkdays: Math.max(Number(newWorkdays || 0), 0),
+            fixedPrice: Math.max(Number(newFixedPrice || 0), 0)
+          }
+        ]
+      };
+    });
     setNewShootType("");
     setNewWorkdays(8);
     setNewFixedPrice(0);
@@ -102,7 +217,20 @@ export default function SettingsPage() {
 
   function handleAddWorkflowStatus(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    addWorkflowStatus(newWorkflowStatus);
+    const cleanName = newWorkflowStatus.trim();
+    if (!cleanName) return;
+
+    updateStudioDraft((current) => {
+      const exists = current.workflowStatuses.some(
+        (status) => status.toLowerCase() === cleanName.toLowerCase()
+      );
+      if (exists) return current;
+
+      return {
+        ...current,
+        workflowStatuses: [...current.workflowStatuses, cleanName]
+      };
+    });
     setNewWorkflowStatus("");
   }
 
@@ -214,10 +342,16 @@ export default function SettingsPage() {
           open={openSection === "email"}
           onToggle={toggleSection}
           action={
-            <button className="button-secondary" onClick={resetShootReminderEmail}>
-              <RotateCcw className="h-4 w-4" />
-              Ponastavi
-            </button>
+            <SettingActions
+              onSave={saveStudioDraft}
+              onReset={() =>
+                updateStudioDraft((current) => ({
+                  ...current,
+                  shootReminderEmailSubject: defaultShootReminderEmailSubject,
+                  shootReminderEmailContent: defaultShootReminderEmailContent
+                }))
+              }
+            />
           }
         >
           <p className="mb-4 text-sm leading-6 text-muted">
@@ -230,11 +364,12 @@ export default function SettingsPage() {
                 <span className="text-sm font-medium text-ink">Zadeva emaila</span>
                 <input
                   className="input"
-                  value={shootReminderEmailSubject}
+                  value={studioDraft.shootReminderEmailSubject}
                   onChange={(event) =>
-                    updateShootReminderEmail({
+                    updateStudioDraft((current) => ({
+                      ...current,
                       shootReminderEmailSubject: event.target.value
-                    })
+                    }))
                   }
                 />
               </label>
@@ -242,11 +377,12 @@ export default function SettingsPage() {
                 <span className="text-sm font-medium text-ink">Vsebina emaila</span>
                 <textarea
                   className="input min-h-80"
-                  value={shootReminderEmailContent}
+                  value={studioDraft.shootReminderEmailContent}
                   onChange={(event) =>
-                    updateShootReminderEmail({
+                    updateStudioDraft((current) => ({
+                      ...current,
                       shootReminderEmailContent: event.target.value
-                    })
+                    }))
                   }
                 />
               </label>
@@ -272,10 +408,15 @@ export default function SettingsPage() {
           open={openSection === "workflow"}
           onToggle={toggleSection}
           action={
-            <button className="button-secondary" onClick={resetWorkflowStatuses}>
-              <RotateCcw className="h-4 w-4" />
-              Ponastavi
-            </button>
+            <SettingActions
+              onSave={saveStudioDraft}
+              onReset={() =>
+                updateStudioDraft((current) => ({
+                  ...current,
+                  workflowStatuses: defaultWorkflowStatusOptions
+                }))
+              }
+            />
           }
         >
           <form
@@ -298,7 +439,7 @@ export default function SettingsPage() {
           </form>
 
           <div className="mt-5 grid gap-2 md:grid-cols-2">
-            {workflowStatuses.map((status) => (
+            {studioDraft.workflowStatuses.map((status) => (
               <div
                 key={status}
                 className="flex items-center justify-between gap-3 rounded-lg border border-line bg-white/70 p-3"
@@ -307,7 +448,18 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   className="button-ghost h-9 w-9 p-0 text-rose hover:text-rose"
-                  onClick={() => removeWorkflowStatus(status)}
+                  onClick={() =>
+                    updateStudioDraft((current) => {
+                      if (current.workflowStatuses.length <= 1) return current;
+
+                      return {
+                        ...current,
+                        workflowStatuses: current.workflowStatuses.filter(
+                          (item) => item !== status
+                        )
+                      };
+                    })
+                  }
                   aria-label={`Odstrani ${status}`}
                   title="Odstrani"
                 >
@@ -325,6 +477,7 @@ export default function SettingsPage() {
           icon={Camera}
           open={openSection === "wedding"}
           onToggle={toggleSection}
+          action={<SettingActions onSave={saveStudioDraft} />}
         >
           <div className="grid gap-4 xl:grid-cols-3">
             <WeddingPackageSettings
@@ -332,33 +485,33 @@ export default function SettingsPage() {
               description="Poročni foto paketi."
               icon={Camera}
               group="photo"
-              packages={weddingPhotoPackages}
-              onAdd={addWeddingPackage}
-              onUpdate={updateWeddingPackage}
-              onRemove={removeWeddingPackage}
-              onReset={resetWeddingPackages}
+              packages={studioDraft.weddingPhotoPackages}
+              onAdd={handleAddWeddingPackage}
+              onUpdate={handleUpdateWeddingPackage}
+              onRemove={handleRemoveWeddingPackage}
+              onReset={handleResetWeddingPackages}
             />
             <WeddingPackageSettings
               title="Snemanje"
               description="Video paketi in cene."
               icon={Video}
               group="video"
-              packages={weddingVideoPackages}
-              onAdd={addWeddingPackage}
-              onUpdate={updateWeddingPackage}
-              onRemove={removeWeddingPackage}
-              onReset={resetWeddingPackages}
+              packages={studioDraft.weddingVideoPackages}
+              onAdd={handleAddWeddingPackage}
+              onUpdate={handleUpdateWeddingPackage}
+              onRemove={handleRemoveWeddingPackage}
+              onReset={handleResetWeddingPackages}
             />
             <WeddingPackageSettings
               title="Photobooth"
               description="Booth paketi."
               icon={Sparkles}
               group="booth"
-              packages={weddingBoothPackages}
-              onAdd={addWeddingPackage}
-              onUpdate={updateWeddingPackage}
-              onRemove={removeWeddingPackage}
-              onReset={resetWeddingPackages}
+              packages={studioDraft.weddingBoothPackages}
+              onAdd={handleAddWeddingPackage}
+              onUpdate={handleUpdateWeddingPackage}
+              onRemove={handleRemoveWeddingPackage}
+              onReset={handleResetWeddingPackages}
             />
           </div>
         </SettingsSection>
@@ -371,10 +524,15 @@ export default function SettingsPage() {
           open={openSection === "shoot-types"}
           onToggle={toggleSection}
           action={
-            <button className="button-secondary" onClick={resetShootTypes}>
-              <RotateCcw className="h-4 w-4" />
-              Ponastavi
-            </button>
+            <SettingActions
+              onSave={saveStudioDraft}
+              onReset={() =>
+                updateStudioDraft((current) => ({
+                  ...current,
+                  shootTypeOptions: defaultShootTypeOptions
+                }))
+              }
+            />
           }
         >
           <form
@@ -418,8 +576,11 @@ export default function SettingsPage() {
           </form>
 
           <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {shootTypeOptions.map((option) => (
-              <div key={option.name} className="rounded-lg border border-line bg-white/70 p-3">
+            {studioDraft.shootTypeOptions.map((option, index) => (
+              <div
+                key={`${option.name}-${index}`}
+                className="rounded-lg border border-line bg-white/70 p-3"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <label className="block flex-1 space-y-1.5">
                     <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
@@ -427,17 +588,30 @@ export default function SettingsPage() {
                     </span>
                     <input
                       className="input"
-                      defaultValue={option.name}
-                      onBlur={(event) => renameShootType(option.name, event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") event.currentTarget.blur();
-                      }}
+                      value={option.name}
+                      onChange={(event) =>
+                        updateStudioDraft((current) => ({
+                          ...current,
+                          shootTypeOptions: current.shootTypeOptions.map((item, itemIndex) =>
+                            itemIndex === index
+                              ? { ...item, name: event.target.value }
+                              : item
+                          )
+                        }))
+                      }
                     />
                   </label>
                   <button
                     type="button"
                     className="button-ghost h-9 w-9 p-0 text-rose hover:text-rose"
-                    onClick={() => removeShootType(option.name)}
+                    onClick={() =>
+                      updateStudioDraft((current) => ({
+                        ...current,
+                        shootTypeOptions: current.shootTypeOptions.filter(
+                          (_, itemIndex) => itemIndex !== index
+                        )
+                      }))
+                    }
                     aria-label={`Odstrani ${option.name}`}
                     title="Odstrani"
                   >
@@ -454,11 +628,17 @@ export default function SettingsPage() {
                     type="number"
                     value={option.deliveryWorkdays}
                     onChange={(event) =>
-                      updateShootType(
-                        option.name,
-                        Number(event.target.value),
-                        option.fixedPrice
-                      )
+                      updateStudioDraft((current) => ({
+                        ...current,
+                        shootTypeOptions: current.shootTypeOptions.map((item, itemIndex) =>
+                          itemIndex === index
+                            ? {
+                                ...item,
+                                deliveryWorkdays: Number(event.target.value)
+                              }
+                            : item
+                        )
+                      }))
                     }
                   />
                 </label>
@@ -473,11 +653,17 @@ export default function SettingsPage() {
                     type="number"
                     value={option.fixedPrice}
                     onChange={(event) =>
-                      updateShootType(
-                        option.name,
-                        option.deliveryWorkdays,
-                        Number(event.target.value)
-                      )
+                      updateStudioDraft((current) => ({
+                        ...current,
+                        shootTypeOptions: current.shootTypeOptions.map((item, itemIndex) =>
+                          itemIndex === index
+                            ? {
+                                ...item,
+                                fixedPrice: Number(event.target.value)
+                              }
+                            : item
+                        )
+                      }))
                     }
                   />
                 </label>
@@ -494,20 +680,20 @@ export default function SettingsPage() {
           open={openSection === "documents"}
           onToggle={toggleSection}
           action={
-            <button className="button-secondary" onClick={resetTemplates}>
-              <RotateCcw className="h-4 w-4" />
-              Ponastavi
-            </button>
+            <SettingActions
+              onSave={() => updateTemplates(() => documentDraft)}
+              onReset={() => setDocumentDraft(defaultDocumentTemplates)}
+            />
           }
         >
           <div className="grid gap-6 xl:grid-cols-2">
             <DocumentContractSettings
-              templates={templates}
-              updateTemplates={updateTemplates}
+              templates={documentDraft}
+              updateTemplates={(updater) => setDocumentDraft(updater)}
             />
             <DocumentTimelineSettings
-              templates={templates}
-              updateTemplates={updateTemplates}
+              templates={documentDraft}
+              updateTemplates={(updater) => setDocumentDraft(updater)}
             />
           </div>
         </SettingsSection>
@@ -567,6 +753,28 @@ function SettingsSection({
         </div>
       ) : null}
     </section>
+  );
+}
+
+function SettingActions({
+  onSave,
+  onReset
+}: {
+  onSave: () => void;
+  onReset?: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap justify-end gap-2">
+      {onReset ? (
+        <button className="button-secondary" type="button" onClick={onReset}>
+          <RotateCcw className="h-4 w-4" />
+          Ponastavi
+        </button>
+      ) : null}
+      <button className="button-primary" type="button" onClick={onSave}>
+        Shrani
+      </button>
+    </div>
   );
 }
 

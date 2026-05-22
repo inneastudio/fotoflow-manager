@@ -22,7 +22,7 @@ export type WeddingPackageOption = {
 
 export type WeddingPackageGroup = "photo" | "video" | "booth";
 
-type StudioSettings = {
+export type StudioSettings = {
   shootTypeOptions: ShootTypeOption[];
   workflowStatuses: string[];
   weddingPhotoPackages: WeddingPackageOption[];
@@ -255,6 +255,15 @@ export function useStudioSettings() {
       return next;
     });
   }, [persistSettings]);
+
+  const saveSettings = useCallback(
+    (nextSettings: StudioSettings) => {
+      const next = normalizeSettings(nextSettings);
+      setSettings(next);
+      void persistSettings(next);
+    },
+    [persistSettings]
+  );
 
   const addShootType = useCallback(
     (name: string, deliveryWorkdays: number, fixedPrice = 0) => {
@@ -497,6 +506,7 @@ export function useStudioSettings() {
 
   return useMemo(
     () => ({
+      settings,
       shootTypeOptions: settings.shootTypeOptions,
       shootTypes: settings.shootTypeOptions.map((option) => option.name),
       workflowStatuses: settings.workflowStatuses,
@@ -518,7 +528,8 @@ export function useStudioSettings() {
       updateShootType,
       updateWeddingPackage,
       updateShootReminderEmail,
-      resetShootReminderEmail
+      resetShootReminderEmail,
+      saveSettings
     }),
     [
       addWorkflowStatus,
@@ -531,6 +542,8 @@ export function useStudioSettings() {
       resetWeddingPackages,
       resetWorkflowStatuses,
       resetShootTypes,
+      saveSettings,
+      settings,
       settings.shootTypeOptions,
       settings.shootReminderEmailContent,
       settings.shootReminderEmailSubject,
