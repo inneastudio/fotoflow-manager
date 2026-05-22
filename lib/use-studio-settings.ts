@@ -28,6 +28,9 @@ type StudioSettings = {
   weddingPhotoPackages: WeddingPackageOption[];
   weddingVideoPackages: WeddingPackageOption[];
   weddingBoothPackages: WeddingPackageOption[];
+  shootReminderEmailSubject: string;
+  shootReminderEmailHtml: string;
+  shootReminderEmailText: string;
 };
 
 const STORAGE_KEY = "fotoflow-manager-settings";
@@ -65,6 +68,47 @@ export const defaultWeddingBoothPackages: WeddingPackageOption[] = [
   { id: "booth-party", name: "Party (3 h)", price: 290 },
   { id: "booth-premium", name: "Premium (4 h)", price: 340 }
 ];
+
+export const defaultShootReminderEmailSubject =
+  "Opomnik za fotografiranje: {tip_fotografiranja}";
+
+export const defaultShootReminderEmailHtml = `<p>Živjo {ime_stranke},</p>
+
+<p>jutri imamo rezerviran termin za <strong>{tip_fotografiranja}</strong>.</p>
+
+<p>
+  <strong>Datum:</strong> {datum_fotografiranja}<br />
+  <strong>Ura:</strong> {ura_fotografiranja}<br />
+  <strong>Lokacija:</strong> {lokacija}
+</p>
+
+<h2>Kratka priprava</h2>
+<ul>
+  <li>pridi nekaj minut prej, da začnemo sproščeno,</li>
+  <li>oblačila naj bodo pripravljena in zlikana,</li>
+  <li>izberi barve brez močnih napisov in velikih vzorcev,</li>
+  <li>če imaš inspiracijo ali posebne želje, jih lahko pošlješ v odgovor na ta email,</li>
+  <li>za zunanje fotografiranje spremljamo vreme in se po potrebi uskladimo.</li>
+</ul>
+
+<p>Se vidimo kmalu,<br />Fiora</p>`;
+
+export const defaultShootReminderEmailText = `Živjo {ime_stranke},
+
+jutri imamo rezerviran termin za {tip_fotografiranja}.
+
+Datum: {datum_fotografiranja}
+Ura: {ura_fotografiranja}
+Lokacija: {lokacija}
+
+Kratka priprava:
+- pridi nekaj minut prej,
+- oblačila naj bodo pripravljena in zlikana,
+- izberi barve brez močnih napisov in velikih vzorcev,
+- če imaš posebne želje, jih lahko pošlješ v odgovor na ta email.
+
+Se vidimo kmalu,
+Fiora`;
 
 function normalizeWeddingPackages(
   packages: WeddingPackageOption[] | undefined,
@@ -122,42 +166,49 @@ function normalizeSettings(value: Partial<StudioSettings> | null): StudioSetting
     weddingBoothPackages: normalizeWeddingPackages(
       value?.weddingBoothPackages,
       defaultWeddingBoothPackages
-    )
+    ),
+    shootReminderEmailSubject:
+      typeof value?.shootReminderEmailSubject === "string"
+        ? value.shootReminderEmailSubject
+        : defaultShootReminderEmailSubject,
+    shootReminderEmailHtml:
+      typeof value?.shootReminderEmailHtml === "string"
+        ? value.shootReminderEmailHtml
+        : defaultShootReminderEmailHtml,
+    shootReminderEmailText:
+      typeof value?.shootReminderEmailText === "string"
+        ? value.shootReminderEmailText
+        : defaultShootReminderEmailText
+  };
+}
+
+function defaultSettings(): StudioSettings {
+  return {
+    shootTypeOptions: defaultShootTypeOptions,
+    workflowStatuses: defaultWorkflowStatusOptions,
+    weddingPhotoPackages: defaultWeddingPhotoPackages,
+    weddingVideoPackages: defaultWeddingVideoPackages,
+    weddingBoothPackages: defaultWeddingBoothPackages,
+    shootReminderEmailSubject: defaultShootReminderEmailSubject,
+    shootReminderEmailHtml: defaultShootReminderEmailHtml,
+    shootReminderEmailText: defaultShootReminderEmailText
   };
 }
 
 function readSettings(): StudioSettings {
   if (typeof window === "undefined") {
-    return {
-      shootTypeOptions: defaultShootTypeOptions,
-      workflowStatuses: defaultWorkflowStatusOptions,
-      weddingPhotoPackages: defaultWeddingPhotoPackages,
-      weddingVideoPackages: defaultWeddingVideoPackages,
-      weddingBoothPackages: defaultWeddingBoothPackages
-    };
+    return defaultSettings();
   }
 
   const saved = window.localStorage.getItem(STORAGE_KEY);
   if (!saved) {
-    return {
-      shootTypeOptions: defaultShootTypeOptions,
-      workflowStatuses: defaultWorkflowStatusOptions,
-      weddingPhotoPackages: defaultWeddingPhotoPackages,
-      weddingVideoPackages: defaultWeddingVideoPackages,
-      weddingBoothPackages: defaultWeddingBoothPackages
-    };
+    return defaultSettings();
   }
 
   try {
     return normalizeSettings(JSON.parse(saved) as Partial<StudioSettings>);
   } catch {
-    return {
-      shootTypeOptions: defaultShootTypeOptions,
-      workflowStatuses: defaultWorkflowStatusOptions,
-      weddingPhotoPackages: defaultWeddingPhotoPackages,
-      weddingVideoPackages: defaultWeddingVideoPackages,
-      weddingBoothPackages: defaultWeddingBoothPackages
-    };
+    return defaultSettings();
   }
 }
 
@@ -168,13 +219,7 @@ function writeSettings(settings: StudioSettings) {
 
 export function useStudioSettings() {
   const { user, demoMode, loading: authLoading } = useAuth();
-  const [settings, setSettings] = useState<StudioSettings>({
-    shootTypeOptions: defaultShootTypeOptions,
-    workflowStatuses: defaultWorkflowStatusOptions,
-    weddingPhotoPackages: defaultWeddingPhotoPackages,
-    weddingVideoPackages: defaultWeddingVideoPackages,
-    weddingBoothPackages: defaultWeddingBoothPackages
-  });
+  const [settings, setSettings] = useState<StudioSettings>(defaultSettings);
 
   const persistSettings = useCallback(
     async (next: StudioSettings) => {
@@ -450,6 +495,28 @@ export function useStudioSettings() {
     [updateSettings]
   );
 
+  const updateShootReminderEmail = useCallback(
+    (values: Partial<Pick<
+      StudioSettings,
+      "shootReminderEmailSubject" | "shootReminderEmailHtml" | "shootReminderEmailText"
+    >>) => {
+      updateSettings((current) => ({
+        ...current,
+        ...values
+      }));
+    },
+    [updateSettings]
+  );
+
+  const resetShootReminderEmail = useCallback(() => {
+    updateSettings((current) => ({
+      ...current,
+      shootReminderEmailSubject: defaultShootReminderEmailSubject,
+      shootReminderEmailHtml: defaultShootReminderEmailHtml,
+      shootReminderEmailText: defaultShootReminderEmailText
+    }));
+  }, [updateSettings]);
+
   return useMemo(
     () => ({
       shootTypeOptions: settings.shootTypeOptions,
@@ -458,6 +525,9 @@ export function useStudioSettings() {
       weddingPhotoPackages: settings.weddingPhotoPackages,
       weddingVideoPackages: settings.weddingVideoPackages,
       weddingBoothPackages: settings.weddingBoothPackages,
+      shootReminderEmailSubject: settings.shootReminderEmailSubject,
+      shootReminderEmailHtml: settings.shootReminderEmailHtml,
+      shootReminderEmailText: settings.shootReminderEmailText,
       addWorkflowStatus,
       addShootType,
       addWeddingPackage,
@@ -469,7 +539,9 @@ export function useStudioSettings() {
       resetWorkflowStatuses,
       resetShootTypes,
       updateShootType,
-      updateWeddingPackage
+      updateWeddingPackage,
+      updateShootReminderEmail,
+      resetShootReminderEmail
     }),
     [
       addWorkflowStatus,
@@ -483,12 +555,17 @@ export function useStudioSettings() {
       resetWorkflowStatuses,
       resetShootTypes,
       settings.shootTypeOptions,
+      settings.shootReminderEmailHtml,
+      settings.shootReminderEmailSubject,
+      settings.shootReminderEmailText,
       settings.weddingBoothPackages,
       settings.weddingPhotoPackages,
       settings.weddingVideoPackages,
       settings.workflowStatuses,
       updateShootType,
-      updateWeddingPackage
+      updateWeddingPackage,
+      updateShootReminderEmail,
+      resetShootReminderEmail
     ]
   );
 }
