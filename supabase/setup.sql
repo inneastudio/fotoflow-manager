@@ -78,8 +78,21 @@ create index if not exists projects_workflow_status_idx on public.projects (work
 create index if not exists projects_payment_status_idx on public.projects (payment_status);
 create index if not exists projects_photographer_idx on public.projects (photographer);
 create index if not exists projects_payment_method_idx on public.projects (payment_method);
-create unique index if not exists projects_external_source_external_id_key on public.projects (external_source, external_id);
 create index if not exists projects_external_source_idx on public.projects (external_source);
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'projects_external_source_external_id_unique'
+      and conrelid = 'public.projects'::regclass
+  ) then
+    alter table public.projects
+    add constraint projects_external_source_external_id_unique
+    unique (external_source, external_id);
+  end if;
+end $$;
 
 create or replace function public.set_project_amounts()
 returns trigger
