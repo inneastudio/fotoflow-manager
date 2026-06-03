@@ -6,6 +6,8 @@ create extension if not exists pgcrypto;
 create table if not exists public.projects (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  external_source text,
+  external_id text,
   project_name text default '',
   client_name text not null,
   client_address text default '',
@@ -66,12 +68,18 @@ add column if not exists wedding_video_provider_paid boolean not null default fa
 
 alter table public.projects drop constraint if exists projects_workflow_status_check;
 
+alter table public.projects
+add column if not exists external_source text,
+add column if not exists external_id text;
+
 create index if not exists projects_user_id_idx on public.projects (user_id);
 create index if not exists projects_shoot_date_idx on public.projects (shoot_date);
 create index if not exists projects_workflow_status_idx on public.projects (workflow_status);
 create index if not exists projects_payment_status_idx on public.projects (payment_status);
 create index if not exists projects_photographer_idx on public.projects (photographer);
 create index if not exists projects_payment_method_idx on public.projects (payment_method);
+create unique index if not exists projects_external_source_external_id_key on public.projects (external_source, external_id);
+create index if not exists projects_external_source_idx on public.projects (external_source);
 
 create or replace function public.set_project_amounts()
 returns trigger
