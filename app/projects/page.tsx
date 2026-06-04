@@ -2,7 +2,16 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, Archive, Filter, Plus, Search, Send, type LucideIcon } from "lucide-react";
+import {
+  AlertCircle,
+  Archive,
+  Filter,
+  Plus,
+  Search,
+  Send,
+  UserRound,
+  type LucideIcon
+} from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { ProjectCard } from "@/components/project-card";
 import { ProjectModal } from "@/components/project-modal";
@@ -12,7 +21,7 @@ import {
   type ReminderItem
 } from "@/lib/project-insights";
 import type { PaymentStatus, Project, WorkflowStatus } from "@/lib/types";
-import { paymentStatuses } from "@/lib/types";
+import { paymentStatuses, photographers } from "@/lib/types";
 import { useProjects } from "@/lib/use-projects";
 import { useStudioSettings } from "@/lib/use-studio-settings";
 import {
@@ -34,6 +43,7 @@ export default function ProjectsPage() {
     useProjects();
   const [query, setQuery] = useState("");
   const [focusFilter, setFocusFilter] = useState<ProjectFocusFilter>("Vsi");
+  const [photographerFilter, setPhotographerFilter] = useState("Vsi");
   const [workflowFilter, setWorkflowFilter] = useState("Vsi");
   const [paymentFilter, setPaymentFilter] = useState("Vsi");
   const [modalOpen, setModalOpen] = useState(false);
@@ -68,14 +78,36 @@ export default function ProjectsPage() {
         workflowFilter === "Vsi" || project.workflow_status === workflowFilter;
       const matchesPayment =
         paymentFilter === "Vsi" || project.payment_status === paymentFilter;
+      const matchesPhotographer =
+        photographerFilter === "Vsi" || project.photographer === photographerFilter;
 
-      return matchesQuery && matchesFocus && matchesWorkflow && matchesPayment;
+      return (
+        matchesQuery &&
+        matchesFocus &&
+        matchesWorkflow &&
+        matchesPayment &&
+        matchesPhotographer
+      );
     });
-  }, [focusFilter, paymentFilter, projects, query, workflowFilter]);
+  }, [focusFilter, paymentFilter, photographerFilter, projects, query, workflowFilter]);
 
-  const activeProjectCount = projects.filter(
-    (project) => project.workflow_status !== "Zaključeno"
-  ).length;
+  const activeProjects = useMemo(
+    () => projects.filter((project) => project.workflow_status !== "Zaključeno"),
+    [projects]
+  );
+  const photographerOptions = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          "Vsi",
+          ...photographers,
+          ...activeProjects.map((project) => project.photographer).filter(Boolean)
+        ])
+      ),
+    [activeProjects]
+  );
+
+  const activeProjectCount = activeProjects.length;
   const archivedProjectCount = projects.length - activeProjectCount;
   const waitingToShootCount = projects.filter(
     (project) => project.workflow_status === "Rezervirano"
@@ -90,6 +122,11 @@ export default function ProjectsPage() {
     reminders.unsaved.length +
     reminders.selectionLate.length +
     reminders.unpaidDeposits.length;
+
+  function photographerCount(photographer: string) {
+    if (photographer === "Vsi") return activeProjects.length;
+    return activeProjects.filter((project) => project.photographer === photographer).length;
+  }
 
   function openNewProject() {
     setEditingProject(null);
@@ -282,7 +319,7 @@ export default function ProjectsPage() {
       <section className="surface rounded-lg p-4">
         <div className="mb-4 flex flex-wrap gap-2">
           {[
-            { label: "Vsi", count: projects.length },
+            { label: "Vsi", count: activeProjectCount },
             { label: "Za fotografirat", count: waitingToShootCount },
             { label: "Za urediti", count: waitingToEditCount }
           ].map((item) => (
@@ -302,6 +339,32 @@ export default function ProjectsPage() {
               </span>
             </button>
           ))}
+        </div>
+
+        <div className="mb-4 rounded-lg border border-line bg-white/60 p-3">
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink">
+            <UserRound className="h-4 w-4 text-clay" />
+            Fotograf
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {photographerOptions.map((photographer) => (
+              <button
+                key={photographer}
+                type="button"
+                className={
+                  photographerFilter === photographer
+                    ? "button-primary"
+                    : "button-secondary"
+                }
+                onClick={() => setPhotographerFilter(photographer)}
+              >
+                {photographer}
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">
+                  {photographerCount(photographer)}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="grid gap-3 lg:grid-cols-[1.3fr_0.8fr_0.8fr]">
