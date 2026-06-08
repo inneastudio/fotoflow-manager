@@ -52,10 +52,6 @@ function isWithinMonth(dateValue: string, selectedMonth: string) {
   return date.getFullYear() === year && date.getMonth() === month;
 }
 
-function paidDate(project: Project) {
-  return project.updated_at || project.shoot_date;
-}
-
 function sumAmount(projects: Project[], key: "amount" | "deposit" | "balance" = "amount") {
   return projects.reduce((sum, project) => sum + Number(project[key] || 0), 0);
 }
@@ -125,10 +121,10 @@ export default function FinancePage() {
     (project) => project.payment_status === "Plačano"
   );
   const monthPaidProjects = paidProjects.filter((project) =>
-    isWithinMonth(paidDate(project), selectedMonth)
+    isWithinMonth(project.shoot_date, selectedMonth)
   );
   const yearPaidProjects = paidProjects.filter((project) => {
-    const date = new Date(paidDate(project));
+    const date = new Date(project.shoot_date);
     return date.getFullYear() === currentYear;
   });
   const monthShootProjects = filteredProjects.filter((project) =>
@@ -404,8 +400,7 @@ export default function FinancePage() {
                 })}
               </h2>
               <p className="mt-2 text-sm text-muted">
-                Prihodki so šteti po datumu plačila, fotografiranja pa po datumu
-                termina.
+                Prihodki in fotografiranja so razporejeni po datumu fotografiranja.
               </p>
             </div>
             <div className="rounded-lg border border-line bg-white/70 px-3 py-2 text-sm font-semibold text-muted">
