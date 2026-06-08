@@ -135,6 +135,7 @@ export default function FinancePage() {
     .reduce((sum, project) => sum + project.amount, 0);
   const annualRevenue = sumAmount(yearPaidProjects);
   const monthlyRevenue = sumAmount(monthPaidProjects);
+  const monthlyProjectedRevenue = sumAmount(monthShootProjects);
   const monthlyCashRevenue = sumAmount(
     monthPaidProjects.filter((project) => project.payment_method === "Gotovina")
   );
@@ -148,6 +149,16 @@ export default function FinancePage() {
     ? Math.min(Math.round((monthlyRevenue / monthlyRevenueGoal) * 100), 999)
     : 0;
   const monthlyGoalRemaining = Math.max(monthlyRevenueGoal - monthlyRevenue, 0);
+  const monthlyProjectedGoalProgress = monthlyRevenueGoal
+    ? Math.min(Math.round((monthlyProjectedRevenue / monthlyRevenueGoal) * 100), 999)
+    : 0;
+  const monthlyProjectedGoalRemaining = Math.max(
+    monthlyRevenueGoal - monthlyProjectedRevenue,
+    0
+  );
+  const isMonthOnPlan = monthlyRevenueGoal
+    ? monthlyProjectedRevenue >= monthlyRevenueGoal
+    : false;
 
   const unpaidProjects = filteredProjects
     .filter(
@@ -184,11 +195,15 @@ export default function FinancePage() {
     const methodProjects = monthPaidProjects.filter(
       (project) => project.payment_method === method
     );
+    const plannedMethodProjects = monthShootProjects.filter(
+      (project) => project.payment_method === method
+    );
 
     return {
       method,
       count: methodProjects.length,
-      amount: sumAmount(methodProjects)
+      amount: sumAmount(methodProjects),
+      planned: sumAmount(plannedMethodProjects)
     };
   });
 
@@ -289,13 +304,26 @@ export default function FinancePage() {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <MetricCard
-          label="Izbrani mesec"
+          label="Plačano v mesecu"
           value={formatCurrency(monthlyRevenue)}
           detail={`${formatDate(selectedMonthRange.start.toISOString())} - ${formatDate(selectedMonthRange.end.toISOString())}`}
           icon={TrendingUp}
           tone="olive"
+        />
+        <MetricCard
+          label="Vpisano v mesecu"
+          value={formatCurrency(monthlyProjectedRevenue)}
+          detail={
+            monthlyRevenueGoal
+              ? isMonthOnPlan
+                ? `V planu: ${monthlyProjectedGoalProgress}% cilja`
+                : `Do plana manjka ${formatCurrency(monthlyProjectedGoalRemaining)}`
+              : `${monthShootProjects.length} fotografiranj`
+          }
+          icon={Target}
+          tone={isMonthOnPlan ? "olive" : "clay"}
         />
         <MetricCard
           label={`Tekoče leto ${currentYear}`}
@@ -350,40 +378,65 @@ export default function FinancePage() {
           <div>
             <div className="mb-3 flex items-end justify-between gap-4">
               <div>
-                <p className="text-sm text-muted">Izbrani mesec</p>
+                <p className="text-sm text-muted">Plačano</p>
                 <p className="mt-1 font-display text-3xl font-semibold text-ink">
                   {formatCurrency(monthlyRevenue)}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-muted">Uspešnost</p>
+                <p className="text-sm text-muted">Vpisano do konca</p>
                 <p className="mt-1 font-display text-3xl font-semibold text-ink">
-                  {monthlyRevenueGoal ? `${monthlyGoalProgress}%` : "Ni cilja"}
+                  {formatCurrency(monthlyProjectedRevenue)}
                 </p>
               </div>
             </div>
-            <div className="h-3 overflow-hidden rounded-full bg-mist">
+            <div className="relative h-3 overflow-hidden rounded-full bg-mist">
               <div
-                className="h-full rounded-full bg-clay transition-all"
+                className="absolute inset-y-0 left-0 rounded-full bg-clay/30 transition-all"
+                style={{
+                  width: `${monthlyRevenueGoal ? Math.min(monthlyProjectedGoalProgress, 100) : 0}%`
+                }}
+              />
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-clay transition-all"
                 style={{
                   width: `${monthlyRevenueGoal ? Math.min(monthlyGoalProgress, 100) : 0}%`
                 }}
               />
             </div>
-            <div className="mt-3 grid gap-2 text-sm text-muted sm:grid-cols-2">
+            <div className="mt-3 grid gap-2 text-sm text-muted sm:grid-cols-3">
               <p>
-                Do cilja manjka{" "}
+                Plačano{" "}
                 <span className="font-semibold text-ink">
-                  {formatCurrency(monthlyGoalRemaining)}
+                  {monthlyRevenueGoal ? `${monthlyGoalProgress}%` : "ni cilja"}
                 </span>
               </p>
               <p>
-                Povprečen plačan projekt{" "}
+                Po vpisanih projektih{" "}
                 <span className="font-semibold text-ink">
-                  {formatCurrency(averagePaidProject)}
+                  {monthlyRevenueGoal ? `${monthlyProjectedGoalProgress}%` : "ni cilja"}
+                </span>
+              </p>
+              <p>
+                {isMonthOnPlan ? "V planu" : "Do plana manjka"}{" "}
+                <span className="font-semibold text-ink">
+                  {isMonthOnPlan
+                    ? formatCurrency(monthlyProjectedRevenue - monthlyRevenueGoal)
+                    : formatCurrency(monthlyProjectedGoalRemaining)}
                 </span>
               </p>
             </div>
+            <p className="mt-3 text-sm text-muted">
+              Povprečen plačan projekt{" "}
+              <span className="font-semibold text-ink">
+                {formatCurrency(averagePaidProject)}
+              </span>
+              . Za realizacijo še manjka{" "}
+              <span className="font-semibold text-ink">
+                {formatCurrency(monthlyGoalRemaining)}
+              </span>
+              .
+            </p>
           </div>
         </div>
       </section>
@@ -420,7 +473,12 @@ export default function FinancePage() {
                     {formatCurrency(row.amount)}
                   </p>
                 </div>
-                <p className="mt-3 text-sm text-muted">{row.count} plačanih projektov</p>
+                <p className="mt-3 text-sm text-muted">
+                  {row.count} plačanih projektov · vpisano{" "}
+                  <span className="font-semibold text-ink">
+                    {formatCurrency(row.planned)}
+                  </span>
+                </p>
               </div>
             ))}
           </div>
