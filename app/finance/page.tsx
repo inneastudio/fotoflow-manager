@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import {
   CircleDollarSign,
   Clapperboard,
+  Filter,
   ReceiptText,
   Target,
   TrendingUp,
@@ -13,23 +14,62 @@ import {
 import { MetricCard } from "@/components/metric-card";
 import { PageHeader } from "@/components/page-header";
 import { PaymentMethodLabel } from "@/components/payment-method-label";
-import { RevenueChart } from "@/components/revenue-chart";
 import { StatusBadge } from "@/components/status-badge";
 import { useFinanceSettings } from "@/lib/use-finance-settings";
 import { useProjects } from "@/lib/use-projects";
-import { photographers, type Project, type ProjectFormValues } from "@/lib/types";
+import {
+  paymentMethods,
+  paymentStatuses,
+  photographers,
+  type Project,
+  type ProjectFormValues
+} from "@/lib/types";
 import {
   formatCurrency,
   formatDate,
-  getMonthlyRevenue,
   getProjectSubtitle,
   getProjectTitle
 } from "@/lib/utils";
 
+function monthValue(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthRange(value: string) {
+  const [yearValue, monthPart] = value.split("-");
+  const year = Number(yearValue);
+  const month = Number(monthPart) - 1;
+  const start = new Date(year, month, 1);
+  const end = new Date(year, month + 1, 0);
+
+  return { start, end, year, month };
+}
+
+function isWithinMonth(dateValue: string, selectedMonth: string) {
+  if (!dateValue) return false;
+  const date = new Date(dateValue);
+  const { year, month } = monthRange(selectedMonth);
+  return date.getFullYear() === year && date.getMonth() === month;
+}
+
+function paidDate(project: Project) {
+  return project.updated_at || project.shoot_date;
+}
+
+function sumAmount(projects: Project[], key: "amount" | "deposit" | "balance" = "amount") {
+  return projects.reduce((sum, project) => sum + Number(project[key] || 0), 0);
+}
+
 export default function FinancePage() {
   const { projects, loading, updateProject } = useProjects();
   const [photographerFilter, setPhotographerFilter] = useState("Vsi");
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState("Vsi");
+  const [shootTypeFilter, setShootTypeFilter] = useState("Vsi");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("Vsi");
+  const [selectedMonth, setSelectedMonth] = useState(monthValue());
   const { monthlyRevenueGoal, updateFinanceSettings } = useFinanceSettings();
+  const currentYear = new Date().getFullYear();
+  const selectedMonthRange = monthRange(selectedMonth);
 
   function updateMonthlyGoal(value: number) {
     const normalizedValue = Math.max(Number(value || 0), 0);
@@ -42,25 +82,68 @@ export default function FinancePage() {
   const photographerOptions = useMemo(() => {
     return Array.from(
       new Set([
+        "Vsi",
         ...photographers,
         ...projects.map((project) => project.photographer).filter(Boolean)
       ])
     );
   }, [projects]);
+  const shootTypeOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(["Vsi", ...projects.map((project) => String(project.shoot_type)).filter(Boolean)])
+      ),
+    [projects]
+  );
   const filteredProjects = useMemo(() => {
-    if (photographerFilter === "Vsi") return projects;
-    return projects.filter((project) => project.photographer === photographerFilter);
-  }, [photographerFilter, projects]);
+    return projects.filter((project) => {
+      const matchesPhotographer =
+        photographerFilter === "Vsi" || project.photographer === photographerFilter;
+      const matchesPaymentMethod =
+        paymentMethodFilter === "Vsi" || project.payment_method === paymentMethodFilter;
+      const matchesShootType =
+        shootTypeFilter === "Vsi" || String(project.shoot_type) === shootTypeFilter;
+      const matchesPaymentStatus =
+        paymentStatusFilter === "Vsi" || project.payment_status === paymentStatusFilter;
 
-  const totalRevenue = filteredProjects
-    .filter((project) => project.payment_status === "Plačano")
-    .reduce((sum, project) => sum + project.amount, 0);
-  const deposits = filteredProjects
-    .filter((project) => String(project.shoot_type).toLowerCase().includes("poroka"))
-    .reduce((sum, project) => sum + project.deposit, 0);
-  const monthlyRevenue = getMonthlyRevenue(filteredProjects);
+      return (
+        matchesPhotographer &&
+        matchesPaymentMethod &&
+        matchesShootType &&
+        matchesPaymentStatus
+      );
+    });
+  }, [
+    paymentMethodFilter,
+    paymentStatusFilter,
+    photographerFilter,
+    projects,
+    shootTypeFilter
+  ]);
+
   const paidProjects = filteredProjects.filter(
     (project) => project.payment_status === "Plačano"
+  );
+  const monthPaidProjects = paidProjects.filter((project) =>
+    isWithinMonth(paidDate(project), selectedMonth)
+  );
+  const yearPaidProjects = paidProjects.filter((project) => {
+    const date = new Date(paidDate(project));
+    return date.getFullYear() === currentYear;
+  });
+  const monthShootProjects = filteredProjects.filter((project) =>
+    isWithinMonth(project.shoot_date, selectedMonth)
+  );
+  const totalRevenue = paidProjects
+    .filter((project) => project.payment_status === "Plačano")
+    .reduce((sum, project) => sum + project.amount, 0);
+  const annualRevenue = sumAmount(yearPaidProjects);
+  const monthlyRevenue = sumAmount(monthPaidProjects);
+  const monthlyCashRevenue = sumAmount(
+    monthPaidProjects.filter((project) => project.payment_method === "Gotovina")
+  );
+  const monthlyBankRevenue = sumAmount(
+    monthPaidProjects.filter((project) => project.payment_method === "TRR")
   );
   const averagePaidProject = paidProjects.length
     ? Math.round(totalRevenue / paidProjects.length)
@@ -87,6 +170,31 @@ export default function FinancePage() {
     (sum, project) => sum + Number(project.wedding_video_price || 0),
     0
   );
+  const monthShootTypeRows = Array.from(
+    monthShootProjects.reduce((map, project) => {
+      const type = String(project.shoot_type);
+      const existing = map.get(type) ?? { count: 0, amount: 0, paid: 0 };
+      map.set(type, {
+        count: existing.count + 1,
+        amount: existing.amount + Number(project.amount || 0),
+        paid:
+          existing.paid +
+          (project.payment_status === "Plačano" ? Number(project.amount || 0) : 0)
+      });
+      return map;
+    }, new Map<string, { count: number; amount: number; paid: number }>())
+  ).sort((a, b) => b[1].amount - a[1].amount);
+  const monthMethodRows = paymentMethods.map((method) => {
+    const methodProjects = monthPaidProjects.filter(
+      (project) => project.payment_method === method
+    );
+
+    return {
+      method,
+      count: methodProjects.length,
+      amount: sumAmount(methodProjects)
+    };
+  });
 
   async function toggleVideoProviderPaid(project: Project) {
     await updateProject(project.id, {
@@ -100,45 +208,110 @@ export default function FinancePage() {
       <PageHeader
         eyebrow="Plačila in prihodki"
         title="Finance"
-        description="Pregled plačanih projektov, avansov, mesečne kvote in odprtih zneskov."
-        actions={
-        <label className="w-full space-y-1.5 sm:max-w-xs">
-          <span className="text-sm font-medium text-ink">Fotograf</span>
-          <select
-            className="input"
-            value={photographerFilter}
-            onChange={(event) => setPhotographerFilter(event.target.value)}
-          >
-            <option value="Vsi">Vsi fotografi</option>
-            {photographerOptions.map((photographer) => (
-              <option key={photographer} value={photographer}>
-                {photographer}
-              </option>
-            ))}
-          </select>
-        </label>
-        }
+        description="Mesečno poročilo, letni promet, načini plačila in odprti računi."
       />
+
+      <section className="surface rounded-lg p-4 sm:p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Filter className="h-5 w-5 text-clay" />
+          <div>
+            <p className="eyebrow">Filtri</p>
+            <h2 className="font-display text-2xl font-semibold text-ink">
+              Poročilo po projektih
+            </h2>
+          </div>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-ink">Mesec poročila</span>
+            <input
+              className="input"
+              type="month"
+              value={selectedMonth}
+              onChange={(event) => setSelectedMonth(event.target.value)}
+            />
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-ink">Fotograf</span>
+            <select
+              className="input"
+              value={photographerFilter}
+              onChange={(event) => setPhotographerFilter(event.target.value)}
+            >
+              {photographerOptions.map((photographer) => (
+                <option key={photographer} value={photographer}>
+                  {photographer === "Vsi" ? "Vsi fotografi" : photographer}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-ink">Način plačila</span>
+            <select
+              className="input"
+              value={paymentMethodFilter}
+              onChange={(event) => setPaymentMethodFilter(event.target.value)}
+            >
+              <option value="Vsi">Gotovina + TRR</option>
+              {paymentMethods.map((method) => (
+                <option key={method} value={method}>
+                  {method}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-ink">Fotografiranje</span>
+            <select
+              className="input"
+              value={shootTypeFilter}
+              onChange={(event) => setShootTypeFilter(event.target.value)}
+            >
+              {shootTypeOptions.map((type) => (
+                <option key={type} value={type}>
+                  {type === "Vsi" ? "Vsi tipi" : type}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-ink">Status plačila</span>
+            <select
+              className="input"
+              value={paymentStatusFilter}
+              onChange={(event) => setPaymentStatusFilter(event.target.value)}
+            >
+              <option value="Vsi">Vsi statusi</option>
+              {paymentStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
-          label="Mesečni prihodki"
+          label="Izbrani mesec"
           value={formatCurrency(monthlyRevenue)}
-          detail="Plačano v tekočem mesecu"
+          detail={`${formatDate(selectedMonthRange.start.toISOString())} - ${formatDate(selectedMonthRange.end.toISOString())}`}
           icon={TrendingUp}
           tone="olive"
         />
         <MetricCard
-          label="Skupaj plačano"
-          value={formatCurrency(totalRevenue)}
-          detail="Zaključena plačila"
+          label={`Tekoče leto ${currentYear}`}
+          value={formatCurrency(annualRevenue)}
+          detail="Vsa plačana fotografiranja v letu"
           icon={CircleDollarSign}
           tone="charcoal"
         />
         <MetricCard
-          label="Poročni avansi"
-          value={formatCurrency(deposits)}
-          detail="Evidentirano samo pri porokah"
+          label="TRR / Gotovina"
+          value={`${formatCurrency(monthlyBankRevenue)} / ${formatCurrency(monthlyCashRevenue)}`}
+          detail="Plačano v izbranem mesecu"
           icon={ReceiptText}
           tone="clay"
         />
@@ -181,7 +354,7 @@ export default function FinancePage() {
           <div>
             <div className="mb-3 flex items-end justify-between gap-4">
               <div>
-                <p className="text-sm text-muted">Ta mesec</p>
+                <p className="text-sm text-muted">Izbrani mesec</p>
                 <p className="mt-1 font-display text-3xl font-semibold text-ink">
                   {formatCurrency(monthlyRevenue)}
                 </p>
@@ -220,7 +393,73 @@ export default function FinancePage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <RevenueChart projects={filteredProjects} />
+        <div className="surface rounded-lg p-4 sm:p-5">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="eyebrow">Mesečno poročilo</p>
+              <h2 className="mt-1 font-display text-2xl font-semibold">
+                {formatDate(selectedMonthRange.start.toISOString(), {
+                  month: "long",
+                  year: "numeric"
+                })}
+              </h2>
+              <p className="mt-2 text-sm text-muted">
+                Prihodki so šteti po datumu plačila, fotografiranja pa po datumu
+                termina.
+              </p>
+            </div>
+            <div className="rounded-lg border border-line bg-white/70 px-3 py-2 text-sm font-semibold text-muted">
+              {monthPaidProjects.length} plačanih · {monthShootProjects.length} terminov
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            {monthMethodRows.map((row) => (
+              <div key={row.method} className="rounded-lg border border-line bg-white/65 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm text-muted">Način plačila</p>
+                    <PaymentMethodLabel method={row.method} className="mt-1 font-semibold" />
+                  </div>
+                  <p className="font-display text-2xl font-semibold text-ink">
+                    {formatCurrency(row.amount)}
+                  </p>
+                </div>
+                <p className="mt-3 text-sm text-muted">{row.count} plačanih projektov</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 overflow-hidden rounded-lg border border-line">
+            <div className="grid grid-cols-[1fr_90px_120px_120px] gap-3 border-b border-line bg-paper px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+              <span>Tip fotografiranja</span>
+              <span className="text-right">Termini</span>
+              <span className="text-right">Vrednost</span>
+              <span className="text-right">Plačano</span>
+            </div>
+            {monthShootTypeRows.length ? (
+              monthShootTypeRows.map(([type, row]) => (
+                <div
+                  key={type}
+                  className="grid grid-cols-[1fr_90px_120px_120px] gap-3 border-b border-line px-3 py-3 text-sm last:border-b-0"
+                >
+                  <span className="font-semibold text-ink">{type}</span>
+                  <span className="text-right text-muted">{row.count}</span>
+                  <span className="text-right font-semibold text-ink">
+                    {formatCurrency(row.amount)}
+                  </span>
+                  <span className="text-right font-semibold text-ink">
+                    {formatCurrency(row.paid)}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="p-3 text-sm text-muted">
+                V izbranem mesecu ni fotografiranj za trenutne filtre.
+              </p>
+            )}
+          </div>
+        </div>
 
         <div className="surface rounded-lg p-4 sm:p-5">
           <div className="mb-4">
