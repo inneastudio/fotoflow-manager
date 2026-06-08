@@ -29,6 +29,57 @@ type ProjectFormProps = {
 
 const today = new Date().toISOString().slice(0, 10);
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function openPrintableHtml(title: string, body: string) {
+  const win = window.open("", "_blank");
+  if (!win) return;
+
+  win.document.open();
+  win.document.write(`<!doctype html>
+<html lang="sl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${escapeHtml(title)}</title>
+  <style>
+    body { margin: 0; background: #f6f1e8; color: #231f1b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .toolbar { width: min(840px, calc(100vw - 32px)); margin: 24px auto 0; display: flex; justify-content: flex-end; }
+    .toolbar button { border: 1px solid #d8c3aa; border-radius: 12px; background: #231f1b; color: #fffaf2; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+    .page { width: min(840px, calc(100vw - 32px)); margin: 24px auto 40px; background: #fffaf2; border: 1px solid #e2d2bd; border-radius: 18px; padding: 48px; box-shadow: 0 24px 70px rgba(59, 45, 30, 0.12); }
+    .eyebrow { margin: 0 0 10px; color: #a9704f; font-size: 12px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: 36px; line-height: 1.08; letter-spacing: 0; }
+    .muted { color: #786f66; }
+    .copy { margin-top: 28px; white-space: pre-wrap; line-height: 1.7; font-size: 15px; }
+    .footer { margin-top: 36px; border-top: 1px solid #e2d2bd; padding-top: 18px; font-size: 13px; color: #786f66; }
+    @media print {
+      body { background: white; }
+      .toolbar { display: none; }
+      .page { width: auto; margin: 0; border: none; border-radius: 0; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar"><button onclick="window.print()">Shrani kot PDF / Natisni</button></div>
+  <main class="page">
+    <p class="eyebrow">INNEA STUDIO</p>
+    <h1>${escapeHtml(title)}</h1>
+    <p class="muted">Prijazen povzetek končne cene za poročni par.</p>
+    <div class="copy">${escapeHtml(body)}</div>
+    <div class="footer">Cena je pripravljena glede na trenutno vpisane storitve in se lahko spremeni, če se spremeni časovnica ali obseg storitev.</div>
+  </main>
+</body>
+</html>`);
+  win.document.close();
+}
+
 function defaultValues(initialValues?: Partial<ProjectFormValues>): ProjectFormValues {
   const base: ProjectFormValues = {
     project_name: "",
@@ -324,6 +375,13 @@ Končno ceno lahko še prilagodimo, če se časovnica ali dodatne storitve sprem
   async function copyWeddingQuote() {
     if (!navigator.clipboard) return;
     await navigator.clipboard.writeText(weddingQuoteText);
+  }
+
+  function openWeddingQuotePdf() {
+    openPrintableHtml(
+      `Povzetek končne cene - ${values.project_name || values.client_name || "Poroka"}`,
+      weddingQuoteText
+    );
   }
 
   function updateWeddingDate(status: string, date: string) {
@@ -961,14 +1019,24 @@ Končno ceno lahko še prilagodimo, če se časovnica ali dodatne storitve sprem
                     Prijazen tekst za email ali sporočilo, brez surovega predračuna.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  className="button-secondary"
-                  onClick={copyWeddingQuote}
-                >
-                  <Copy className="h-4 w-4" />
-                  Kopiraj
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="button-secondary"
+                    onClick={openWeddingQuotePdf}
+                  >
+                    <FileText className="h-4 w-4" />
+                    PDF
+                  </button>
+                  <button
+                    type="button"
+                    className="button-secondary"
+                    onClick={copyWeddingQuote}
+                  >
+                    <Copy className="h-4 w-4" />
+                    Kopiraj
+                  </button>
+                </div>
               </div>
               <textarea
                 className="input min-h-64 whitespace-pre-wrap"

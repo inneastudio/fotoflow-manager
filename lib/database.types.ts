@@ -1,5 +1,6 @@
 import type {
   AppSetting,
+  FinanceEntry,
   Project,
   PushSubscriptionRecord,
   SocialPost,
@@ -41,6 +42,18 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Omit<AppSetting, "id" | "created_at" | "updated_at">> & {
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      finance_entries: {
+        Row: FinanceEntry;
+        Insert: Omit<FinanceEntry, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<FinanceEntry, "id" | "created_at" | "updated_at">> & {
           updated_at?: string;
         };
         Relationships: [];

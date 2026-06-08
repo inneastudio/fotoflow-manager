@@ -6,21 +6,25 @@ import {
   CircleDollarSign,
   Clapperboard,
   Filter,
+  Plus,
   ReceiptText,
   Target,
   TrendingUp,
+  Trash2,
   WalletCards
 } from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
 import { PageHeader } from "@/components/page-header";
 import { PaymentMethodLabel } from "@/components/payment-method-label";
 import { StatusBadge } from "@/components/status-badge";
+import { useFinanceEntries } from "@/lib/use-finance-entries";
 import { useFinanceSettings } from "@/lib/use-finance-settings";
 import { useProjects } from "@/lib/use-projects";
 import {
   paymentMethods,
   paymentStatuses,
   photographers,
+  type PaymentMethod,
   type Project,
   type ProjectFormValues
 } from "@/lib/types";
@@ -58,11 +62,28 @@ function sumAmount(projects: Project[], key: "amount" | "deposit" | "balance" = 
 
 export default function FinancePage() {
   const { projects, loading, updateProject } = useProjects();
+  const {
+    entries: financeEntries,
+    loading: financeEntriesLoading,
+    error: financeEntriesError,
+    createEntry,
+    deleteEntry
+  } = useFinanceEntries();
   const [photographerFilter, setPhotographerFilter] = useState("Vsi");
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("Vsi");
   const [shootTypeFilter, setShootTypeFilter] = useState("Vsi");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("Vsi");
   const [selectedMonth, setSelectedMonth] = useState(monthValue());
+  const [inkasoForm, setInkasoForm] = useState({
+    entry_date: new Date().toISOString().slice(0, 10),
+    title: "Osebni dokumenti",
+    category: "Osebni dokumenti",
+    payment_method: "Gotovina" as PaymentMethod,
+    amount: 0,
+    notes: ""
+  });
+  const [inkasoSaving, setInkasoSaving] = useState(false);
+  const [inkasoError, setInkasoError] = useState<string | null>(null);
   const { monthlyRevenueGoal, updateFinanceSettings } = useFinanceSettings();
   const currentYear = new Date().getFullYear();
   const selectedMonthRange = monthRange(selectedMonth);
@@ -120,28 +141,62 @@ export default function FinancePage() {
   const paidProjects = filteredProjects.filter(
     (project) => project.payment_status === "Plačano"
   );
+  const includeInkaso =
+    (paymentStatusFilter === "Vsi" || paymentStatusFilter === "Plačano") &&
+    photographerFilter === "Vsi" &&
+    shootTypeFilter === "Vsi";
+  const filteredFinanceEntries = useMemo(() => {
+    return financeEntries.filter((entry) => {
+      const matchesPaymentMethod =
+        paymentMethodFilter === "Vsi" || entry.payment_method === paymentMethodFilter;
+      return matchesPaymentMethod;
+    });
+  }, [financeEntries, paymentMethodFilter]);
   const monthPaidProjects = paidProjects.filter((project) =>
     isWithinMonth(project.shoot_date, selectedMonth)
   );
+  const monthFinanceEntries = includeInkaso
+    ? filteredFinanceEntries.filter((entry) =>
+        isWithinMonth(entry.entry_date, selectedMonth)
+      )
+    : [];
   const yearPaidProjects = paidProjects.filter((project) => {
     const date = new Date(project.shoot_date);
     return date.getFullYear() === currentYear;
   });
+  const yearFinanceEntries = includeInkaso
+    ? filteredFinanceEntries.filter((entry) => {
+        const date = new Date(entry.entry_date);
+        return date.getFullYear() === currentYear;
+      })
+    : [];
   const monthShootProjects = filteredProjects.filter((project) =>
     isWithinMonth(project.shoot_date, selectedMonth)
   );
   const totalRevenue = paidProjects
     .filter((project) => project.payment_status === "Plačano")
     .reduce((sum, project) => sum + project.amount, 0);
-  const annualRevenue = sumAmount(yearPaidProjects);
-  const monthlyRevenue = sumAmount(monthPaidProjects);
-  const monthlyProjectedRevenue = sumAmount(monthShootProjects);
+  const monthInkasoRevenue = monthFinanceEntries.reduce(
+    (sum, entry) => sum + Number(entry.amount || 0),
+    0
+  );
+  const annualInkasoRevenue = yearFinanceEntries.reduce(
+    (sum, entry) => sum + Number(entry.amount || 0),
+    0
+  );
+  const annualRevenue = sumAmount(yearPaidProjects) + annualInkasoRevenue;
+  const monthlyRevenue = sumAmount(monthPaidProjects) + monthInkasoRevenue;
+  const monthlyProjectedRevenue = sumAmount(monthShootProjects) + monthInkasoRevenue;
   const monthlyCashRevenue = sumAmount(
     monthPaidProjects.filter((project) => project.payment_method === "Gotovina")
-  );
+  ) + monthFinanceEntries
+    .filter((entry) => entry.payment_method === "Gotovina")
+    .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
   const monthlyBankRevenue = sumAmount(
     monthPaidProjects.filter((project) => project.payment_method === "TRR")
-  );
+  ) + monthFinanceEntries
+    .filter((entry) => entry.payment_method === "TRR")
+    .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
   const averagePaidProject = paidProjects.length
     ? Math.round(totalRevenue / paidProjects.length)
     : 0;
@@ -198,12 +253,19 @@ export default function FinancePage() {
     const plannedMethodProjects = monthShootProjects.filter(
       (project) => project.payment_method === method
     );
+    const methodEntries = monthFinanceEntries.filter(
+      (entry) => entry.payment_method === method
+    );
+    const methodEntryAmount = methodEntries.reduce(
+      (sum, entry) => sum + Number(entry.amount || 0),
+      0
+    );
 
     return {
       method,
-      count: methodProjects.length,
-      amount: sumAmount(methodProjects),
-      planned: sumAmount(plannedMethodProjects)
+      count: methodProjects.length + methodEntries.length,
+      amount: sumAmount(methodProjects) + methodEntryAmount,
+      planned: sumAmount(plannedMethodProjects) + methodEntryAmount
     };
   });
 
@@ -212,6 +274,36 @@ export default function FinancePage() {
       ...toProjectFormValues(project),
       wedding_video_provider_paid: !project.wedding_video_provider_paid
     });
+  }
+
+  async function handleCreateInkaso(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setInkasoError(null);
+
+    if (!inkasoForm.title.trim()) {
+      setInkasoError("Dodaj opis inkasa.");
+      return;
+    }
+
+    if (Number(inkasoForm.amount || 0) <= 0) {
+      setInkasoError("Znesek mora biti večji od 0.");
+      return;
+    }
+
+    setInkasoSaving(true);
+    try {
+      await createEntry(inkasoForm);
+      setInkasoForm((current) => ({
+        ...current,
+        title: current.category,
+        amount: 0,
+        notes: ""
+      }));
+    } catch (error) {
+      setInkasoError(error instanceof Error ? error.message : "Inkaso ni bil shranjen.");
+    } finally {
+      setInkasoSaving(false);
+    }
   }
 
   return (
@@ -320,7 +412,7 @@ export default function FinancePage() {
               ? isMonthOnPlan
                 ? `V planu: ${monthlyProjectedGoalProgress}% cilja`
                 : `Do plana manjka ${formatCurrency(monthlyProjectedGoalRemaining)}`
-              : `${monthShootProjects.length} fotografiranj`
+              : `${monthShootProjects.length} fotografiranj · ${monthFinanceEntries.length} inkaso`
           }
           icon={Target}
           tone={isMonthOnPlan ? "olive" : "clay"}
@@ -441,6 +533,190 @@ export default function FinancePage() {
         </div>
       </section>
 
+      <section className="surface rounded-lg p-4 sm:p-5">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="eyebrow">Inkaso</p>
+            <h2 className="mt-1 font-display text-2xl font-semibold text-ink">
+              Studio, osebni dokumenti in ostalo
+            </h2>
+            <p className="mt-2 text-sm text-muted">
+              Vnosi se štejejo v mesečno poročilo, kadar sta fotograf in tip nastavljena
+              na “vsi”.
+            </p>
+          </div>
+          <div className="rounded-lg border border-line bg-white/70 px-3 py-2 text-sm font-semibold text-muted">
+            Ta mesec: {formatCurrency(monthInkasoRevenue)}
+          </div>
+        </div>
+
+        <form
+          onSubmit={handleCreateInkaso}
+          className="grid gap-3 lg:grid-cols-[150px_1fr_170px_150px_1fr_auto]"
+        >
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-ink">Datum</span>
+            <input
+              className="input"
+              type="date"
+              value={inkasoForm.entry_date}
+              onChange={(event) =>
+                setInkasoForm((current) => ({
+                  ...current,
+                  entry_date: event.target.value
+                }))
+              }
+            />
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-ink">Opis</span>
+            <input
+              className="input"
+              value={inkasoForm.title}
+              onChange={(event) =>
+                setInkasoForm((current) => ({
+                  ...current,
+                  title: event.target.value
+                }))
+              }
+              placeholder="npr. Osebni dokumenti"
+            />
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-ink">Kategorija</span>
+            <select
+              className="input"
+              value={inkasoForm.category}
+              onChange={(event) =>
+                setInkasoForm((current) => ({
+                  ...current,
+                  category: event.target.value,
+                  title:
+                    current.title === current.category || !current.title.trim()
+                      ? event.target.value
+                      : current.title
+                }))
+              }
+            >
+              {["Osebni dokumenti", "Studio", "Inkaso", "Ostalo"].map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-ink">Način</span>
+            <select
+              className="input"
+              value={inkasoForm.payment_method}
+              onChange={(event) =>
+                setInkasoForm((current) => ({
+                  ...current,
+                  payment_method: event.target.value as PaymentMethod
+                }))
+              }
+            >
+              {paymentMethods.map((method) => (
+                <option key={method} value={method}>
+                  {method}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-ink">Znesek</span>
+            <input
+              className="input"
+              min="0"
+              step="1"
+              type="number"
+              value={inkasoForm.amount}
+              onChange={(event) =>
+                setInkasoForm((current) => ({
+                  ...current,
+                  amount: Number(event.target.value)
+                }))
+              }
+            />
+          </label>
+          <button
+            type="submit"
+            className="button-primary self-end"
+            disabled={inkasoSaving}
+          >
+            <Plus className="h-4 w-4" />
+            Dodaj
+          </button>
+          <label className="space-y-1.5 lg:col-span-full">
+            <span className="text-sm font-medium text-ink">Opomba</span>
+            <input
+              className="input"
+              value={inkasoForm.notes}
+              onChange={(event) =>
+                setInkasoForm((current) => ({
+                  ...current,
+                  notes: event.target.value
+                }))
+              }
+              placeholder="Opcijsko, npr. 4x dokumenti, gotovina ..."
+            />
+          </label>
+        </form>
+
+        {inkasoError || financeEntriesError ? (
+          <p className="mt-3 rounded-lg border border-rose/20 bg-rose/10 px-3 py-2 text-sm font-medium text-rose">
+            {inkasoError || financeEntriesError}
+          </p>
+        ) : null}
+
+        <div className="mt-5 overflow-hidden rounded-lg border border-line">
+          <div className="grid grid-cols-[110px_1fr_130px_130px_44px] gap-3 border-b border-line bg-paper px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+            <span>Datum</span>
+            <span>Opis</span>
+            <span>Način</span>
+            <span className="text-right">Znesek</span>
+            <span />
+          </div>
+          {financeEntriesLoading ? (
+            <div className="h-16 animate-pulse bg-mist/70" />
+          ) : monthFinanceEntries.length ? (
+            monthFinanceEntries.map((entry) => (
+              <div
+                key={entry.id}
+                className="grid grid-cols-[110px_1fr_130px_130px_44px] items-center gap-3 border-b border-line px-3 py-3 text-sm last:border-b-0"
+              >
+                <span className="text-muted">{formatDate(entry.entry_date)}</span>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-ink">{entry.title}</p>
+                  <p className="truncate text-xs text-muted">
+                    {entry.category}
+                    {entry.notes ? ` · ${entry.notes}` : ""}
+                  </p>
+                </div>
+                <PaymentMethodLabel method={entry.payment_method} />
+                <span className="text-right font-semibold text-ink">
+                  {formatCurrency(entry.amount)}
+                </span>
+                <button
+                  type="button"
+                  className="button-ghost h-9 w-9 p-0 text-rose hover:text-rose"
+                  onClick={() => deleteEntry(entry.id)}
+                  aria-label="Izbriši inkaso"
+                  title="Izbriši"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))
+          ) : (
+            <p className="p-3 text-sm text-muted">
+              V izbranem mesecu ni inkaso vnosov za trenutne filtre.
+            </p>
+          )}
+        </div>
+      </section>
+
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="surface rounded-lg p-4 sm:p-5">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -474,7 +750,7 @@ export default function FinancePage() {
                   </p>
                 </div>
                 <p className="mt-3 text-sm text-muted">
-                  {row.count} plačanih projektov · vpisano{" "}
+                  {row.count} plačanih vnosov · vpisano{" "}
                   <span className="font-semibold text-ink">
                     {formatCurrency(row.planned)}
                   </span>

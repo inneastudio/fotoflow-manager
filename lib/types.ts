@@ -165,6 +165,25 @@ export type AppSetting = {
   updated_at: string;
 };
 
+export type FinanceEntryCategory =
+  | "Osebni dokumenti"
+  | "Studio"
+  | "Inkaso"
+  | "Ostalo";
+
+export type FinanceEntry = {
+  id: string;
+  user_id?: string | null;
+  entry_date: string;
+  title: string;
+  category: FinanceEntryCategory | string;
+  payment_method: PaymentMethod;
+  amount: number;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type PushSubscriptionRecord = {
   id: string;
   user_id?: string | null;
