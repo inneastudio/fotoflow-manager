@@ -20,7 +20,7 @@ create table if not exists public.projects (
   location text default '',
   workflow_status text not null default 'Rezervirano',
   payment_status text not null default 'Neplačano'
-    check (payment_status in ('Neplačano', 'Delno plačano', 'Plačano')),
+    check (payment_status in ('Neplačano', 'Delno plačano', 'Pošlji račun', 'Račun poslan', 'Plačano')),
   payment_method text not null default 'TRR'
     check (payment_method in ('Gotovina', 'TRR')),
   amount numeric(12, 2) not null default 0 check (amount >= 0),
@@ -67,6 +67,10 @@ alter table public.projects
 add column if not exists wedding_video_provider_paid boolean not null default false;
 
 alter table public.projects drop constraint if exists projects_workflow_status_check;
+alter table public.projects drop constraint if exists projects_payment_status_check;
+alter table public.projects
+add constraint projects_payment_status_check
+check (payment_status in ('Neplačano', 'Delno plačano', 'Pošlji račun', 'Račun poslan', 'Plačano'));
 
 alter table public.projects
 add column if not exists external_source text,

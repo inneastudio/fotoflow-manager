@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type { Database } from "@/lib/database.types";
 import type { PaymentMethod, PaymentStatus, Photographer } from "@/lib/types";
+import { paymentStatuses } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,6 @@ type FioraImportPayload = {
   retouchNotes?: string;
 };
 
-const paymentStatuses: PaymentStatus[] = ["Neplačano", "Delno plačano", "Plačano"];
 const paymentMethods: PaymentMethod[] = ["Gotovina", "TRR"];
 const photographers: Photographer[] = ["Žan", "Teja", "Žan in Teja"];
 
@@ -129,7 +129,11 @@ export async function POST(request: Request) {
     shoot_time: stringValue(payload?.shootTime),
     location: stringValue(payload?.location),
     workflow_status: stringValue(payload?.workflowStatus) || "Rezervirano",
-    payment_status: oneOf(payload?.paymentStatus, paymentStatuses, "Neplačano"),
+    payment_status: oneOf(
+      payload?.paymentStatus,
+      [...paymentStatuses] as PaymentStatus[],
+      "Pošlji račun"
+    ),
     payment_method: oneOf(payload?.paymentMethod, paymentMethods, "TRR"),
     amount,
     deposit,

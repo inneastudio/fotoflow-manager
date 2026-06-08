@@ -145,6 +145,8 @@ export function getStatusProgress(
 export function paymentTone(status: PaymentStatus) {
   if (status === "Plačano") return "bg-olive/10 text-olive border-olive/20";
   if (status === "Delno plačano") return "bg-clay/10 text-clay border-clay/20";
+  if (status === "Pošlji račun") return "bg-charcoal/10 text-charcoal border-charcoal/20";
+  if (status === "Račun poslan") return "bg-clay/10 text-clay border-clay/20";
   return "bg-rose/10 text-rose border-rose/25";
 }
 

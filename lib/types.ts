@@ -45,6 +45,8 @@ export const weddingDateStatuses = [
 export const paymentStatuses = [
   "Neplačano",
   "Delno plačano",
+  "Pošlji račun",
+  "Račun poslan",
   "Plačano"
 ] as const;
 
@@ -70,6 +72,20 @@ export type PaymentStatus = (typeof paymentStatuses)[number];
 export type Photographer = (typeof photographers)[number];
 export type PaymentMethod = (typeof paymentMethods)[number];
 export type ShootType = (typeof shootTypes)[number] | string;
+
+export function getPaymentStatusesForMethod(
+  paymentMethod: PaymentMethod | string,
+  currentStatus?: PaymentStatus | string
+) {
+  const methodStatuses =
+    paymentMethod === "TRR"
+      ? ["Pošlji račun", "Račun poslan", "Plačano"]
+      : ["Neplačano", "Delno plačano", "Plačano"];
+
+  return Array.from(
+    new Set([...methodStatuses, currentStatus].filter(Boolean))
+  ) as PaymentStatus[];
+}
 
 export type Project = {
   id: string;

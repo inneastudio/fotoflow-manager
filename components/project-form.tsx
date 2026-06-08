@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { FileText, Link as LinkIcon, Save, Upload } from "lucide-react";
 import type { Project, ProjectFormValues } from "@/lib/types";
 import {
+  getPaymentStatusesForMethod,
   paymentMethods,
-  paymentStatuses,
   photographers,
   weddingDateStatuses,
   weddingWorkflowStatuses
@@ -41,7 +41,7 @@ function defaultValues(initialValues?: Partial<ProjectFormValues>): ProjectFormV
     shoot_time: "",
     location: "",
     workflow_status: "Rezervirano",
-    payment_status: "Neplačano",
+    payment_status: "Pošlji račun",
     payment_method: "TRR",
     amount: 0,
     deposit: 0,
@@ -143,6 +143,14 @@ export function ProjectForm({
       new Set([...weddingWorkflowStatuses, String(values.workflow_status)].filter(Boolean))
     );
   }, [isWedding, values.workflow_status, workflowStatuses]);
+  const paymentStatusOptions = useMemo(
+    () =>
+      getPaymentStatusesForMethod(
+        values.payment_method,
+        values.payment_status
+      ),
+    [values.payment_method, values.payment_status]
+  );
 
   const balance = useMemo(() => {
     if (values.payment_status === "Plačano") return 0;
@@ -170,6 +178,31 @@ export function ProjectForm({
     value: ProjectFormValues[K]
   ) {
     setValues((current) => ({ ...current, [key]: value }));
+  }
+
+  function updatePaymentMethod(paymentMethod: Project["payment_method"]) {
+    setValues((current) => {
+      const nextPaymentStatusOptions = getPaymentStatusesForMethod(
+        paymentMethod,
+        current.payment_status
+      );
+      const currentStatusFitsMethod =
+        paymentMethod === "TRR"
+          ? ["Pošlji račun", "Račun poslan", "Plačano"].includes(
+              current.payment_status
+            )
+          : ["Neplačano", "Delno plačano", "Plačano"].includes(
+              current.payment_status
+            );
+
+      return {
+        ...current,
+        payment_method: paymentMethod,
+        payment_status: currentStatusFitsMethod
+          ? current.payment_status
+          : nextPaymentStatusOptions[0]
+      };
+    });
   }
 
   function calculateWeddingTotal(nextValues: ProjectFormValues) {
@@ -530,7 +563,7 @@ export function ProjectForm({
               updateValue("payment_status", event.target.value as Project["payment_status"])
             }
           >
-            {paymentStatuses.map((status) => (
+            {paymentStatusOptions.map((status) => (
               <option key={status} value={status}>
                 {status}
               </option>
@@ -544,7 +577,7 @@ export function ProjectForm({
             className="input"
             value={values.payment_method}
             onChange={(event) =>
-              updateValue("payment_method", event.target.value as Project["payment_method"])
+              updatePaymentMethod(event.target.value as Project["payment_method"])
             }
           >
             {paymentMethods.map((method) => (

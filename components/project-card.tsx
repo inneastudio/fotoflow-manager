@@ -12,7 +12,7 @@ import {
 import { PaymentMethodLabel } from "@/components/payment-method-label";
 import { StatusBadge } from "@/components/status-badge";
 import type { PaymentStatus, Project, WorkflowStatus } from "@/lib/types";
-import { paymentStatuses, weddingWorkflowStatuses } from "@/lib/types";
+import { getPaymentStatusesForMethod, weddingWorkflowStatuses } from "@/lib/types";
 import { useStudioSettings } from "@/lib/use-studio-settings";
 import {
   formatCurrency,
@@ -46,6 +46,10 @@ export function ProjectCard({
   );
   const projectTitle = getProjectTitle(project);
   const projectSubtitle = getProjectSubtitle(project);
+  const paymentStatusOptions = getPaymentStatusesForMethod(
+    project.payment_method,
+    project.payment_status
+  );
 
   return (
     <article className="surface rounded-lg px-4 py-3 transition hover:-translate-y-0.5 hover:border-clay/35 hover:bg-white/75 hover:shadow-soft">
@@ -120,7 +124,7 @@ export function ProjectCard({
                 )
               }
             >
-              {paymentStatuses.map((status) => (
+              {paymentStatusOptions.map((status) => (
                 <option key={status} value={status}>
                   {status}
                 </option>
