@@ -218,6 +218,8 @@ function toFormValues(project: Project) {
     wedding_status_dates: project.wedding_status_dates ?? {},
     wedding_package: project.wedding_package ?? "",
     wedding_package_price: Number(project.wedding_package_price ?? 0),
+    wedding_extra_hours: Number(project.wedding_extra_hours ?? 0),
+    wedding_extra_hour_price: Number(project.wedding_extra_hour_price ?? 90),
     wedding_video_enabled: Boolean(project.wedding_video_enabled),
     wedding_video_package: project.wedding_video_package ?? "",
     wedding_video_price: Number(project.wedding_video_price ?? 0),

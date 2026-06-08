@@ -463,6 +463,9 @@ function WeddingServiceBadges({ project }: { project: Project }) {
 function WeddingPackageSummary({ project }: { project: Project }) {
   const parts = [
     project.wedding_package ? `Foto: ${project.wedding_package}` : "",
+    Number(project.wedding_extra_hours || 0) > 0
+      ? `Dodatne ure: ${project.wedding_extra_hours}`
+      : "",
     project.wedding_video_enabled && project.wedding_video_package
       ? `Video: ${project.wedding_video_package}`
       : "",

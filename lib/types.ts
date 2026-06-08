@@ -118,6 +118,8 @@ export type Project = {
   wedding_status_dates?: WeddingStatusDates;
   wedding_package?: string;
   wedding_package_price?: number;
+  wedding_extra_hours?: number;
+  wedding_extra_hour_price?: number;
   wedding_video_enabled?: boolean;
   wedding_video_package?: string;
   wedding_video_price?: number;
@@ -219,6 +221,8 @@ export type ProjectFormValues = Omit<
   wedding_status_dates: WeddingStatusDates;
   wedding_package: string;
   wedding_package_price: number;
+  wedding_extra_hours: number;
+  wedding_extra_hour_price: number;
   wedding_video_enabled: boolean;
   wedding_video_package: string;
   wedding_video_price: number;

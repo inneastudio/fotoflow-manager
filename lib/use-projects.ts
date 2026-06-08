@@ -28,6 +28,8 @@ function ensureProjectShape(project: Project): Project {
     wedding_status_dates: project.wedding_status_dates ?? {},
     wedding_package: project.wedding_package ?? "",
     wedding_package_price: Number(project.wedding_package_price ?? 0),
+    wedding_extra_hours: Number(project.wedding_extra_hours ?? 0),
+    wedding_extra_hour_price: Number(project.wedding_extra_hour_price ?? 90),
     wedding_video_enabled: Boolean(project.wedding_video_enabled),
     wedding_video_package: project.wedding_video_package ?? "",
     wedding_video_price: Number(project.wedding_video_price ?? 0),
@@ -72,6 +74,8 @@ function isMissingOptionalColumn(message: string) {
     message.includes("schema cache") &&
     (message.includes("client_address") ||
       message.includes("wedding_video_provider_paid") ||
+      message.includes("wedding_extra_hours") ||
+      message.includes("wedding_extra_hour_price") ||
       message.includes("shoot_reminder_sent_at"))
   );
 }
@@ -80,12 +84,16 @@ function omitMissingOptionalColumns<
   T extends {
     client_address?: string;
     wedding_video_provider_paid?: boolean;
+    wedding_extra_hours?: number;
+    wedding_extra_hour_price?: number;
     shoot_reminder_sent_at?: string | null;
   }
 >(value: T) {
   const {
     client_address: _clientAddress,
     wedding_video_provider_paid: _weddingVideoProviderPaid,
+    wedding_extra_hours: _weddingExtraHours,
+    wedding_extra_hour_price: _weddingExtraHourPrice,
     shoot_reminder_sent_at: _shootReminderSentAt,
     ...rest
   } = value;
@@ -131,6 +139,8 @@ function normalizeProject(values: ProjectFormValues, existing?: Project): Projec
     wedding_status_dates: values.wedding_status_dates ?? {},
     wedding_package: values.wedding_package?.trim() ?? "",
     wedding_package_price: Number(values.wedding_package_price || 0),
+    wedding_extra_hours: Math.max(Number(values.wedding_extra_hours || 0), 0),
+    wedding_extra_hour_price: Math.max(Number(values.wedding_extra_hour_price || 0), 0),
     wedding_video_enabled: Boolean(values.wedding_video_enabled),
     wedding_video_package: values.wedding_video_package?.trim() ?? "",
     wedding_video_price: Number(values.wedding_video_price || 0),
@@ -268,6 +278,8 @@ export function useProjects() {
           wedding_status_dates: updated.wedding_status_dates,
           wedding_package: updated.wedding_package,
           wedding_package_price: updated.wedding_package_price,
+          wedding_extra_hours: updated.wedding_extra_hours,
+          wedding_extra_hour_price: updated.wedding_extra_hour_price,
           wedding_video_enabled: updated.wedding_video_enabled,
           wedding_video_package: updated.wedding_video_package,
           wedding_video_price: updated.wedding_video_price,
@@ -364,6 +376,8 @@ export function useProjects() {
         wedding_status_dates: existing.wedding_status_dates ?? {},
         wedding_package: existing.wedding_package ?? "",
         wedding_package_price: Number(existing.wedding_package_price ?? 0),
+        wedding_extra_hours: Number(existing.wedding_extra_hours ?? 0),
+        wedding_extra_hour_price: Number(existing.wedding_extra_hour_price ?? 90),
         wedding_video_enabled: Boolean(existing.wedding_video_enabled),
         wedding_video_package: existing.wedding_video_package ?? "",
         wedding_video_price: Number(existing.wedding_video_price ?? 0),

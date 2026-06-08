@@ -17,6 +17,9 @@ function projectVariables(project: Project) {
     month: "long",
     year: "numeric"
   }).format(new Date());
+  const extraHoursTotal =
+    Number(project.wedding_extra_hours || 0) *
+    Number(project.wedding_extra_hour_price || 90);
 
   return {
     danasnji_datum: currentDate,
@@ -36,6 +39,9 @@ function projectVariables(project: Project) {
     rok_oddaje: formatDate(project.delivery_due),
     foto_paket: project.wedding_package || "",
     cena_foto_paketa: formatCurrency(project.wedding_package_price || 0),
+    dodatne_ure: String(project.wedding_extra_hours || 0),
+    cena_dodatne_ure: formatCurrency(project.wedding_extra_hour_price || 90),
+    cena_dodatnih_ur: formatCurrency(extraHoursTotal),
     snemanje_paket: project.wedding_video_package || "",
     cena_snemanja: formatCurrency(project.wedding_video_price || 0),
     photobooth_paket: project.wedding_photobooth_package || "",

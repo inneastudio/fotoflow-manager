@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { FileText, Link as LinkIcon, Save, Upload } from "lucide-react";
+import { Copy, FileText, Link as LinkIcon, Save, Upload } from "lucide-react";
 import type { Project, ProjectFormValues } from "@/lib/types";
 import {
   getPaymentStatusesForMethod,
@@ -16,6 +16,7 @@ import {
   addBusinessDays,
   calculateBalance,
   formatCurrency,
+  formatDate,
   getBusinessDaysBetween
 } from "@/lib/utils";
 
@@ -54,6 +55,8 @@ function defaultValues(initialValues?: Partial<ProjectFormValues>): ProjectFormV
     wedding_status_dates: {},
     wedding_package: "",
     wedding_package_price: 0,
+    wedding_extra_hours: 0,
+    wedding_extra_hour_price: 90,
     wedding_video_enabled: false,
     wedding_video_package: "",
     wedding_video_price: 0,
@@ -123,6 +126,8 @@ export function ProjectForm({
       wedding_status_dates: project.wedding_status_dates ?? {},
       wedding_package: project.wedding_package ?? "",
       wedding_package_price: Number(project.wedding_package_price ?? 0),
+      wedding_extra_hours: Number(project.wedding_extra_hours ?? 0),
+      wedding_extra_hour_price: Number(project.wedding_extra_hour_price ?? 90),
       wedding_video_enabled: Boolean(project.wedding_video_enabled),
       wedding_video_package: project.wedding_video_package ?? "",
       wedding_video_price: Number(project.wedding_video_price ?? 0),
@@ -162,15 +167,67 @@ export function ProjectForm({
   const weddingPackageTotal = useMemo(() => {
     return (
       Number(values.wedding_package_price || 0) +
+      Number(values.wedding_extra_hours || 0) *
+        Number(values.wedding_extra_hour_price || 0) +
       (values.wedding_video_enabled ? Number(values.wedding_video_price || 0) : 0) +
       (values.wedding_photobooth_enabled ? Number(values.wedding_photobooth_price || 0) : 0)
     );
   }, [
+    values.wedding_extra_hour_price,
+    values.wedding_extra_hours,
     values.wedding_package_price,
     values.wedding_photobooth_enabled,
     values.wedding_photobooth_price,
     values.wedding_video_enabled,
     values.wedding_video_price
+  ]);
+  const weddingExtraHoursTotal =
+    Number(values.wedding_extra_hours || 0) *
+    Number(values.wedding_extra_hour_price || 0);
+  const weddingQuoteText = useMemo(() => {
+    const rows = [
+      values.wedding_package
+        ? `Fotografiranje: ${values.wedding_package} (${formatCurrency(values.wedding_package_price)})`
+        : "",
+      Number(values.wedding_extra_hours || 0) > 0
+        ? `Dodatne ure fotografiranja: ${values.wedding_extra_hours} x ${formatCurrency(values.wedding_extra_hour_price)} (${formatCurrency(weddingExtraHoursTotal)})`
+        : "",
+      values.wedding_video_enabled
+        ? `Snemanje: ${values.wedding_video_package || "po dogovoru"} (${formatCurrency(values.wedding_video_price)})`
+        : "",
+      values.wedding_photobooth_enabled
+        ? `Photobooth: ${values.wedding_photobooth_package || "po dogovoru"} (${formatCurrency(values.wedding_photobooth_price)})`
+        : ""
+    ].filter(Boolean);
+
+    return `Živjo ${values.client_name || "oba"},
+
+pripravila sem vama povzetek ponudbe za poročni dan${values.shoot_date ? ` ${formatDate(values.shoot_date)}` : ""}${values.location ? ` na lokaciji ${values.location}` : ""}.
+
+${rows.length ? rows.map((row) => `- ${row}`).join("\n") : "- Paket še uskladimo glede na vajino časovnico."}
+
+Skupaj: ${formatCurrency(weddingPackageTotal)}
+${Number(values.deposit || 0) > 0 ? `Avans za rezervacijo termina: ${formatCurrency(values.deposit)}` : ""}
+${Number(values.deposit || 0) > 0 ? `Preostanek po poroki: ${formatCurrency(Math.max(weddingPackageTotal - Number(values.deposit || 0), 0))}` : ""}
+
+Končno ceno lahko še prilagodimo, če se časovnica ali dodatne storitve spremenijo.`;
+  }, [
+    values.client_name,
+    values.deposit,
+    values.location,
+    values.shoot_date,
+    values.wedding_extra_hour_price,
+    values.wedding_extra_hours,
+    values.wedding_package,
+    values.wedding_package_price,
+    values.wedding_photobooth_enabled,
+    values.wedding_photobooth_package,
+    values.wedding_photobooth_price,
+    values.wedding_video_enabled,
+    values.wedding_video_package,
+    values.wedding_video_price,
+    weddingExtraHoursTotal,
+    weddingPackageTotal
   ]);
 
   function updateValue<K extends keyof ProjectFormValues>(
@@ -208,6 +265,8 @@ export function ProjectForm({
   function calculateWeddingTotal(nextValues: ProjectFormValues) {
     return (
       Number(nextValues.wedding_package_price || 0) +
+      Number(nextValues.wedding_extra_hours || 0) *
+        Number(nextValues.wedding_extra_hour_price || 0) +
       (nextValues.wedding_video_enabled ? Number(nextValues.wedding_video_price || 0) : 0) +
       (nextValues.wedding_photobooth_enabled
         ? Number(nextValues.wedding_photobooth_price || 0)
@@ -260,6 +319,11 @@ export function ProjectForm({
       wedding_package: selectedPackage.name,
       wedding_package_price: selectedPackage.price
     });
+  }
+
+  async function copyWeddingQuote() {
+    if (!navigator.clipboard) return;
+    await navigator.clipboard.writeText(weddingQuoteText);
   }
 
   function updateWeddingDate(status: string, date: string) {
@@ -705,6 +769,53 @@ export function ProjectForm({
                   }
                 />
               </label>
+              <div className="rounded-lg border border-line bg-white p-3 md:col-span-2">
+                <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-ink">
+                      Dodatne ure fotografiranja
+                    </p>
+                    <p className="text-xs text-muted">
+                      Privzeto 90 EUR na dodatno uro.
+                    </p>
+                  </div>
+                  <p className="text-sm font-semibold text-ink">
+                    {formatCurrency(weddingExtraHoursTotal)}
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium text-ink">Količina ur</span>
+                    <input
+                      className="input"
+                      min="0"
+                      step="0.5"
+                      type="number"
+                      value={values.wedding_extra_hours}
+                      onChange={(event) =>
+                        updateWeddingOffer({
+                          wedding_extra_hours: Number(event.target.value)
+                        })
+                      }
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-sm font-medium text-ink">Cena na uro</span>
+                    <input
+                      className="input"
+                      min="0"
+                      step="1"
+                      type="number"
+                      value={values.wedding_extra_hour_price}
+                      onChange={(event) =>
+                        updateWeddingOffer({
+                          wedding_extra_hour_price: Number(event.target.value)
+                        })
+                      }
+                    />
+                  </label>
+                </div>
+              </div>
               <label className="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-ink md:col-span-2">
                 <input
                   type="checkbox"
@@ -838,6 +949,33 @@ export function ProjectForm({
             <p className="mt-3 text-sm font-semibold text-muted">
               Predlagan skupaj: {formatCurrency(weddingPackageTotal)}
             </p>
+
+            <div className="mt-4 rounded-lg border border-line bg-white p-4">
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="eyebrow">Izpis za par</p>
+                  <h5 className="mt-1 font-display text-lg font-semibold text-ink">
+                    Povzetek končne cene
+                  </h5>
+                  <p className="mt-1 text-sm text-muted">
+                    Prijazen tekst za email ali sporočilo, brez surovega predračuna.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="button-secondary"
+                  onClick={copyWeddingQuote}
+                >
+                  <Copy className="h-4 w-4" />
+                  Kopiraj
+                </button>
+              </div>
+              <textarea
+                className="input min-h-64 whitespace-pre-wrap"
+                value={weddingQuoteText}
+                readOnly
+              />
+            </div>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">

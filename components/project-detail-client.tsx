@@ -340,6 +340,17 @@ function WeddingPackageCard({ project }: { project: Project }) {
       detail: ""
     },
     {
+      label: "Dodatne ure",
+      name:
+        Number(project.wedding_extra_hours || 0) > 0
+          ? `${project.wedding_extra_hours} x ${formatCurrency(project.wedding_extra_hour_price ?? 90)}`
+          : "Ni dodano",
+      price:
+        Number(project.wedding_extra_hours || 0) *
+        Number(project.wedding_extra_hour_price ?? 90),
+      detail: ""
+    },
+    {
       label: "Snemanje",
       name: project.wedding_video_enabled
         ? project.wedding_video_package || "Vključeno"
