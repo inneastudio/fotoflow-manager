@@ -204,6 +204,20 @@ export type GiftVoucher = {
   updated_at: string;
 };
 
+export type ProjectChecklistItem = {
+  id: string;
+  user_id?: string | null;
+  project_id: string;
+  label: string;
+  category: string;
+  quantity: number;
+  is_checked: boolean;
+  sort_order: number;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type PushSubscriptionRecord = {
   id: string;
   user_id?: string | null;

@@ -3,6 +3,7 @@ import type {
   FinanceEntry,
   GiftVoucher,
   Project,
+  ProjectChecklistItem,
   PushSubscriptionRecord,
   SocialPost,
   StudioDocument
@@ -67,6 +68,20 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Omit<GiftVoucher, "id" | "created_at" | "updated_at">> & {
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      project_checklist_items: {
+        Row: ProjectChecklistItem;
+        Insert: Omit<ProjectChecklistItem, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Omit<ProjectChecklistItem, "id" | "created_at" | "updated_at">
+        > & {
           updated_at?: string;
         };
         Relationships: [];
