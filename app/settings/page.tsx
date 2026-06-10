@@ -7,6 +7,7 @@ import {
   Bell,
   Camera,
   ChevronDown,
+  ClipboardCheck,
   Database,
   FileText,
   LogOut,
@@ -31,10 +32,12 @@ import {
   defaultShootReminderEmailContent,
   defaultShootReminderEmailSubject,
   defaultShootTypeOptions,
+  defaultEquipmentPresets,
   defaultWeddingBoothPackages,
   defaultWeddingPhotoPackages,
   defaultWeddingVideoPackages,
   defaultWorkflowStatusOptions,
+  type EquipmentPreset,
   type StudioSettings,
   type WeddingPackageGroup,
   type WeddingPackageOption,
@@ -55,6 +58,7 @@ type SettingsSectionId =
   | "account"
   | "push"
   | "email"
+  | "equipment"
   | "workflow"
   | "wedding"
   | "shoot-types"
@@ -79,6 +83,8 @@ export default function SettingsPage() {
   const [newWorkdays, setNewWorkdays] = useState(8);
   const [newFixedPrice, setNewFixedPrice] = useState(0);
   const [newWorkflowStatus, setNewWorkflowStatus] = useState("");
+  const [newPresetName, setNewPresetName] = useState("");
+  const [newPresetShootType, setNewPresetShootType] = useState("Vsi dogodki");
   const [studioDraft, setStudioDraft] = useState<StudioSettings>(settings);
   const [documentDraft, setDocumentDraft] = useState(templates);
 
@@ -232,6 +238,34 @@ export default function SettingsPage() {
       };
     });
     setNewWorkflowStatus("");
+  }
+
+  function handleAddEquipmentPreset(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const cleanName = newPresetName.trim();
+    if (!cleanName) return;
+
+    updateStudioDraft((current) => {
+      const exists = current.equipmentPresets.some(
+        (preset) => preset.name.toLowerCase() === cleanName.toLowerCase()
+      );
+      if (exists) return current;
+
+      return {
+        ...current,
+        equipmentPresets: [
+          ...current.equipmentPresets,
+          {
+            id: crypto.randomUUID(),
+            name: cleanName,
+            shootType: newPresetShootType.trim() || "Vsi dogodki",
+            items: []
+          }
+        ]
+      };
+    });
+    setNewPresetName("");
+    setNewPresetShootType("Vsi dogodki");
   }
 
   return (
@@ -513,6 +547,79 @@ export default function SettingsPage() {
               onRemove={handleRemoveWeddingPackage}
               onReset={handleResetWeddingPackages}
             />
+          </div>
+        </SettingsSection>
+
+        <SettingsSection
+          id="equipment"
+          title="Preseti opreme"
+          description="Predloge checklist po tipih dogodkov."
+          icon={ClipboardCheck}
+          open={openSection === "equipment"}
+          onToggle={toggleSection}
+          action={
+            <SettingActions
+              onSave={saveStudioDraft}
+              onReset={() =>
+                updateStudioDraft((current) => ({
+                  ...current,
+                  equipmentPresets: defaultEquipmentPresets
+                }))
+              }
+            />
+          }
+        >
+          <form
+            onSubmit={handleAddEquipmentPreset}
+            className="grid gap-3 md:grid-cols-[1fr_220px_auto]"
+          >
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-ink">Ime preseta</span>
+              <input
+                className="input"
+                value={newPresetName}
+                onChange={(event) => setNewPresetName(event.target.value)}
+                placeholder="npr. Krst / teren / poroka"
+              />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-sm font-medium text-ink">Tip dogodka</span>
+              <input
+                className="input"
+                value={newPresetShootType}
+                onChange={(event) => setNewPresetShootType(event.target.value)}
+                placeholder="Vsi dogodki"
+              />
+            </label>
+            <button className="button-primary self-end" type="submit">
+              <Plus className="h-4 w-4" />
+              Dodaj preset
+            </button>
+          </form>
+
+          <div className="mt-5 grid gap-4 xl:grid-cols-2">
+            {studioDraft.equipmentPresets.map((preset) => (
+              <EquipmentPresetSettings
+                key={preset.id}
+                preset={preset}
+                onUpdate={(values) =>
+                  updateStudioDraft((current) => ({
+                    ...current,
+                    equipmentPresets: current.equipmentPresets.map((item) =>
+                      item.id === preset.id ? { ...item, ...values } : item
+                    )
+                  }))
+                }
+                onRemove={() =>
+                  updateStudioDraft((current) => ({
+                    ...current,
+                    equipmentPresets: current.equipmentPresets.filter(
+                      (item) => item.id !== preset.id
+                    )
+                  }))
+                }
+              />
+            ))}
           </div>
         </SettingsSection>
 
@@ -1013,6 +1120,202 @@ function DocumentTimelineSettings({
             </label>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function EquipmentPresetSettings({
+  preset,
+  onUpdate,
+  onRemove
+}: {
+  preset: EquipmentPreset;
+  onUpdate: (values: Partial<EquipmentPreset>) => void;
+  onRemove: () => void;
+}) {
+  const [itemName, setItemName] = useState("");
+  const [category, setCategory] = useState("Oprema");
+  const [quantity, setQuantity] = useState(1);
+  const [notes, setNotes] = useState("");
+
+  function handleAddItem(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const cleanName = itemName.trim();
+    if (!cleanName) return;
+
+    onUpdate({
+      items: [
+        ...preset.items,
+        {
+          id: crypto.randomUUID(),
+          label: cleanName,
+          category: category.trim() || "Oprema",
+          quantity: Math.max(Number(quantity || 1), 1),
+          notes: notes.trim()
+        }
+      ]
+    });
+    setItemName("");
+    setCategory("Oprema");
+    setQuantity(1);
+    setNotes("");
+  }
+
+  return (
+    <div className="rounded-lg border border-line bg-white/70 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="eyebrow">Preset</p>
+          <input
+            className="input mt-2"
+            value={preset.name}
+            onChange={(event) => onUpdate({ name: event.target.value })}
+            placeholder="Ime preseta"
+          />
+          <input
+            className="input mt-3"
+            value={preset.shootType}
+            onChange={(event) => onUpdate({ shootType: event.target.value })}
+            placeholder="Tip dogodka"
+          />
+        </div>
+        <button
+          type="button"
+          className="button-ghost h-9 w-9 p-0 text-rose hover:text-rose"
+          onClick={onRemove}
+          aria-label={`Odstrani preset ${preset.name}`}
+          title="Odstrani"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+
+      <form onSubmit={handleAddItem} className="mt-4 grid gap-3 md:grid-cols-[1fr_130px_90px]">
+        <label className="space-y-1.5">
+          <span className="text-sm font-medium text-ink">Postavka</span>
+          <input
+            className="input"
+            value={itemName}
+            onChange={(event) => setItemName(event.target.value)}
+            placeholder="npr. Bliskavica"
+          />
+        </label>
+        <label className="space-y-1.5">
+          <span className="text-sm font-medium text-ink">Kategorija</span>
+          <input
+            className="input"
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+          />
+        </label>
+        <label className="space-y-1.5">
+          <span className="text-sm font-medium text-ink">Količina</span>
+          <input
+            className="input"
+            min="1"
+            step="1"
+            type="number"
+            value={quantity}
+            onChange={(event) => setQuantity(Number(event.target.value))}
+          />
+        </label>
+        <label className="space-y-1.5 md:col-span-2">
+          <span className="text-sm font-medium text-ink">Opomba</span>
+          <input
+            className="input"
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+            placeholder="Opcijsko"
+          />
+        </label>
+        <button className="button-primary self-end" type="submit">
+          <Plus className="h-4 w-4" />
+          Dodaj
+        </button>
+      </form>
+
+      <div className="mt-4 space-y-2">
+        {preset.items.map((item) => (
+          <div key={item.id} className="rounded-lg border border-line bg-paper p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="grid flex-1 gap-2 md:grid-cols-[1fr_130px_90px]">
+                <input
+                  className="input"
+                  value={item.label}
+                  onChange={(event) =>
+                    onUpdate({
+                      items: preset.items.map((row) =>
+                        row.id === item.id ? { ...row, label: event.target.value } : row
+                      )
+                    })
+                  }
+                />
+                <input
+                  className="input"
+                  value={item.category}
+                  onChange={(event) =>
+                    onUpdate({
+                      items: preset.items.map((row) =>
+                        row.id === item.id ? { ...row, category: event.target.value } : row
+                      )
+                    })
+                  }
+                />
+                <input
+                  className="input"
+                  min="1"
+                  step="1"
+                  type="number"
+                  value={item.quantity}
+                  onChange={(event) =>
+                    onUpdate({
+                      items: preset.items.map((row) =>
+                        row.id === item.id
+                          ? {
+                              ...row,
+                              quantity: Math.max(Number(event.target.value || 1), 1)
+                            }
+                          : row
+                      )
+                    })
+                  }
+                />
+              </div>
+              <button
+                type="button"
+                className="button-ghost h-9 w-9 p-0 text-rose hover:text-rose"
+                onClick={() =>
+                  onUpdate({
+                    items: preset.items.filter((row) => row.id !== item.id)
+                  })
+                }
+                aria-label={`Odstrani ${item.label}`}
+                title="Odstrani"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+            <input
+              className="input mt-2"
+              value={item.notes}
+              onChange={(event) =>
+                onUpdate({
+                  items: preset.items.map((row) =>
+                    row.id === item.id ? { ...row, notes: event.target.value } : row
+                  )
+                })
+              }
+              placeholder="Opomba"
+            />
+          </div>
+        ))}
+
+        {!preset.items.length ? (
+          <p className="rounded-lg border border-line bg-paper p-3 text-sm text-muted">
+            Ta preset še nima postavk.
+          </p>
+        ) : null}
       </div>
     </div>
   );

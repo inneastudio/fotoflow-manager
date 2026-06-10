@@ -22,12 +22,28 @@ export type WeddingPackageOption = {
 
 export type WeddingPackageGroup = "photo" | "video" | "booth";
 
+export type EquipmentPresetItem = {
+  id: string;
+  label: string;
+  category: string;
+  quantity: number;
+  notes: string;
+};
+
+export type EquipmentPreset = {
+  id: string;
+  name: string;
+  shootType: string;
+  items: EquipmentPresetItem[];
+};
+
 export type StudioSettings = {
   shootTypeOptions: ShootTypeOption[];
   workflowStatuses: string[];
   weddingPhotoPackages: WeddingPackageOption[];
   weddingVideoPackages: WeddingPackageOption[];
   weddingBoothPackages: WeddingPackageOption[];
+  equipmentPresets: EquipmentPreset[];
   shootReminderEmailSubject: string;
   shootReminderEmailContent: string;
 };
@@ -68,6 +84,54 @@ export const defaultWeddingBoothPackages: WeddingPackageOption[] = [
   { id: "booth-premium", name: "Premium (4 h)", price: 340 }
 ];
 
+export const defaultEquipmentPresets: EquipmentPreset[] = [
+  {
+    id: "preset-basic",
+    name: "Osnovna oprema",
+    shootType: "Vsi dogodki",
+    items: [
+      { id: "basic-camera-1", label: "Fotoaparat 1", category: "Oprema", quantity: 1, notes: "" },
+      { id: "basic-camera-2", label: "Fotoaparat 2", category: "Oprema", quantity: 1, notes: "" },
+      { id: "basic-35", label: "Objektiv 35mm", category: "Objektivi", quantity: 1, notes: "" },
+      { id: "basic-85", label: "Objektiv 85mm", category: "Objektivi", quantity: 1, notes: "" },
+      { id: "basic-cards", label: "Spominske kartice", category: "Shramba", quantity: 4, notes: "" },
+      { id: "basic-batteries", label: "Baterije", category: "Baterije", quantity: 4, notes: "" },
+      { id: "basic-chargers", label: "Polnilci", category: "Baterije", quantity: 2, notes: "" },
+      { id: "basic-strap", label: "Pas / oprtnik", category: "Oprema", quantity: 1, notes: "" }
+    ]
+  },
+  {
+    id: "preset-wedding",
+    name: "Poroka",
+    shootType: "Poroka",
+    items: [
+      { id: "wedding-flash", label: "Bliskavica", category: "Luč", quantity: 2, notes: "" },
+      { id: "wedding-flash-batteries", label: "Baterije za bliskavico", category: "Baterije", quantity: 8, notes: "" },
+      { id: "wedding-trigger", label: "Sprožilec", category: "Luč", quantity: 1, notes: "" },
+      { id: "wedding-light-stand", label: "Stojalo za luč", category: "Luč", quantity: 1, notes: "" },
+      { id: "wedding-backup", label: "Rezervni fotoaparat", category: "Oprema", quantity: 1, notes: "" },
+      { id: "wedding-cloth", label: "Čistilna krpica", category: "Oprema", quantity: 1, notes: "" },
+      { id: "wedding-rain", label: "Dežnik / zaščita za dež", category: "Oprema", quantity: 1, notes: "" },
+      { id: "wedding-timeline", label: "Časovnica", category: "Dokumenti", quantity: 1, notes: "" }
+    ]
+  },
+  {
+    id: "preset-studio",
+    name: "Studio",
+    shootType: "Studio",
+    items: [
+      { id: "studio-light-1", label: "Luč 1", category: "Studio", quantity: 1, notes: "" },
+      { id: "studio-light-2", label: "Luč 2", category: "Studio", quantity: 1, notes: "" },
+      { id: "studio-softbox", label: "Softbox", category: "Studio", quantity: 1, notes: "" },
+      { id: "studio-background", label: "Ozadje", category: "Studio", quantity: 1, notes: "" },
+      { id: "studio-extension", label: "Podaljšek", category: "Studio", quantity: 1, notes: "" },
+      { id: "studio-props", label: "Rekviziti", category: "Rekviziti", quantity: 1, notes: "" },
+      { id: "studio-kids", label: "Otroški pripomočki", category: "Rekviziti", quantity: 1, notes: "" },
+      { id: "studio-prints", label: "Mini tiskovine", category: "Tiskovine", quantity: 1, notes: "" }
+    ]
+  }
+];
+
 export const defaultShootReminderEmailSubject =
   "Opomnik za fotografiranje: {tip_fotografiranja}";
 
@@ -101,6 +165,29 @@ function normalizeWeddingPackages(
       price: Math.max(Number(option.price || 0), 0)
     }))
     .filter((option) => option.name);
+}
+
+function normalizeEquipmentPresets(presets: EquipmentPreset[] | undefined) {
+  const source = Array.isArray(presets) ? presets : defaultEquipmentPresets;
+
+  return source
+    .map((preset) => ({
+      id: String(preset.id || crypto.randomUUID()),
+      name: String(preset.name || "").trim(),
+      shootType: String(preset.shootType || "Vsi dogodki").trim(),
+      items: Array.isArray(preset.items)
+        ? preset.items
+            .map((item) => ({
+              id: String(item.id || crypto.randomUUID()),
+              label: String(item.label || "").trim(),
+              category: String(item.category || "Oprema").trim(),
+              quantity: Math.max(Number(item.quantity || 1), 1),
+              notes: String(item.notes || "").trim()
+            }))
+            .filter((item) => item.label)
+        : []
+    }))
+    .filter((preset) => preset.name);
 }
 
 type LegacyStudioSettings = Partial<StudioSettings> & {
@@ -149,6 +236,7 @@ function normalizeSettings(value: LegacyStudioSettings | null): StudioSettings {
       value?.weddingBoothPackages,
       defaultWeddingBoothPackages
     ),
+    equipmentPresets: normalizeEquipmentPresets(value?.equipmentPresets),
     shootReminderEmailSubject:
       typeof value?.shootReminderEmailSubject === "string"
         ? value.shootReminderEmailSubject
@@ -169,6 +257,7 @@ function defaultSettings(): StudioSettings {
     weddingPhotoPackages: defaultWeddingPhotoPackages,
     weddingVideoPackages: defaultWeddingVideoPackages,
     weddingBoothPackages: defaultWeddingBoothPackages,
+    equipmentPresets: defaultEquipmentPresets,
     shootReminderEmailSubject: defaultShootReminderEmailSubject,
     shootReminderEmailContent: defaultShootReminderEmailContent
   };
@@ -513,6 +602,7 @@ export function useStudioSettings() {
       weddingPhotoPackages: settings.weddingPhotoPackages,
       weddingVideoPackages: settings.weddingVideoPackages,
       weddingBoothPackages: settings.weddingBoothPackages,
+      equipmentPresets: settings.equipmentPresets,
       shootReminderEmailSubject: settings.shootReminderEmailSubject,
       shootReminderEmailContent: settings.shootReminderEmailContent,
       addWorkflowStatus,
@@ -544,6 +634,7 @@ export function useStudioSettings() {
       resetShootTypes,
       saveSettings,
       settings,
+      settings.equipmentPresets,
       settings.shootTypeOptions,
       settings.shootReminderEmailContent,
       settings.shootReminderEmailSubject,

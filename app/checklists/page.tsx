@@ -14,6 +14,7 @@ import { MetricCard } from "@/components/metric-card";
 import { PageHeader } from "@/components/page-header";
 import { useProjectChecklists } from "@/lib/use-project-checklists";
 import { useProjects } from "@/lib/use-projects";
+import { useStudioSettings, type EquipmentPreset } from "@/lib/use-studio-settings";
 import type { Project, ProjectChecklistItem } from "@/lib/types";
 import {
   cn,
@@ -22,39 +23,6 @@ import {
   getProjectTitle,
   sortByNearestUpcoming
 } from "@/lib/utils";
-
-const checklistTemplates = {
-  osnovno: [
-    "Fotoaparat 1",
-    "Fotoaparat 2",
-    "Objektiv 35mm",
-    "Objektiv 85mm",
-    "Spominske kartice",
-    "Baterije",
-    "Polnilci",
-    "Pas / oprtnik"
-  ],
-  poroka: [
-    "Bliskavica",
-    "Baterije za bliskavico",
-    "Sprožilec",
-    "Stojalo za luč",
-    "Rezervni fotoaparat",
-    "Čistilna krpica",
-    "Dežnik / zaščita za dež",
-    "Časovnica"
-  ],
-  studio: [
-    "Luč 1",
-    "Luč 2",
-    "Softbox",
-    "Ozadje",
-    "Podaljšek",
-    "Rekviziti",
-    "Otroški pripomočki",
-    "Mini tiskovine"
-  ]
-} as const;
 
 function projectProgress(items: ProjectChecklistItem[]) {
   if (!items.length) return 0;
@@ -71,6 +39,7 @@ function categoryIcon(category: string) {
 
 export default function ChecklistsPage() {
   const { projects, loading: projectsLoading } = useProjects();
+  const { equipmentPresets } = useStudioSettings();
   const {
     items,
     loading: itemsLoading,
@@ -119,6 +88,20 @@ export default function ChecklistsPage() {
   const readyItems = projectItems.filter((item) => item.is_checked);
   const projectsWithLists = new Set(items.map((item) => item.project_id)).size;
   const progress = projectProgress(projectItems);
+  const suggestedPresets = useMemo(() => {
+    if (!selectedProject) return equipmentPresets;
+    const projectType = String(selectedProject.shoot_type).toLowerCase();
+
+    return equipmentPresets.filter((preset) => {
+      const presetType = preset.shootType.toLowerCase();
+      return (
+        presetType === "vsi dogodki" ||
+        projectType.includes(presetType) ||
+        presetType.includes(projectType)
+      );
+    });
+  }, [equipmentPresets, selectedProject]);
+  const visiblePresets = suggestedPresets.length ? suggestedPresets : equipmentPresets;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -154,18 +137,18 @@ export default function ChecklistsPage() {
     }
   }
 
-  async function addTemplate(templateName: keyof typeof checklistTemplates) {
+  async function addTemplate(preset: EquipmentPreset) {
     if (!activeProjectId) return;
 
     const existingLabels = new Set(projectItems.map((item) => item.label.toLowerCase()));
-    const values = checklistTemplates[templateName]
-      .filter((label) => !existingLabels.has(label.toLowerCase()))
-      .map((label) => ({
+    const values = preset.items
+      .filter((item) => !existingLabels.has(item.label.toLowerCase()))
+      .map((item) => ({
         project_id: activeProjectId,
-        label,
-        category: templateName === "studio" ? "Studio" : "Oprema",
-        quantity: label.toLowerCase().includes("bater") ? 4 : 1,
-        notes: ""
+        label: item.label,
+        category: item.category,
+        quantity: item.quantity,
+        notes: item.notes
       }));
 
     if (values.length) await createItems(values);
@@ -287,15 +270,16 @@ export default function ChecklistsPage() {
                 ) : null}
               </div>
               <div className="flex flex-wrap gap-2">
-                <button className="button-secondary" onClick={() => addTemplate("osnovno")} type="button">
-                  Osnovna oprema
-                </button>
-                <button className="button-secondary" onClick={() => addTemplate("poroka")} type="button">
-                  Poroka
-                </button>
-                <button className="button-secondary" onClick={() => addTemplate("studio")} type="button">
-                  Studio
-                </button>
+                {visiblePresets.map((preset) => (
+                  <button
+                    key={preset.id}
+                    className="button-secondary"
+                    onClick={() => addTemplate(preset)}
+                    type="button"
+                  >
+                    {preset.name}
+                  </button>
+                ))}
               </div>
             </div>
 
