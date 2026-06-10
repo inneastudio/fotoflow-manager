@@ -184,6 +184,26 @@ export type FinanceEntry = {
   updated_at: string;
 };
 
+export const giftVoucherStatuses = ["Aktiven", "Unovčen", "Potekel"] as const;
+
+export type GiftVoucherStatus = (typeof giftVoucherStatuses)[number];
+
+export type GiftVoucher = {
+  id: string;
+  user_id?: string | null;
+  serial_number: string;
+  buyer_name: string;
+  recipient_name: string;
+  value: number;
+  issue_date: string;
+  expiry_date?: string | null;
+  redeemed_date?: string | null;
+  status: GiftVoucherStatus;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type PushSubscriptionRecord = {
   id: string;
   user_id?: string | null;

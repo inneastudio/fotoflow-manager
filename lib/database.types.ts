@@ -1,6 +1,7 @@
 import type {
   AppSetting,
   FinanceEntry,
+  GiftVoucher,
   Project,
   PushSubscriptionRecord,
   SocialPost,
@@ -54,6 +55,18 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Omit<FinanceEntry, "id" | "created_at" | "updated_at">> & {
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      gift_vouchers: {
+        Row: GiftVoucher;
+        Insert: Omit<GiftVoucher, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<GiftVoucher, "id" | "created_at" | "updated_at">> & {
           updated_at?: string;
         };
         Relationships: [];
