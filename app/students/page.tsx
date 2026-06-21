@@ -55,6 +55,16 @@ function weekDays(weekValue: string) {
   return Array.from({ length: 7 }).map((_, index) => addDays(monday, index));
 }
 
+function monthDays(month: string) {
+  if (!month) return [];
+  const [year, monthPart] = month.split("-").map(Number);
+  const daysInMonth = new Date(year, monthPart, 0).getDate();
+
+  return Array.from({ length: daysInMonth }).map(
+    (_, index) => new Date(year, monthPart - 1, index + 1, 12)
+  );
+}
+
 function weekLabel(weekValue: string) {
   const days = weekDays(weekValue);
   return `${formatDate(toDateInputValue(days[0]))} - ${formatDate(toDateInputValue(days[6]))}`;
@@ -191,6 +201,7 @@ export default function StudentsPage() {
     () => filteredShifts.filter((shift) => isWithinYear(shift.shift_date, selectedYear)),
     [filteredShifts, selectedYear]
   );
+  const selectedMonthDays = useMemo(() => monthDays(selectedMonth), [selectedMonth]);
   const monthSummary = summarizeShifts(monthShifts);
   const yearSummary = summarizeShifts(yearShifts);
   const studentMonthlySummaries = students
@@ -633,6 +644,56 @@ export default function StudentsPage() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="eyebrow">Izmene</p>
+                <h2 className="mt-2 font-display text-2xl font-semibold text-ink">
+                  Mesečni pregled izmen
+                </h2>
+                <p className="mt-1 text-sm text-muted">
+                  {monthLabel(selectedMonth)} · {monthSummary.shifts} izmen · {monthSummary.hours.toFixed(1)} h
+                </p>
+              </div>
+              <CalendarDays className="h-5 w-5 text-muted" />
+            </div>
+
+            <div className="mt-5 overflow-hidden rounded-lg border border-line">
+              {selectedMonthDays.map((day) => {
+                const dateValue = toDateInputValue(day);
+                const dayShifts = monthShifts.filter((shift) => shift.shift_date === dateValue);
+
+                return (
+                  <div key={dateValue} className="border-b border-line last:border-b-0">
+                    <div className="flex items-center justify-between gap-3 bg-mist px-4 py-3">
+                      <p className="text-sm font-semibold text-ink">{dayLabel(dateValue)}</p>
+                      {dayShifts.length ? (
+                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+                          {dayShifts.length} izmen
+                        </p>
+                      ) : null}
+                    </div>
+                    {dayShifts.length ? (
+                      <div className="divide-y divide-line">
+                        {dayShifts.map((shift) => (
+                          <ShiftRow
+                            key={shift.id}
+                            shift={shift}
+                            studentName={studentName(shift.student_id)}
+                            updateShift={updateShift}
+                            deleteShift={deleteShift}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="px-4 py-3 text-sm text-muted">Ni vpisanih izmen.</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="surface rounded-lg p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="eyebrow">Izmene</p>
                 <h2 className="mt-2 font-display text-2xl font-semibold text-ink">Tedenski pregled</h2>
               </div>
               <Mail className="h-5 w-5 text-muted" />
@@ -651,37 +712,13 @@ export default function StudentsPage() {
                     {dayShifts.length ? (
                       <div className="divide-y divide-line">
                         {dayShifts.map((shift) => (
-                          <div key={shift.id} className="grid gap-3 px-4 py-4 lg:grid-cols-[1.1fr_1fr_1fr_1fr_auto] lg:items-center">
-                            <div>
-                              <p className="font-semibold text-ink">{studentName(shift.student_id)}</p>
-                              <p className="mt-1 text-sm text-muted">{shift.start_time}-{shift.end_time} · {shift.hours} h</p>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-ink">{shift.work_type}</p>
-                              <p className="mt-1 text-sm text-muted">{shift.location}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-ink">{formatCurrency(shift.amount)}</p>
-                              <p className="mt-1 text-sm text-muted">{formatCurrency(shift.hourly_rate)}/h</p>
-                            </div>
-                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-                              <select className="input" value={shift.billing_status} onChange={(event) => updateShift(shift.id, { billing_status: event.target.value as StudentShiftBillingStatus })}>
-                                {studentShiftBillingStatuses.map((status) => <option key={status}>{status}</option>)}
-                              </select>
-                              <select className="input" value={shift.payment_method} onChange={(event) => updateShift(shift.id, { payment_method: event.target.value as PaymentMethod })}>
-                                {paymentMethods.map((method) => <option key={method}>{method}</option>)}
-                              </select>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                              <button className="button-secondary px-3 py-2" type="button" onClick={() => updateShift(shift.id, { billing_status: "Plačano" })}>
-                                Plačano
-                              </button>
-                              <button className="button-secondary px-3 py-2 text-rose" type="button" onClick={() => deleteShift(shift.id)} aria-label="Izbriši izmeno">
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                            {shift.notes ? <p className="text-sm text-muted lg:col-span-5">{shift.notes}</p> : null}
-                          </div>
+                          <ShiftRow
+                            key={shift.id}
+                            shift={shift}
+                            studentName={studentName(shift.student_id)}
+                            updateShift={updateShift}
+                            deleteShift={deleteShift}
+                          />
                         ))}
                       </div>
                     ) : (
@@ -736,6 +773,81 @@ function SummaryTable({
       ) : (
         <p className="px-4 py-6 text-sm text-muted">Ni izmen za izbrani pregled.</p>
       )}
+    </div>
+  );
+}
+
+function ShiftRow({
+  shift,
+  studentName,
+  updateShift,
+  deleteShift
+}: {
+  shift: StudentShift;
+  studentName: string;
+  updateShift: (shiftId: string, values: Partial<StudentShift>) => Promise<StudentShift | null>;
+  deleteShift: (shiftId: string) => Promise<void>;
+}) {
+  return (
+    <div className="grid gap-3 px-4 py-4 lg:grid-cols-[1.1fr_1fr_1fr_1fr_auto] lg:items-center">
+      <div>
+        <p className="font-semibold text-ink">{studentName}</p>
+        <p className="mt-1 text-sm text-muted">
+          {shift.start_time}-{shift.end_time} · {shift.hours} h
+        </p>
+      </div>
+      <div>
+        <p className="text-sm font-medium text-ink">{shift.work_type}</p>
+        <p className="mt-1 text-sm text-muted">{shift.location}</p>
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-ink">{formatCurrency(shift.amount)}</p>
+        <p className="mt-1 text-sm text-muted">{formatCurrency(shift.hourly_rate)}/h</p>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+        <select
+          className="input"
+          value={shift.billing_status}
+          onChange={(event) =>
+            updateShift(shift.id, {
+              billing_status: event.target.value as StudentShiftBillingStatus
+            })
+          }
+        >
+          {studentShiftBillingStatuses.map((status) => (
+            <option key={status}>{status}</option>
+          ))}
+        </select>
+        <select
+          className="input"
+          value={shift.payment_method}
+          onChange={(event) =>
+            updateShift(shift.id, { payment_method: event.target.value as PaymentMethod })
+          }
+        >
+          {paymentMethods.map((method) => (
+            <option key={method}>{method}</option>
+          ))}
+        </select>
+      </div>
+      <div className="flex justify-end gap-2">
+        <button
+          className="button-secondary px-3 py-2"
+          type="button"
+          onClick={() => updateShift(shift.id, { billing_status: "Plačano" })}
+        >
+          Plačano
+        </button>
+        <button
+          className="button-secondary px-3 py-2 text-rose"
+          type="button"
+          onClick={() => deleteShift(shift.id)}
+          aria-label="Izbriši izmeno"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+      {shift.notes ? <p className="text-sm text-muted lg:col-span-5">{shift.notes}</p> : null}
     </div>
   );
 }
