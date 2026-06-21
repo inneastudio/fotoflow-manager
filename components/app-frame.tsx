@@ -17,7 +17,6 @@ import {
   LayoutDashboard,
   Megaphone,
   Settings,
-  UserRoundClock,
   UsersRound,
   WalletCards
 } from "lucide-react";
@@ -32,7 +31,7 @@ const navItems = [
   { href: "/documents", label: "Dokumenti", icon: FileText },
   { href: "/checklists", label: "Checkliste", icon: ClipboardCheck },
   { href: "/calendar", label: "Koledar", icon: CalendarDays },
-  { href: "/students", label: "Urniki", icon: UserRoundClock },
+  { href: "/students", label: "Urniki", icon: CalendarDays },
   { href: "/statistics", label: "Statistika", icon: BarChart3 },
   { href: "/finance", label: "Finance", icon: WalletCards },
   { href: "/gift-vouchers", label: "Boni", icon: Gift },
