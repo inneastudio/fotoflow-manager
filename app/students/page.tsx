@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import {
+  BarChart3,
   CalendarDays,
   Clock,
   Mail,
@@ -23,6 +24,7 @@ import {
   studentShiftBillingStatuses,
   studentWorkTypes,
   type PaymentMethod,
+  type StudentShift,
   type StudentShiftBillingStatus,
   type StudentWorkType
 } from "@/lib/types";
@@ -68,6 +70,54 @@ function defaultWeekValue() {
   return toDateInputValue(startOfWeek(new Date().toISOString().slice(0, 10)));
 }
 
+function monthValue(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function selectedYearValue(date = new Date()) {
+  return String(date.getFullYear());
+}
+
+function isWithinMonth(dateValue: string, month: string) {
+  if (!month) return false;
+  const [yearValue, monthValuePart] = month.split("-");
+  const date = new Date(`${dateValue}T12:00:00`);
+  return (
+    date.getFullYear() === Number(yearValue) &&
+    date.getMonth() === Number(monthValuePart) - 1
+  );
+}
+
+function isWithinYear(dateValue: string, year: string) {
+  if (!year) return false;
+  const date = new Date(`${dateValue}T12:00:00`);
+  return date.getFullYear() === Number(year);
+}
+
+function monthLabel(value: string) {
+  if (!value) return "Izbran mesec";
+  const [year, month] = value.split("-");
+  return new Intl.DateTimeFormat("sl-SI", {
+    month: "long",
+    year: "numeric"
+  }).format(new Date(Number(year), Number(month) - 1, 1));
+}
+
+function summarizeShifts(shiftsToSummarize: StudentShift[]) {
+  const hours = shiftsToSummarize.reduce((sum, shift) => sum + Number(shift.hours || 0), 0);
+  const amount = shiftsToSummarize.reduce((sum, shift) => sum + Number(shift.amount || 0), 0);
+  const unpaid = shiftsToSummarize
+    .filter((shift) => shift.billing_status !== "Plačano")
+    .reduce((sum, shift) => sum + Number(shift.amount || 0), 0);
+
+  return {
+    shifts: shiftsToSummarize.length,
+    hours,
+    amount,
+    unpaid
+  };
+}
+
 export default function StudentsPage() {
   const { session, demoMode } = useAuth();
   const {
@@ -105,6 +155,8 @@ export default function StudentsPage() {
   });
   const [savingStudent, setSavingStudent] = useState(false);
   const [savingShift, setSavingShift] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(monthValue());
+  const [selectedYear, setSelectedYear] = useState(selectedYearValue());
   const [message, setMessage] = useState<string | null>(null);
 
   const activeStudents = students.filter((student) => student.active);
@@ -127,6 +179,38 @@ export default function StudentsPage() {
   const unpaidAmount = weekShifts
     .filter((shift) => shift.billing_status !== "Plačano")
     .reduce((sum, shift) => sum + Number(shift.amount || 0), 0);
+  const filteredShifts = useMemo(
+    () => shifts.filter((shift) => !selectedStudentId || shift.student_id === selectedStudentId),
+    [selectedStudentId, shifts]
+  );
+  const monthShifts = useMemo(
+    () => filteredShifts.filter((shift) => isWithinMonth(shift.shift_date, selectedMonth)),
+    [filteredShifts, selectedMonth]
+  );
+  const yearShifts = useMemo(
+    () => filteredShifts.filter((shift) => isWithinYear(shift.shift_date, selectedYear)),
+    [filteredShifts, selectedYear]
+  );
+  const monthSummary = summarizeShifts(monthShifts);
+  const yearSummary = summarizeShifts(yearShifts);
+  const studentMonthlySummaries = students
+    .map((student) => {
+      const studentShifts = monthShifts.filter((shift) => shift.student_id === student.id);
+      return {
+        student,
+        ...summarizeShifts(studentShifts)
+      };
+    })
+    .filter((row) => row.shifts > 0);
+  const studentYearlySummaries = students
+    .map((student) => {
+      const studentShifts = yearShifts.filter((shift) => shift.student_id === student.id);
+      return {
+        student,
+        ...summarizeShifts(studentShifts)
+      };
+    })
+    .filter((row) => row.shifts > 0);
 
   function studentName(studentId: string) {
     return students.find((student) => student.id === studentId)?.name ?? "Neznan študent";
@@ -474,6 +558,78 @@ export default function StudentsPage() {
           </section>
 
           <section className="surface rounded-lg p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="eyebrow">Obračun</p>
+                <h2 className="mt-2 font-display text-2xl font-semibold text-ink">
+                  Mesečni in letni pregled
+                </h2>
+                <p className="mt-1 text-sm text-muted">
+                  Pregled se upošteva po datumu izmene in izbranem študentu zgoraj.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <input
+                  className="input w-44"
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(event) => setSelectedMonth(event.target.value)}
+                />
+                <input
+                  className="input w-32"
+                  min="2020"
+                  max="2035"
+                  type="number"
+                  value={selectedYear}
+                  onChange={(event) => setSelectedYear(event.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <MetricCard
+                label="Mesec izmene"
+                value={String(monthSummary.shifts)}
+                detail={monthLabel(selectedMonth)}
+                icon={CalendarDays}
+                tone="charcoal"
+              />
+              <MetricCard
+                label="Mesec ure"
+                value={`${monthSummary.hours.toFixed(1)} h`}
+                detail={formatCurrency(monthSummary.amount)}
+                icon={Clock}
+                tone="olive"
+              />
+              <MetricCard
+                label="Leto izmene"
+                value={String(yearSummary.shifts)}
+                detail={selectedYear}
+                icon={BarChart3}
+                tone="clay"
+              />
+              <MetricCard
+                label="Leto za izplačilo"
+                value={formatCurrency(yearSummary.unpaid)}
+                detail={`Skupaj ${formatCurrency(yearSummary.amount)}`}
+                icon={WalletCards}
+                tone="rose"
+              />
+            </div>
+
+            <div className="mt-5 grid gap-5 xl:grid-cols-2">
+              <SummaryTable
+                title={`Po študentih - ${monthLabel(selectedMonth)}`}
+                rows={studentMonthlySummaries}
+              />
+              <SummaryTable
+                title={`Po študentih - ${selectedYear}`}
+                rows={studentYearlySummaries}
+              />
+            </div>
+          </section>
+
+          <section className="surface rounded-lg p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="eyebrow">Izmene</p>
@@ -538,6 +694,48 @@ export default function StudentsPage() {
           </section>
         </div>
       </section>
+    </div>
+  );
+}
+
+function SummaryTable({
+  title,
+  rows
+}: {
+  title: string;
+  rows: Array<{
+    student: { id: string; name: string };
+    shifts: number;
+    hours: number;
+    amount: number;
+    unpaid: number;
+  }>;
+}) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-line bg-white">
+      <div className="border-b border-line bg-mist px-4 py-3">
+        <h3 className="font-display text-lg font-semibold text-ink">{title}</h3>
+      </div>
+      {rows.length ? (
+        <div className="divide-y divide-line">
+          {rows.map((row) => (
+            <div
+              key={row.student.id}
+              className="grid gap-3 px-4 py-3 text-sm sm:grid-cols-[1.3fr_0.7fr_0.8fr_1fr_1fr] sm:items-center"
+            >
+              <p className="font-semibold text-ink">{row.student.name}</p>
+              <p className="text-muted">{row.shifts} izmen</p>
+              <p className="text-muted">{row.hours.toFixed(1)} h</p>
+              <p className="font-semibold text-ink">{formatCurrency(row.amount)}</p>
+              <p className={cn("font-semibold", row.unpaid > 0 ? "text-rose" : "text-olive")}>
+                {row.unpaid > 0 ? `${formatCurrency(row.unpaid)} odprto` : "Plačano"}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="px-4 py-6 text-sm text-muted">Ni izmen za izbrani pregled.</p>
+      )}
     </div>
   );
 }
