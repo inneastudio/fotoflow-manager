@@ -133,6 +133,20 @@ function shouldSendShift(shift: StudentShift) {
   return new Date(shift.updated_at).getTime() > new Date(shift.email_sent_at).getTime();
 }
 
+function shiftRangeLabel(shiftsToLabel: StudentShift[]) {
+  const dates = shiftsToLabel.map((shift) => shift.shift_date).sort();
+  if (!dates.length) return "nove izmene";
+
+  const firstDate = dates[0];
+  const lastDate = dates[dates.length - 1];
+
+  if (firstDate === lastDate) {
+    return `izmene za ${formatDate(firstDate)}`;
+  }
+
+  return `izmene od ${formatDate(firstDate)} do ${formatDate(lastDate)}`;
+}
+
 export default function StudentsPage() {
   const { session, demoMode } = useAuth();
   const {
@@ -296,8 +310,6 @@ export default function StudentsPage() {
           .filter(
             (shift) =>
               shift.student_id === student.id &&
-              shift.shift_date >= weekStart &&
-              shift.shift_date <= weekEnd &&
               shouldSendShift(shift)
           )
           .sort((a, b) => a.shift_date.localeCompare(b.shift_date) || a.start_time.localeCompare(b.start_time));
@@ -310,7 +322,7 @@ export default function StudentsPage() {
       .filter((row) => row.student.email && row.shifts.length);
 
     if (!shiftsByStudent.length) {
-      setMessage("Ni novih ali spremenjenih izmen za pošiljanje v tem tednu.");
+      setMessage("Ni novih ali spremenjenih izmen za pošiljanje.");
       return;
     }
 
@@ -319,6 +331,9 @@ export default function StudentsPage() {
       return;
     }
 
+    const shiftsToSend = shiftsByStudent.flatMap((row) => row.shifts);
+    const scheduleLabel = shiftRangeLabel(shiftsToSend);
+
     const response = await fetch("/api/students/schedule-email", {
       method: "POST",
       headers: {
@@ -326,7 +341,7 @@ export default function StudentsPage() {
         ...(session?.access_token ? { authorization: `Bearer ${session.access_token}` } : {})
       },
       body: JSON.stringify({
-        weekLabel: weekLabel(selectedWeek),
+        weekLabel: scheduleLabel,
         students: shiftsByStudent.map(({ student, shifts: studentShifts }) => ({
           name: student.name,
           email: student.email,
