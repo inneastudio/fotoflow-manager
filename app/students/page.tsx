@@ -128,6 +128,11 @@ function summarizeShifts(shiftsToSummarize: StudentShift[]) {
   };
 }
 
+function shouldSendShift(shift: StudentShift) {
+  if (!shift.email_sent_at) return true;
+  return new Date(shift.updated_at).getTime() > new Date(shift.email_sent_at).getTime();
+}
+
 export default function StudentsPage() {
   const { session, demoMode } = useAuth();
   const {
@@ -292,7 +297,8 @@ export default function StudentsPage() {
             (shift) =>
               shift.student_id === student.id &&
               shift.shift_date >= weekStart &&
-              shift.shift_date <= weekEnd
+              shift.shift_date <= weekEnd &&
+              shouldSendShift(shift)
           )
           .sort((a, b) => a.shift_date.localeCompare(b.shift_date) || a.start_time.localeCompare(b.start_time));
 
@@ -304,7 +310,7 @@ export default function StudentsPage() {
       .filter((row) => row.student.email && row.shifts.length);
 
     if (!shiftsByStudent.length) {
-      setMessage("Za ta teden ni študentov z emailom in izmenami.");
+      setMessage("Ni novih ali spremenjenih izmen za pošiljanje v tem tednu.");
       return;
     }
 
@@ -347,7 +353,9 @@ export default function StudentsPage() {
         row.shifts.map((shift) => updateShift(shift.id, { email_sent_at: new Date().toISOString() }))
       )
     );
-    setMessage(`Urnik poslan študentom: ${result.sent}.`);
+    setMessage(
+      `Nove/spremenjene izmene poslane študentom: ${result.sent}. Potrditev je bila poslana tudi tebi.`
+    );
   }
 
   return (
@@ -359,7 +367,7 @@ export default function StudentsPage() {
         actions={
           <button className="button-primary" type="button" onClick={sendWeeklySchedule}>
             <Send className="h-4 w-4" />
-            Pošlji urnik
+            Pošlji nove izmene
           </button>
         }
       />

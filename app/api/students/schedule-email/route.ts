@@ -45,6 +45,7 @@ export async function POST(request: Request) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const token = request.headers.get("authorization")?.replace("Bearer ", "");
+    let confirmationEmail = process.env.RESEND_REPLY_TO_EMAIL || "";
 
     if (supabaseUrl && supabaseAnonKey) {
       if (!token) {
@@ -59,6 +60,8 @@ export async function POST(request: Request) {
       if (error || !data.user) {
         return NextResponse.json({ error: "Prijava ni veljavna." }, { status: 401 });
       }
+
+      confirmationEmail = data.user.email || confirmationEmail;
     }
 
     const body = (await request.json()) as StudentScheduleEmailRequest;
@@ -108,6 +111,30 @@ export async function POST(request: Request) {
           text
         })
       );
+    }
+
+    if (confirmationEmail) {
+      const totalShifts = students.reduce((sum, student) => sum + student.shifts.length, 0);
+      const sentRows = students
+        .map(
+          (student) =>
+            `<li><strong>${escapeHtml(student.name)}</strong> (${escapeHtml(student.email)}): ${student.shifts.length} izmen</li>`
+        )
+        .join("");
+
+      await sendResendEmail({
+        to: confirmationEmail,
+        subject: `Potrditev: urnik poslan za ${body.weekLabel}`,
+        html: `
+          <div style="font-family:Inter,Arial,sans-serif;color:#1f1d1b;line-height:1.5;">
+            <h1 style="margin:0 0 8px;font-size:24px;">Urnik je bil poslan</h1>
+            <p style="margin:0 0 14px;color:#6f6a64;">Teden: ${escapeHtml(body.weekLabel)}</p>
+            <p style="margin:0 0 14px;">Poslano študentom: <strong>${students.length}</strong><br />Skupaj poslanih izmen: <strong>${totalShifts}</strong></p>
+            <ul style="margin:0;padding-left:20px;">${sentRows}</ul>
+          </div>
+        `,
+        text: `Urnik je bil poslan za ${body.weekLabel}. Poslano študentom: ${students.length}. Skupaj izmen: ${totalShifts}.`
+      });
     }
 
     return NextResponse.json({ sent: results.length });
