@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { sendResendEmail } from "@/lib/email-server";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type EmailShift = {
   dateLabel: string;
@@ -47,15 +47,12 @@ export async function POST(request: Request) {
     const token = request.headers.get("authorization")?.replace("Bearer ", "");
     let confirmationEmail = process.env.RESEND_REPLY_TO_EMAIL || "";
 
-    if (supabaseUrl && supabaseAnonKey) {
+    if (supabaseUrl && supabaseAnonKey && supabaseAdmin) {
       if (!token) {
         return NextResponse.json({ error: "Potrebna je prijava." }, { status: 401 });
       }
 
-      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-        global: { headers: { authorization: `Bearer ${token}` } }
-      });
-      const { data, error } = await supabase.auth.getUser(token);
+      const { data, error } = await supabaseAdmin.auth.getUser(token);
 
       if (error || !data.user) {
         return NextResponse.json({ error: "Prijava ni veljavna." }, { status: 401 });
@@ -80,7 +77,7 @@ export async function POST(request: Request) {
       const html = `
         <div style="font-family:Inter,Arial,sans-serif;color:#1f1d1b;line-height:1.5;">
           <h1 style="margin:0 0 8px;font-size:24px;">Urnik za ${escapeHtml(body.weekLabel)}</h1>
-          <p style="margin:0 0 18px;color:#6f6a64;">Živjo ${escapeHtml(student.name)}, spodaj je tvoj urnik za izbrani teden.</p>
+          <p style="margin:0 0 18px;color:#6f6a64;">Živjo ${escapeHtml(student.name)}, spodaj so tvoje nove oziroma posodobljene izmene.</p>
           <table style="width:100%;border-collapse:collapse;border:1px solid #eee;border-radius:10px;overflow:hidden;">
             <thead>
               <tr style="background:#f6f3ee;text-align:left;">
