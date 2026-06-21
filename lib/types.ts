@@ -218,6 +218,45 @@ export type ProjectChecklistItem = {
   updated_at: string;
 };
 
+export const studentWorkTypes = ["Studio", "Teren", "Poroka", "Booth", "Drugo"] as const;
+export const studentShiftBillingStatuses = ["Ni obračunano", "Obračunano", "Plačano"] as const;
+
+export type StudentWorkType = (typeof studentWorkTypes)[number];
+export type StudentShiftBillingStatus = (typeof studentShiftBillingStatuses)[number];
+
+export type Student = {
+  id: string;
+  user_id?: string | null;
+  name: string;
+  email: string;
+  phone: string;
+  hourly_rate: number;
+  active: boolean;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StudentShift = {
+  id: string;
+  user_id?: string | null;
+  student_id: string;
+  shift_date: string;
+  start_time: string;
+  end_time: string;
+  work_type: StudentWorkType;
+  hourly_rate: number;
+  hours: number;
+  amount: number;
+  billing_status: StudentShiftBillingStatus;
+  payment_method: PaymentMethod;
+  location: string;
+  notes: string;
+  email_sent_at?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type PushSubscriptionRecord = {
   id: string;
   user_id?: string | null;

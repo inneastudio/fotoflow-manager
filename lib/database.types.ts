@@ -6,6 +6,8 @@ import type {
   ProjectChecklistItem,
   PushSubscriptionRecord,
   SocialPost,
+  Student,
+  StudentShift,
   StudioDocument
 } from "@/lib/types";
 
@@ -82,6 +84,30 @@ export type Database = {
         Update: Partial<
           Omit<ProjectChecklistItem, "id" | "created_at" | "updated_at">
         > & {
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      students: {
+        Row: Student;
+        Insert: Omit<Student, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<Student, "id" | "created_at" | "updated_at">> & {
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      student_shifts: {
+        Row: StudentShift;
+        Insert: Omit<StudentShift, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<StudentShift, "id" | "created_at" | "updated_at">> & {
           updated_at?: string;
         };
         Relationships: [];
