@@ -180,6 +180,12 @@ export default function ProjectsPage() {
       wedding_photobooth_enabled: Boolean(values.wedding_photobooth_enabled),
       wedding_photobooth_package: values.wedding_photobooth_package ?? "",
       wedding_photobooth_price: Number(values.wedding_photobooth_price ?? 0),
+      wedding_album_size: values.wedding_album_size ?? "",
+      wedding_album_shape: values.wedding_album_shape ?? "",
+      wedding_album_pages: Number(values.wedding_album_pages ?? 0),
+      wedding_album_wishes: values.wedding_album_wishes ?? "",
+      wedding_album_inscription: values.wedding_album_inscription ?? "",
+      wedding_album_notes: values.wedding_album_notes ?? "",
       workflow_status: workflowStatus,
       payment_status: paymentStatus
     });
@@ -214,6 +220,12 @@ export default function ProjectsPage() {
       wedding_photobooth_enabled: Boolean(values.wedding_photobooth_enabled),
       wedding_photobooth_package: values.wedding_photobooth_package ?? "",
       wedding_photobooth_price: Number(values.wedding_photobooth_price ?? 0),
+      wedding_album_size: values.wedding_album_size ?? "",
+      wedding_album_shape: values.wedding_album_shape ?? "",
+      wedding_album_pages: Number(values.wedding_album_pages ?? 0),
+      wedding_album_wishes: values.wedding_album_wishes ?? "",
+      wedding_album_inscription: values.wedding_album_inscription ?? "",
+      wedding_album_notes: values.wedding_album_notes ?? "",
       payment_status: paymentStatus
     });
   }

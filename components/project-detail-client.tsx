@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
   ArrowLeft,
+  BookOpen,
   CalendarDays,
   ChevronRight,
   Clock3,
@@ -302,6 +303,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
               </div>
 
               <WeddingPackageCard project={project} />
+              <WeddingAlbumCard project={project} />
             </>
           ) : null}
 
@@ -327,6 +329,65 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
           setModalOpen(false);
         }}
       />
+    </div>
+  );
+}
+
+function WeddingAlbumCard({ project }: { project: Project }) {
+  const rows = [
+    { label: "Velikost", value: project.wedding_album_size },
+    { label: "Oblika", value: project.wedding_album_shape },
+    {
+      label: "Število strani",
+      value:
+        Number(project.wedding_album_pages || 0) > 0
+          ? String(project.wedding_album_pages)
+          : ""
+    },
+    { label: "Napis", value: project.wedding_album_inscription }
+  ];
+  const hasAlbumDetails =
+    rows.some((row) => row.value) ||
+    Boolean(project.wedding_album_wishes || project.wedding_album_notes);
+
+  return (
+    <div className="surface rounded-lg p-4">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-paper text-clay ring-1 ring-line">
+          <BookOpen className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="eyebrow">Fotoknjiga</p>
+          <h2 className="mt-1 font-display text-2xl font-semibold text-ink">
+            Naročilo fotoknjige
+          </h2>
+        </div>
+      </div>
+
+      {hasAlbumDetails ? (
+        <>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {rows.map((row) => (
+              <div key={row.label} className="rounded-lg border border-line bg-white/60 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                  {row.label}
+                </p>
+                <p className="mt-2 text-sm font-semibold text-ink">
+                  {row.value || "Ni dodano"}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <NoteCard title="Želje za fotoknjigo" body={project.wedding_album_wishes ?? ""} />
+            <NoteCard title="Opombe fotoknjige" body={project.wedding_album_notes ?? ""} />
+          </div>
+        </>
+      ) : (
+        <p className="mt-4 text-sm text-muted">
+          Podrobnosti fotoknjige še niso dodane.
+        </p>
+      )}
     </div>
   );
 }

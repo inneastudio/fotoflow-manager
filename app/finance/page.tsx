@@ -986,6 +986,12 @@ function toProjectFormValues(project: Project): ProjectFormValues {
     wedding_video_provider_paid: Boolean(project.wedding_video_provider_paid),
     wedding_photobooth_enabled: Boolean(project.wedding_photobooth_enabled),
     wedding_photobooth_package: project.wedding_photobooth_package ?? "",
-    wedding_photobooth_price: Number(project.wedding_photobooth_price ?? 0)
+    wedding_photobooth_price: Number(project.wedding_photobooth_price ?? 0),
+    wedding_album_size: project.wedding_album_size ?? "",
+    wedding_album_shape: project.wedding_album_shape ?? "",
+    wedding_album_pages: Number(project.wedding_album_pages ?? 0),
+    wedding_album_wishes: project.wedding_album_wishes ?? "",
+    wedding_album_inscription: project.wedding_album_inscription ?? "",
+    wedding_album_notes: project.wedding_album_notes ?? ""
   };
 }

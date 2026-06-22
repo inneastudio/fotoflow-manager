@@ -127,6 +127,12 @@ export type Project = {
   wedding_photobooth_enabled?: boolean;
   wedding_photobooth_package?: string;
   wedding_photobooth_price?: number;
+  wedding_album_size?: string;
+  wedding_album_shape?: string;
+  wedding_album_pages?: number;
+  wedding_album_wishes?: string;
+  wedding_album_inscription?: string;
+  wedding_album_notes?: string;
   selected_photos: number;
   notes: string;
   retouch_notes: string;
@@ -322,6 +328,12 @@ export type ProjectFormValues = Omit<
   wedding_photobooth_enabled: boolean;
   wedding_photobooth_package: string;
   wedding_photobooth_price: number;
+  wedding_album_size: string;
+  wedding_album_shape: string;
+  wedding_album_pages: number;
+  wedding_album_wishes: string;
+  wedding_album_inscription: string;
+  wedding_album_notes: string;
   balance?: number;
 };
 

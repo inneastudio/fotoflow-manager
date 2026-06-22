@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Copy, FileText, Link as LinkIcon, Save, Upload } from "lucide-react";
+import { BookOpen, Copy, FileText, Link as LinkIcon, Save, Upload } from "lucide-react";
 import type { Project, ProjectFormValues } from "@/lib/types";
 import {
   getPaymentStatusesForMethod,
@@ -115,6 +115,12 @@ function defaultValues(initialValues?: Partial<ProjectFormValues>): ProjectFormV
     wedding_photobooth_enabled: false,
     wedding_photobooth_package: "",
     wedding_photobooth_price: 0,
+    wedding_album_size: "",
+    wedding_album_shape: "",
+    wedding_album_pages: 0,
+    wedding_album_wishes: "",
+    wedding_album_inscription: "",
+    wedding_album_notes: "",
     selected_photos: 0,
     notes: "",
     retouch_notes: ""
@@ -186,6 +192,12 @@ export function ProjectForm({
       wedding_photobooth_enabled: Boolean(project.wedding_photobooth_enabled),
       wedding_photobooth_package: project.wedding_photobooth_package ?? "",
       wedding_photobooth_price: Number(project.wedding_photobooth_price ?? 0),
+      wedding_album_size: project.wedding_album_size ?? "",
+      wedding_album_shape: project.wedding_album_shape ?? "",
+      wedding_album_pages: Number(project.wedding_album_pages ?? 0),
+      wedding_album_wishes: project.wedding_album_wishes ?? "",
+      wedding_album_inscription: project.wedding_album_inscription ?? "",
+      wedding_album_notes: project.wedding_album_notes ?? "",
       selected_photos: project.selected_photos,
       notes: project.notes,
       retouch_notes: project.retouch_notes
@@ -1043,6 +1055,94 @@ Končno ceno lahko še prilagodimo, če se časovnica ali dodatne storitve sprem
                 value={weddingQuoteText}
                 readOnly
               />
+            </div>
+          </div>
+
+          <div className="mb-5 rounded-lg border border-line bg-paper p-4">
+            <div className="mb-4 flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-clay ring-1 ring-line">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="eyebrow">Fotoknjiga</p>
+                <h4 className="mt-1 font-display text-lg font-semibold text-ink">
+                  Podrobnosti naročila
+                </h4>
+                <p className="mt-1 text-sm text-muted">
+                  Velikost, oblika, napis in posebne želje za pripravo albuma.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium text-ink">Velikost</span>
+                <input
+                  className="input"
+                  value={values.wedding_album_size}
+                  onChange={(event) =>
+                    updateValue("wedding_album_size", event.target.value)
+                  }
+                  placeholder="npr. 30 x 30 cm"
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium text-ink">Oblika</span>
+                <input
+                  className="input"
+                  value={values.wedding_album_shape}
+                  onChange={(event) =>
+                    updateValue("wedding_album_shape", event.target.value)
+                  }
+                  placeholder="npr. kvadratna, ležeča ..."
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium text-ink">Število strani</span>
+                <input
+                  className="input"
+                  min="0"
+                  step="1"
+                  type="number"
+                  value={values.wedding_album_pages}
+                  onChange={(event) =>
+                    updateValue("wedding_album_pages", Number(event.target.value))
+                  }
+                />
+              </label>
+              <label className="space-y-1.5 md:col-span-3">
+                <span className="text-sm font-medium text-ink">Napis</span>
+                <input
+                  className="input"
+                  value={values.wedding_album_inscription}
+                  onChange={(event) =>
+                    updateValue("wedding_album_inscription", event.target.value)
+                  }
+                  placeholder="npr. Ana & Luka, 16. 5. 2026"
+                />
+              </label>
+              <label className="space-y-1.5 md:col-span-3">
+                <span className="text-sm font-medium text-ink">Želje</span>
+                <textarea
+                  className="input min-h-28"
+                  value={values.wedding_album_wishes}
+                  onChange={(event) =>
+                    updateValue("wedding_album_wishes", event.target.value)
+                  }
+                  placeholder="Posebne želje glede izbora fotografij, barv, postavitve ..."
+                />
+              </label>
+              <label className="space-y-1.5 md:col-span-3">
+                <span className="text-sm font-medium text-ink">Opombe</span>
+                <textarea
+                  className="input min-h-28"
+                  value={values.wedding_album_notes}
+                  onChange={(event) =>
+                    updateValue("wedding_album_notes", event.target.value)
+                  }
+                  placeholder="Interno: status naročila, dogovor s tiskarno, popravki ..."
+                />
+              </label>
             </div>
           </div>
 

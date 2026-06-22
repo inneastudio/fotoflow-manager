@@ -41,6 +41,12 @@ function ensureProjectShape(project: Project): Project {
     ),
     wedding_photobooth_package: project.wedding_photobooth_package ?? "",
     wedding_photobooth_price: Number(project.wedding_photobooth_price ?? 0),
+    wedding_album_size: project.wedding_album_size ?? "",
+    wedding_album_shape: project.wedding_album_shape ?? "",
+    wedding_album_pages: Number(project.wedding_album_pages ?? 0),
+    wedding_album_wishes: project.wedding_album_wishes ?? "",
+    wedding_album_inscription: project.wedding_album_inscription ?? "",
+    wedding_album_notes: project.wedding_album_notes ?? "",
     delivery_workdays:
       project.delivery_workdays ??
       getBusinessDaysBetween(project.shoot_date, project.delivery_due),
@@ -76,6 +82,12 @@ function isMissingOptionalColumn(message: string) {
       message.includes("wedding_video_provider_paid") ||
       message.includes("wedding_extra_hours") ||
       message.includes("wedding_extra_hour_price") ||
+      message.includes("wedding_album_size") ||
+      message.includes("wedding_album_shape") ||
+      message.includes("wedding_album_pages") ||
+      message.includes("wedding_album_wishes") ||
+      message.includes("wedding_album_inscription") ||
+      message.includes("wedding_album_notes") ||
       message.includes("shoot_reminder_sent_at"))
   );
 }
@@ -86,6 +98,12 @@ function omitMissingOptionalColumns<
     wedding_video_provider_paid?: boolean;
     wedding_extra_hours?: number;
     wedding_extra_hour_price?: number;
+    wedding_album_size?: string;
+    wedding_album_shape?: string;
+    wedding_album_pages?: number;
+    wedding_album_wishes?: string;
+    wedding_album_inscription?: string;
+    wedding_album_notes?: string;
     shoot_reminder_sent_at?: string | null;
   }
 >(value: T) {
@@ -94,6 +112,12 @@ function omitMissingOptionalColumns<
     wedding_video_provider_paid: _weddingVideoProviderPaid,
     wedding_extra_hours: _weddingExtraHours,
     wedding_extra_hour_price: _weddingExtraHourPrice,
+    wedding_album_size: _weddingAlbumSize,
+    wedding_album_shape: _weddingAlbumShape,
+    wedding_album_pages: _weddingAlbumPages,
+    wedding_album_wishes: _weddingAlbumWishes,
+    wedding_album_inscription: _weddingAlbumInscription,
+    wedding_album_notes: _weddingAlbumNotes,
     shoot_reminder_sent_at: _shootReminderSentAt,
     ...rest
   } = value;
@@ -148,6 +172,12 @@ function normalizeProject(values: ProjectFormValues, existing?: Project): Projec
     wedding_photobooth_enabled: Boolean(values.wedding_photobooth_enabled),
     wedding_photobooth_package: values.wedding_photobooth_package?.trim() ?? "",
     wedding_photobooth_price: Number(values.wedding_photobooth_price || 0),
+    wedding_album_size: values.wedding_album_size?.trim() ?? "",
+    wedding_album_shape: values.wedding_album_shape?.trim() ?? "",
+    wedding_album_pages: Math.max(Number(values.wedding_album_pages || 0), 0),
+    wedding_album_wishes: values.wedding_album_wishes?.trim() ?? "",
+    wedding_album_inscription: values.wedding_album_inscription?.trim() ?? "",
+    wedding_album_notes: values.wedding_album_notes?.trim() ?? "",
     selected_photos: selectedPhotos,
     notes: values.notes.trim(),
     retouch_notes: values.retouch_notes.trim(),
@@ -385,6 +415,12 @@ export function useProjects() {
         wedding_photobooth_enabled: Boolean(existing.wedding_photobooth_enabled),
         wedding_photobooth_package: existing.wedding_photobooth_package ?? "",
         wedding_photobooth_price: Number(existing.wedding_photobooth_price ?? 0),
+        wedding_album_size: existing.wedding_album_size ?? "",
+        wedding_album_shape: existing.wedding_album_shape ?? "",
+        wedding_album_pages: Number(existing.wedding_album_pages ?? 0),
+        wedding_album_wishes: existing.wedding_album_wishes ?? "",
+        wedding_album_inscription: existing.wedding_album_inscription ?? "",
+        wedding_album_notes: existing.wedding_album_notes ?? "",
         workflow_status: nextStatus,
         payment_status: nextPaymentStatus
       });
