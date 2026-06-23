@@ -82,12 +82,6 @@ function isMissingOptionalColumn(message: string) {
       message.includes("wedding_video_provider_paid") ||
       message.includes("wedding_extra_hours") ||
       message.includes("wedding_extra_hour_price") ||
-      message.includes("wedding_album_size") ||
-      message.includes("wedding_album_shape") ||
-      message.includes("wedding_album_pages") ||
-      message.includes("wedding_album_wishes") ||
-      message.includes("wedding_album_inscription") ||
-      message.includes("wedding_album_notes") ||
       message.includes("shoot_reminder_sent_at"))
   );
 }
@@ -98,12 +92,6 @@ function omitMissingOptionalColumns<
     wedding_video_provider_paid?: boolean;
     wedding_extra_hours?: number;
     wedding_extra_hour_price?: number;
-    wedding_album_size?: string;
-    wedding_album_shape?: string;
-    wedding_album_pages?: number;
-    wedding_album_wishes?: string;
-    wedding_album_inscription?: string;
-    wedding_album_notes?: string;
     shoot_reminder_sent_at?: string | null;
   }
 >(value: T) {
@@ -112,12 +100,6 @@ function omitMissingOptionalColumns<
     wedding_video_provider_paid: _weddingVideoProviderPaid,
     wedding_extra_hours: _weddingExtraHours,
     wedding_extra_hour_price: _weddingExtraHourPrice,
-    wedding_album_size: _weddingAlbumSize,
-    wedding_album_shape: _weddingAlbumShape,
-    wedding_album_pages: _weddingAlbumPages,
-    wedding_album_wishes: _weddingAlbumWishes,
-    wedding_album_inscription: _weddingAlbumInscription,
-    wedding_album_notes: _weddingAlbumNotes,
     shoot_reminder_sent_at: _shootReminderSentAt,
     ...rest
   } = value;
@@ -317,6 +299,12 @@ export function useProjects() {
           wedding_photobooth_enabled: updated.wedding_photobooth_enabled,
           wedding_photobooth_package: updated.wedding_photobooth_package,
           wedding_photobooth_price: updated.wedding_photobooth_price,
+          wedding_album_size: updated.wedding_album_size,
+          wedding_album_shape: updated.wedding_album_shape,
+          wedding_album_pages: updated.wedding_album_pages,
+          wedding_album_wishes: updated.wedding_album_wishes,
+          wedding_album_inscription: updated.wedding_album_inscription,
+          wedding_album_notes: updated.wedding_album_notes,
           selected_photos: updated.selected_photos,
           notes: updated.notes,
           retouch_notes: updated.retouch_notes,

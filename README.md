@@ -52,6 +52,7 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
 VAPID_PRIVATE_KEY=your-vapid-private-key
 VAPID_SUBJECT=mailto:info@inneastudio.si
 CRON_SECRET=choose-a-long-random-secret
+STUDENT_CALENDAR_TOKEN=choose-a-long-random-calendar-secret
 OPENAI_API_KEY=your-openai-api-key
 OPENAI_MODEL=gpt-5-mini
 RESEND_API_KEY=re_your-resend-api-key
@@ -86,6 +87,12 @@ Opomnik zajame današnja fotografiranja, deadline v manj kot 3 dneh, fotografira
 Social media opomniki se preverjajo vsakih 15 minut in pošljejo push približno 30 minut pred planirano objavo. AI pomočnik uporablja `OPENAI_API_KEY`; če ključ ni nastavljen, aplikacija pokaže osnovni lokalni predlog.
 
 Email opomniki za fotografiranja se pošljejo en dan pred terminom vsem projektom, ki imajo vpisan email. Za pošiljanje mora biti v Vercel nastavljen `RESEND_API_KEY` in preverjen pošiljatelj `RESEND_FROM_EMAIL`.
+
+## Google Calendar za urnik študentov
+
+Za prikaz izmen v Google Calendar nastavi `STUDENT_CALENDAR_TOKEN` v Vercel env nastavitvah. Vrednost naj bo dolga naključna skrivnost, podobno kot `CRON_SECRET`.
+
+Po deployu odpri stran `Urniki`, klikni `Google Calendar`, kopiran link pa v Google Calendar dodaj pod `Other calendars` > `From URL`.
 
 ## Struktura
 

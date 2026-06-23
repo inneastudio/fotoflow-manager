@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import {
   BarChart3,
   CalendarDays,
+  CalendarPlus,
   Clock,
   Mail,
   Plus,
@@ -187,6 +188,7 @@ export default function StudentsPage() {
   const [selectedMonth, setSelectedMonth] = useState(monthValue());
   const [selectedYear, setSelectedYear] = useState(selectedYearValue());
   const [message, setMessage] = useState<string | null>(null);
+  const [copyingCalendarLink, setCopyingCalendarLink] = useState(false);
 
   const activeStudents = students.filter((student) => student.active);
   const selectedStudent = students.find((student) => student.id === selectedStudentId);
@@ -373,6 +375,43 @@ export default function StudentsPage() {
     );
   }
 
+  async function copyGoogleCalendarLink() {
+    setMessage(null);
+    setCopyingCalendarLink(true);
+
+    try {
+      if (!demoMode && !session?.access_token) {
+        setMessage("Za Google Calendar link moraš biti prijavljen.");
+        return;
+      }
+
+      const response = await fetch("/api/students/calendar-link", {
+        headers: {
+          ...(session?.access_token ? { authorization: `Bearer ${session.access_token}` } : {})
+        }
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setMessage(result.error ?? "Google Calendar linka ni bilo mogoče pripraviti.");
+        return;
+      }
+
+      await navigator.clipboard.writeText(result.url);
+      setMessage(
+        "Google Calendar link je kopiran. V Google Calendar izberi Other calendars > From URL in prilepi link."
+      );
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Google Calendar linka ni bilo mogoče kopirati."
+      );
+    } finally {
+      setCopyingCalendarLink(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -380,10 +419,21 @@ export default function StudentsPage() {
         title="Urniki in obračun"
         description="Planiraj tedenske izmene, obračunaj ure in pošlji urnik študentom po emailu."
         actions={
-          <button className="button-primary" type="button" onClick={sendWeeklySchedule}>
-            <Send className="h-4 w-4" />
-            Pošlji nove izmene
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className="button-secondary"
+              disabled={copyingCalendarLink}
+              type="button"
+              onClick={copyGoogleCalendarLink}
+            >
+              <CalendarPlus className="h-4 w-4" />
+              {copyingCalendarLink ? "Pripravljam ..." : "Google Calendar"}
+            </button>
+            <button className="button-primary" type="button" onClick={sendWeeklySchedule}>
+              <Send className="h-4 w-4" />
+              Pošlji nove izmene
+            </button>
+          </div>
         }
       />
 
