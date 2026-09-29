@@ -3,6 +3,7 @@ import { buildReminderSummary } from "@/lib/reminder-summary";
 import { sendShootReminderEmails } from "@/lib/shoot-email-reminders";
 import { sendPushNotification } from "@/lib/push-server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { buildStudioTaskReminder, studioTaskDate } from "@/lib/studio-task-reminders";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get("authorization");
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -21,7 +22,11 @@ export async function GET(request: Request) {
     );
   }
   const admin = supabaseAdmin;
-  const emailReminders = await sendShootReminderEmails(admin);
+  // Email delivery must not prevent the independent push reminders.
+  const emailReminders = await sendShootReminderEmails(admin).catch(() => ({
+    error: "Pošiljanje e-poštnih opomnikov ni uspelo."
+  }));
+  const now = new Date();
 
   const { data: subscriptions, error: subscriptionError } = await admin
     .from("push_subscriptions")
@@ -54,11 +59,21 @@ export async function GET(request: Request) {
   let sent = 0;
   let failed = 0;
 
+  const { data: tasks, error: taskError } = await admin
+    .from("studio_tasks")
+    .select("*")
+    .in("user_id", userIds)
+    .eq("task_date", studioTaskDate(now))
+    .eq("status", "Odprto");
+
   await Promise.all(
     userIds.map(async (userId) => {
       const userProjects = (projects ?? []).filter((project) => project.user_id === userId);
-      const summary = buildReminderSummary(userProjects);
-      if (!summary) return;
+      const summaries = [
+        buildReminderSummary(userProjects, now),
+        buildStudioTaskReminder((tasks ?? []).filter((task) => task.user_id === userId), now)
+      ].filter((summary) => summary !== null);
+      if (!summaries.length) return;
 
       const userSubscriptions = (subscriptions ?? []).filter(
         (subscription) => subscription.user_id === userId
@@ -66,21 +81,24 @@ export async function GET(request: Request) {
 
       await Promise.all(
         userSubscriptions.map(async (subscription) => {
-          try {
-            await sendPushNotification(subscription, summary);
-            sent += 1;
-          } catch (error) {
-            failed += 1;
-            const statusCode =
-              typeof error === "object" && error && "statusCode" in error
-                ? Number((error as { statusCode?: number }).statusCode)
-                : 0;
+          for (const summary of summaries) {
+            try {
+              await sendPushNotification(subscription, summary);
+              sent += 1;
+            } catch (error) {
+              failed += 1;
+              const statusCode =
+                typeof error === "object" && error && "statusCode" in error
+                  ? Number((error as { statusCode?: number }).statusCode)
+                  : 0;
 
-            if (statusCode === 404 || statusCode === 410) {
-              await admin
-                .from("push_subscriptions")
-                .delete()
-                .eq("endpoint", subscription.endpoint);
+              if (statusCode === 404 || statusCode === 410) {
+                await admin
+                  .from("push_subscriptions")
+                  .delete()
+                  .eq("endpoint", subscription.endpoint);
+                break;
+              }
             }
           }
         })
@@ -90,6 +108,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     push: { sent, failed, users: userIds.length },
+    tasks: { error: taskError?.message ?? null },
     email: emailReminders
   });
 }

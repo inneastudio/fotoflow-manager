@@ -617,6 +617,10 @@ create table if not exists public.studio_tasks (
   updated_at timestamptz not null default now()
 );
 
+alter table public.studio_tasks
+  add column if not exists assignee text
+  check (assignee in ('Žan', 'Teja'));
+
 create index if not exists studio_tasks_user_id_idx
 on public.studio_tasks (user_id);
 

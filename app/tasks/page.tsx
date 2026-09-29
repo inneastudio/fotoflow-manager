@@ -13,6 +13,8 @@ import { MetricCard } from "@/components/metric-card";
 import { PageHeader } from "@/components/page-header";
 import {
   studioTaskPriorities,
+  studioTaskAssignees,
+  type StudioTaskAssignee,
   type StudioTask,
   type StudioTaskPriority
 } from "@/lib/types";
@@ -21,6 +23,7 @@ import {
   type StudioTaskFormValues
 } from "@/lib/use-studio-tasks";
 import { cn, formatDate, toDateInputValue } from "@/lib/utils";
+import { studioTaskDate } from "@/lib/studio-task-reminders";
 
 function monthValue(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -62,9 +65,10 @@ function priorityTone(priority: StudioTaskPriority) {
   return "border-clay/25 bg-clay/10 text-clay";
 }
 
-const today = new Date().toISOString().slice(0, 10);
+const today = studioTaskDate();
 
 const emptyForm: StudioTaskFormValues = {
+  assignee: "Teja",
   task_date: today,
   title: "",
   description: "",
@@ -79,17 +83,24 @@ export default function TasksPage() {
   const [form, setForm] = useState<StudioTaskFormValues>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [assigneeFilter, setAssigneeFilter] = useState<StudioTaskAssignee | "Vsi">("Vsi");
+  const [pendingTask, setPendingTask] = useState<string | null>(null);
+  const [taskError, setTaskError] = useState<string | null>(null);
+  const filteredTasks = useMemo(
+    () => tasks.filter((task) => assigneeFilter === "Vsi" || task.assignee === assigneeFilter),
+    [tasks, assigneeFilter]
+  );
 
   const days = useMemo(() => monthDays(selectedMonth), [selectedMonth]);
   const monthTasks = useMemo(
-    () => tasks.filter((task) => isWithinMonth(task.task_date, selectedMonth)),
-    [selectedMonth, tasks]
+    () => filteredTasks.filter((task) => isWithinMonth(task.task_date, selectedMonth)),
+    [selectedMonth, filteredTasks]
   );
   const selectedDateTasks = useMemo(
-    () => tasks.filter((task) => task.task_date === selectedDate),
-    [selectedDate, tasks]
+    () => filteredTasks.filter((task) => task.task_date === selectedDate),
+    [selectedDate, filteredTasks]
   );
-  const todayTasks = tasks.filter((task) => task.task_date === today);
+  const todayTasks = filteredTasks.filter((task) => task.task_date === today);
   const openMonthTasks = monthTasks.filter((task) => task.status !== "Opravljeno");
   const doneMonthTasks = monthTasks.filter((task) => task.status === "Opravljeno");
 
@@ -120,7 +131,8 @@ export default function TasksPage() {
       setForm((current) => ({
         ...emptyForm,
         task_date: selectedDate,
-        priority: current.priority
+        priority: current.priority,
+        assignee: current.assignee
       }));
     } catch (submitError) {
       setFormError(
@@ -133,14 +145,36 @@ export default function TasksPage() {
     }
   }
 
-  async function toggleTask(task: StudioTask) {
-    await updateTask(task.id, {
-      task_date: task.task_date,
-      title: task.title,
-      description: task.description,
-      priority: task.priority,
-      status: task.status === "Opravljeno" ? "Odprto" : "Opravljeno"
-    });
+  async function changeTask(task: StudioTask, changes: Partial<StudioTaskFormValues>) {
+    setTaskError(null);
+    setPendingTask(task.id);
+    try {
+      await updateTask(task.id, {
+        task_date: task.task_date,
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        status: task.status,
+        assignee: task.assignee,
+        ...changes
+      });
+    } catch (error) {
+      setTaskError(error instanceof Error ? error.message : "Spremembe ni mogoče shraniti.");
+    } finally {
+      setPendingTask(null);
+    }
+  }
+
+  async function removeTask(task: StudioTask) {
+    setTaskError(null);
+    setPendingTask(task.id);
+    try {
+      await deleteTask(task.id);
+    } catch (error) {
+      setTaskError(error instanceof Error ? error.message : "Opravila ni mogoče izbrisati.");
+    } finally {
+      setPendingTask(null);
+    }
   }
 
   function selectDate(dateValue: string) {
@@ -161,6 +195,20 @@ export default function TasksPage() {
           </a>
         }
       />
+
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Opravila po osebi">
+        {(["Vsi", ...studioTaskAssignees] as const).map((person) => (
+          <button
+            key={person}
+            type="button"
+            className={cn("min-h-11", assigneeFilter === person ? "button-primary" : "button-secondary")}
+            aria-pressed={assigneeFilter === person}
+            onClick={() => setAssigneeFilter(person)}
+          >
+            {person}
+          </button>
+        ))}
+      </div>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
@@ -287,6 +335,16 @@ export default function TasksPage() {
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-ink">Zadolžen/a</span>
+              <select
+                className="input min-h-12 text-base"
+                value={form.assignee ?? "Teja"}
+                onChange={(event) => setForm((current) => ({ ...current, assignee: event.target.value as StudioTaskAssignee }))}
+              >
+                {studioTaskAssignees.map((person) => <option key={person} value={person}>{person}</option>)}
+              </select>
+            </label>
+            <label className="block space-y-1.5">
               <span className="text-sm font-medium text-ink">Datum</span>
               <input
                 className="input min-h-12 text-base"
@@ -376,6 +434,8 @@ export default function TasksPage() {
             </span>
           </div>
 
+          {taskError ? <p role="alert" className="mb-3 rounded-lg border border-rose/20 bg-rose/10 p-3 text-sm text-rose">{taskError}</p> : null}
+
           {loading ? (
             <div className="h-40 animate-pulse rounded-lg bg-mist/70" />
           ) : error ? (
@@ -395,27 +455,19 @@ export default function TasksPage() {
                   )}
                 >
                   <div className="flex items-start gap-3">
-                    <button
-                      type="button"
-                      className={cn(
-                        "mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition",
-                        task.status === "Opravljeno"
-                          ? "border-olive/25 bg-olive/10 text-olive"
-                          : "border-line bg-white text-muted hover:border-clay"
-                      )}
-                      onClick={() => toggleTask(task)}
-                      aria-label="Označi opravilo"
-                      title="Označi opravilo"
-                    >
-                      {task.status === "Opravljeno" ? (
-                        <CheckCircle2 className="h-4 w-4" />
-                      ) : (
-                        <Circle className="h-4 w-4" />
-                      )}
-                    </button>
+                    <label className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
+                      <input
+                        type="checkbox"
+                        className="h-6 w-6 accent-ink"
+                        checked={task.status === "Opravljeno"}
+                        disabled={pendingTask !== null}
+                        aria-label={`Opravljeno: ${task.title}`}
+                        onChange={(event) => changeTask(task, { status: event.target.checked ? "Opravljeno" : "Odprto" })}
+                      />
+                    </label>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <p
                             className={cn(
                               "whitespace-pre-wrap break-words font-semibold text-ink",
@@ -429,6 +481,16 @@ export default function TasksPage() {
                               {task.description}
                             </p>
                           ) : null}
+                          <select
+                            className="input mt-2 min-h-11 max-w-40 text-base"
+                            aria-label={`Zadolžen/a: ${task.title}`}
+                            value={task.assignee ?? ""}
+                            disabled={pendingTask !== null}
+                            onChange={(event) => changeTask(task, { assignee: (event.target.value || null) as StudioTaskAssignee | null })}
+                          >
+                            <option value="">Nedodeljeno</option>
+                            {studioTaskAssignees.map((person) => <option key={person} value={person}>{person}</option>)}
+                          </select>
                         </div>
                         <div className="flex shrink-0 flex-wrap items-center gap-2">
                           <span
@@ -442,7 +504,8 @@ export default function TasksPage() {
                           <button
                             type="button"
                             className="button-ghost h-11 w-11 p-0 text-rose hover:text-rose"
-                            onClick={() => deleteTask(task.id)}
+                            disabled={pendingTask !== null}
+                            onClick={() => removeTask(task)}
                             aria-label="Izbriši opravilo"
                             title="Izbriši"
                           >

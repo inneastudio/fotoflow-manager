@@ -212,6 +212,8 @@ export type GiftVoucher = {
 
 export const studioTaskStatuses = ["Odprto", "Opravljeno"] as const;
 export const studioTaskPriorities = ["Nizka", "Normalna", "Visoka"] as const;
+export const studioTaskAssignees = ["Žan", "Teja"] as const;
+export type StudioTaskAssignee = (typeof studioTaskAssignees)[number];
 
 export type StudioTaskStatus = (typeof studioTaskStatuses)[number];
 export type StudioTaskPriority = (typeof studioTaskPriorities)[number];
@@ -219,6 +221,7 @@ export type StudioTaskPriority = (typeof studioTaskPriorities)[number];
 export type StudioTask = {
   id: string;
   user_id?: string | null;
+  assignee: StudioTaskAssignee | null;
   task_date: string;
   title: string;
   description: string;

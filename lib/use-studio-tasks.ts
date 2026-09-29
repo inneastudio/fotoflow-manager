@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { supabase } from "@/lib/supabase";
-import type { StudioTask, StudioTaskPriority, StudioTaskStatus } from "@/lib/types";
+import type { StudioTask, StudioTaskAssignee, StudioTaskPriority, StudioTaskStatus } from "@/lib/types";
 
 const STORAGE_KEY = "fotoflow-manager-studio-tasks";
 
 export type StudioTaskFormValues = {
+  assignee: StudioTaskAssignee | null;
   task_date: string;
   title: string;
   description: string;
@@ -18,6 +19,7 @@ export type StudioTaskFormValues = {
 function ensureTaskShape(task: StudioTask): StudioTask {
   return {
     ...task,
+    assignee: task.assignee ?? null,
     task_date: task.task_date ?? new Date().toISOString().slice(0, 10),
     title: task.title ?? "",
     description: task.description ?? "",
@@ -56,6 +58,7 @@ function buildTask(values: StudioTaskFormValues, existing?: StudioTask): StudioT
   return {
     id: existing?.id ?? crypto.randomUUID(),
     user_id: existing?.user_id ?? null,
+    assignee: values.assignee,
     task_date: values.task_date,
     title: values.title.trim(),
     description: values.description.trim(),
@@ -69,6 +72,7 @@ function buildTask(values: StudioTaskFormValues, existing?: StudioTask): StudioT
 function taskPayload(task: StudioTask) {
   return {
     user_id: task.user_id,
+    assignee: task.assignee,
     task_date: task.task_date,
     title: task.title,
     description: task.description,

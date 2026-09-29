@@ -94,7 +94,23 @@ Za prikaz izmen v Google Calendar nastavi `STUDENT_CALENDAR_TOKEN` v Vercel env 
 
 Po deployu odpri stran `Urniki`, klikni `Google Calendar`, kopiran link pa v Google Calendar dodaj pod `Other calendars` > `From URL`.
 
-## Struktura
+## Opravila in jutranji opomniki
+
+Za izbiro zadolžene osebe (Žan/Teja) zaženi migracijo
+`supabase/migrations/20260929150000_add_studio_task_assignee.sql`.
+Stara opravila ostanejo nedodeljena, dokler jim ne izbereš osebe.
+Označevanje opravljenega in sprememba zadolžene osebe se shranita takoj.
+
+Obstoječi `/api/push/daily` se sproži vsak dan ob 06:00 UTC. Na Hobby paketu
+Vercel ne zagotavlja točne minute. Pošlje tudi ločeno obvestilo za odprta
+opravila današnjega dne po časovnem pasu Europe/Ljubljana. Klik odpre `/tasks`.
+Obvestila prejmejo vse naročene naprave lastnikovega prijavnega računa;
+ime Žan/Teja je oznaka zadolžitve, ne drug uporabniški račun.
+Potrebne so obstoječe push nastavitve in dovoljenje za obvestila na napravi.
+
+Testi opomnikov (Node 24): `node --test tests/studio-task-reminders.test.mjs`.
+
+## Struktura projekta
 
 ```text
 app/
