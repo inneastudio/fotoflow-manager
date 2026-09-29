@@ -86,7 +86,7 @@ Opomnik zajame današnja fotografiranja, deadline v manj kot 3 dneh, fotografira
 
 Social media opomniki se preverjajo vsakih 15 minut in pošljejo push približno 30 minut pred planirano objavo. AI pomočnik uporablja `OPENAI_API_KEY`; če ključ ni nastavljen, aplikacija pokaže osnovni lokalni predlog.
 
-Email opomniki za fotografiranja se pošljejo en dan pred terminom vsem projektom, ki imajo vpisan email. Za pošiljanje mora biti v Vercel nastavljen `RESEND_API_KEY` in preverjen pošiljatelj `RESEND_FROM_EMAIL`.
+Email opomniki za fotografiranja se pošljejo en dan pred terminom vsem projektom, ki imajo vpisan email. Jutranji cron jih pošlje skupaj z dnevnim opomnikom, dodatni cron na `/api/shoot-reminders` pa čez dan ponovno preverja nove projekte za jutri, ki so bili vpisani po jutranjem pošiljanju. Ko je email poslan, se v projektu nastavi `shoot_reminder_sent_at`, da se isti opomnik ne pošlje dvakrat. Za pošiljanje mora biti v Vercel nastavljen `RESEND_API_KEY` in preverjen pošiljatelj `RESEND_FROM_EMAIL`.
 
 ## Google Calendar za urnik študentov
 

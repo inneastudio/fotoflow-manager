@@ -8,6 +8,7 @@ import type {
   SocialPost,
   Student,
   StudentShift,
+  StudioTask,
   StudioDocument
 } from "@/lib/types";
 
@@ -70,6 +71,18 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Omit<GiftVoucher, "id" | "created_at" | "updated_at">> & {
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      studio_tasks: {
+        Row: StudioTask;
+        Insert: Omit<StudioTask, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<StudioTask, "id" | "created_at" | "updated_at">> & {
           updated_at?: string;
         };
         Relationships: [];

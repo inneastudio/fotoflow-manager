@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
+  Camera,
   CalendarHeart,
   CheckCircle2,
   Edit3,
@@ -74,6 +75,11 @@ export default function WeddingsPage() {
   const weddingRevenue = weddingProjects
     .filter((project) => project.payment_status === "Plačano")
     .reduce((sum, project) => sum + project.amount, 0);
+  const currentYear = new Date().getFullYear();
+  const weddingYearSummary = useMemo(
+    () => buildWeddingYearSummary(weddingProjects, currentYear),
+    [currentYear, weddingProjects]
+  );
 
   if (loading) {
     return <div className="h-96 animate-pulse rounded-lg bg-mist/70" />;
@@ -141,6 +147,98 @@ export default function WeddingsPage() {
           icon={WalletCards}
           tone="rose"
         />
+      </section>
+
+      <section className="surface rounded-lg p-4 sm:p-5">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="eyebrow">Letni pregled</p>
+            <h2 className="mt-1 font-display text-2xl font-semibold text-ink">
+              Poročne postavke {currentYear}
+            </h2>
+            <p className="mt-2 text-sm text-muted">
+              Fotografiranje in photobooth sta izračunana iz poročnih paketov,
+              ne samo iz skupnega zneska projekta.
+            </p>
+          </div>
+          <div className="rounded-lg border border-line bg-white/70 px-3 py-2 text-sm font-semibold text-muted">
+            Avansi skupaj: {formatCurrency(weddingYearSummary.deposits)}
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            label="Fotografiranje z avansi"
+            value={formatCurrency(weddingYearSummary.photoGross)}
+            detail={`${weddingYearSummary.count} porok v letu`}
+            icon={Camera}
+            tone="charcoal"
+          />
+          <MetricCard
+            label="Fotografiranje brez avansov"
+            value={formatCurrency(weddingYearSummary.photoNet)}
+            detail={`Odšteto ${formatCurrency(weddingYearSummary.photoDepositPart)} avansov`}
+            icon={Camera}
+            tone="clay"
+          />
+          <MetricCard
+            label="Booth z avansi"
+            value={formatCurrency(weddingYearSummary.boothGross)}
+            detail={`${weddingYearSummary.boothCount} porok z boothom`}
+            icon={Images}
+            tone="olive"
+          />
+          <MetricCard
+            label="Booth brez avansov"
+            value={formatCurrency(weddingYearSummary.boothNet)}
+            detail={`Odšteto ${formatCurrency(weddingYearSummary.boothDepositPart)} avansov`}
+            icon={Images}
+            tone="rose"
+          />
+        </div>
+
+        <div className="mt-5 overflow-x-auto rounded-lg border border-line">
+          <div className="grid min-w-[680px] grid-cols-[1fr_120px_120px_120px_120px] gap-3 border-b border-line bg-paper px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+            <span>Postavka</span>
+            <span className="text-right">Št.</span>
+            <span className="text-right">Z avansi</span>
+            <span className="text-right">Avansi</span>
+            <span className="text-right">Brez avansov</span>
+          </div>
+          {[
+            {
+              label: "Fotografiranje",
+              count: weddingYearSummary.count,
+              gross: weddingYearSummary.photoGross,
+              deposit: weddingYearSummary.photoDepositPart,
+              net: weddingYearSummary.photoNet
+            },
+            {
+              label: "Photobooth",
+              count: weddingYearSummary.boothCount,
+              gross: weddingYearSummary.boothGross,
+              deposit: weddingYearSummary.boothDepositPart,
+              net: weddingYearSummary.boothNet
+            }
+          ].map((row) => (
+            <div
+              key={row.label}
+              className="grid min-w-[680px] grid-cols-[1fr_120px_120px_120px_120px] gap-3 border-b border-line px-3 py-3 text-sm last:border-b-0"
+            >
+              <span className="font-semibold text-ink">{row.label}</span>
+              <span className="text-right text-muted">{row.count}</span>
+              <span className="text-right font-semibold text-ink">
+                {formatCurrency(row.gross)}
+              </span>
+              <span className="text-right text-muted">
+                {formatCurrency(row.deposit)}
+              </span>
+              <span className="text-right font-semibold text-ink">
+                {formatCurrency(row.net)}
+              </span>
+            </div>
+          ))}
+        </div>
       </section>
 
       {meetingReminders.length ? (
@@ -291,6 +389,62 @@ export default function WeddingsPage() {
         }}
       />
     </div>
+  );
+}
+
+function getWeddingPhotoAmount(project: Project) {
+  return (
+    Number(project.wedding_package_price || 0) +
+    Number(project.wedding_extra_hours || 0) *
+      Number(project.wedding_extra_hour_price || 0)
+  );
+}
+
+function getWeddingBoothAmount(project: Project) {
+  return project.wedding_photobooth_enabled
+    ? Number(project.wedding_photobooth_price || 0)
+    : 0;
+}
+
+function buildWeddingYearSummary(projects: Project[], year: number) {
+  const yearProjects = projects.filter((project) => {
+    const date = new Date(`${project.shoot_date}T12:00:00`);
+    return date.getFullYear() === year;
+  });
+
+  return yearProjects.reduce(
+    (summary, project) => {
+      const photo = getWeddingPhotoAmount(project);
+      const booth = getWeddingBoothAmount(project);
+      const trackedTotal = photo + booth;
+      const deposit = Math.min(Number(project.deposit || 0), trackedTotal);
+      const photoDeposit =
+        trackedTotal > 0 ? Math.round((deposit * photo / trackedTotal) * 100) / 100 : 0;
+      const boothDeposit = Math.max(deposit - photoDeposit, 0);
+
+      return {
+        count: summary.count + 1,
+        boothCount: summary.boothCount + (booth > 0 ? 1 : 0),
+        photoGross: summary.photoGross + photo,
+        boothGross: summary.boothGross + booth,
+        deposits: summary.deposits + Number(project.deposit || 0),
+        photoDepositPart: summary.photoDepositPart + photoDeposit,
+        boothDepositPart: summary.boothDepositPart + boothDeposit,
+        photoNet: summary.photoNet + Math.max(photo - photoDeposit, 0),
+        boothNet: summary.boothNet + Math.max(booth - boothDeposit, 0)
+      };
+    },
+    {
+      count: 0,
+      boothCount: 0,
+      photoGross: 0,
+      boothGross: 0,
+      deposits: 0,
+      photoDepositPart: 0,
+      boothDepositPart: 0,
+      photoNet: 0,
+      boothNet: 0
+    }
   );
 }
 

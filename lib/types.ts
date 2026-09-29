@@ -210,6 +210,24 @@ export type GiftVoucher = {
   updated_at: string;
 };
 
+export const studioTaskStatuses = ["Odprto", "Opravljeno"] as const;
+export const studioTaskPriorities = ["Nizka", "Normalna", "Visoka"] as const;
+
+export type StudioTaskStatus = (typeof studioTaskStatuses)[number];
+export type StudioTaskPriority = (typeof studioTaskPriorities)[number];
+
+export type StudioTask = {
+  id: string;
+  user_id?: string | null;
+  task_date: string;
+  title: string;
+  description: string;
+  priority: StudioTaskPriority;
+  status: StudioTaskStatus;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProjectChecklistItem = {
   id: string;
   user_id?: string | null;
