@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/shoot-reminders",
-      "schedule": "0 7-20 * * *"
+      "schedule": "0 18 * * *"
     }
   ]
 }
