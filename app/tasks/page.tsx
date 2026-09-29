@@ -274,7 +274,7 @@ export default function TasksPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <div id="novo-opravilo" className="surface rounded-lg p-4 sm:p-5">
+        <div id="novo-opravilo" className="surface scroll-mt-24 rounded-lg p-4 sm:p-5">
           <div className="mb-4">
             <p className="eyebrow">Nov vnos</p>
             <h2 className="mt-1 font-display text-2xl font-semibold text-ink">
@@ -286,19 +286,25 @@ export default function TasksPage() {
           </div>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
-            <label className="space-y-1.5">
+            <label className="block space-y-1.5">
               <span className="text-sm font-medium text-ink">Datum</span>
               <input
-                className="input"
+                className="input min-h-12 text-base"
                 type="date"
                 value={selectedDate}
                 onChange={(event) => selectDate(event.target.value)}
               />
             </label>
-            <label className="space-y-1.5">
+            <label className="block space-y-1.5">
               <span className="text-sm font-medium text-ink">Naslov opravila</span>
-              <input
-                className="input"
+              <textarea
+                className="input min-h-28 resize-y px-4 py-3 text-base leading-7"
+                name="title"
+                rows={2}
+                required
+                autoCapitalize="sentences"
+                autoComplete="off"
+                spellCheck
                 value={form.title}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, title: event.target.value }))
@@ -306,10 +312,10 @@ export default function TasksPage() {
                 placeholder="npr. Pripraviti galerijo, naročiti album ..."
               />
             </label>
-            <label className="space-y-1.5">
+            <label className="block space-y-1.5">
               <span className="text-sm font-medium text-ink">Prioriteta</span>
               <select
-                className="input"
+                className="input min-h-12 text-base"
                 value={form.priority}
                 onChange={(event) =>
                   setForm((current) => ({
@@ -325,10 +331,14 @@ export default function TasksPage() {
                 ))}
               </select>
             </label>
-            <label className="space-y-1.5">
+            <label className="block space-y-1.5">
               <span className="text-sm font-medium text-ink">Opis</span>
               <textarea
-                className="input min-h-28"
+                className="input min-h-48 resize-y px-4 py-3 text-base leading-7"
+                name="description"
+                rows={5}
+                autoCapitalize="sentences"
+                spellCheck
                 value={form.description}
                 onChange={(event) =>
                   setForm((current) => ({
@@ -346,7 +356,7 @@ export default function TasksPage() {
               </p>
             ) : null}
 
-            <button className="button-primary w-full justify-center" disabled={saving} type="submit">
+            <button className="button-primary min-h-12 w-full justify-center" disabled={saving} type="submit">
               <Plus className="h-4 w-4" />
               {saving ? "Shranjujem ..." : "Dodaj opravilo"}
             </button>
@@ -388,7 +398,7 @@ export default function TasksPage() {
                     <button
                       type="button"
                       className={cn(
-                        "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition",
+                        "mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition",
                         task.status === "Opravljeno"
                           ? "border-olive/25 bg-olive/10 text-olive"
                           : "border-line bg-white text-muted hover:border-clay"
@@ -408,7 +418,7 @@ export default function TasksPage() {
                         <div>
                           <p
                             className={cn(
-                              "font-semibold text-ink",
+                              "whitespace-pre-wrap break-words font-semibold text-ink",
                               task.status === "Opravljeno" && "text-muted line-through"
                             )}
                           >
@@ -431,7 +441,7 @@ export default function TasksPage() {
                           </span>
                           <button
                             type="button"
-                            className="button-ghost h-8 w-8 p-0 text-rose hover:text-rose"
+                            className="button-ghost h-11 w-11 p-0 text-rose hover:text-rose"
                             onClick={() => deleteTask(task.id)}
                             aria-label="Izbriši opravilo"
                             title="Izbriši"
